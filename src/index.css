@@ -1,0 +1,117 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* Пастельні теплі кольори — м'який вечір біля ватри */
+  --fire-orange: #e8a87c;       /* М'яке полум'я */
+  --warm-amber: #d4a574;        /* Тепле світло */
+  --golden-yellow: #f0d9a0;     /* Ніжне золото */
+  --sunset-red: #c97b63;        /* М'який захід */
+  --ember-brown: #8b6f5e;       /* Тліючі вугілля */
+  
+  /* Природні пастельні відтінки */
+  --forest-green: #7db89b;      /* М'яка зелень */
+  --mountain-blue: #89b4d4;     /* Ніжне небо */
+  --earth-brown: #a08878;       /* Тепла земля */
+  --stone-gray: #b0a8a0;        /* М'який камінь */
+  
+  /* Теплі нейтральні */
+  --cream-white: #ffffff;         /* Чистий білий */
+  --soft-beige: #f5f0e8;          /* Теплий бежевий для тексту пісні */
+  --warm-gray: #8a7e74;           /* Теплий сірий */
+  --dark-brown: #3d3530;          /* Темний коричневий */
+  
+  /* Акценти */
+  --guitar-wood: #c4a882;       /* Колір гітари */
+  --tea-steam: rgba(232, 168, 124, 0.08); /* Пара від чаю */
+  --fire-glow: rgba(232, 168, 124, 0.12); /* Сяйво ватри */
+  --card-shadow: rgba(139, 111, 94, 0.1);
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #f6f4f1;
+  line-height: 1.5;
+  color: var(--dark-brown);
+  min-height: 100vh;
+}
+
+/* Оптимізація для мобільних */
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
+}
+
+/* Анімації */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 8px var(--fire-glow); }
+  50% { box-shadow: 0 0 20px var(--fire-glow), 0 0 40px var(--tea-steam); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Мобільна оптимізація */
+@media (max-width: 768px) {
+  body {
+    font-size: 16px;
+  }
+  
+  input, textarea, select {
+    font-size: 16px;
+  }
+}
+
+/* Прискорення скролу */
+* {
+  -webkit-overflow-scrolling: touch;
+}

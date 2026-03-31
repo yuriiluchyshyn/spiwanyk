@@ -1,0 +1,114 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: none;
+  font-family: inherit;
+  box-shadow: 0 2px 8px var(--card-shadow);
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px var(--card-shadow);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* Розміри */
+.btn-small {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+.btn-medium {
+  padding: 0.75rem 1.25rem;
+  font-size: 1rem;
+}
+
+.btn-large {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+}
+
+/* Варіанти */
+.btn-primary {
+  background: linear-gradient(135deg, var(--fire-orange), var(--warm-amber));
+  color: var(--cream-white);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 4px 20px rgba(232, 168, 124, 0.4);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, var(--earth-brown), var(--warm-gray));
+  color: var(--cream-white);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, var(--forest-green), var(--mountain-blue));
+  color: var(--cream-white);
+}
+
+.btn-success:hover {
+  box-shadow: 0 4px 20px rgba(125, 184, 155, 0.4);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, var(--sunset-red), var(--fire-orange));
+  color: var(--cream-white);
+}
+
+.btn-danger:hover {
+  box-shadow: 0 4px 20px rgba(201, 123, 99, 0.4);
+}
+
+.btn-outline {
+  background: var(--cream-white);
+  border: 2px solid rgba(196, 168, 130, 0.5);
+  color: var(--dark-brown);
+}
+
+.btn-outline:hover {
+  border-color: var(--fire-orange);
+  color: var(--fire-orange);
+}
+
+/* Стани */
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn.loading {
+  cursor: not-allowed;
+}
+
+.btn-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+  .btn {
+    min-height: 2.75rem;
+  }
+}

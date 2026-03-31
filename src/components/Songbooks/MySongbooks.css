@@ -1,0 +1,245 @@
+.my-songbooks {
+  max-width: 1000px;
+  margin: 0 auto;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.songbooks-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.songbooks-header h1 {
+  color: var(--dark-brown);
+}
+
+.create-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, var(--fire-orange), var(--warm-amber));
+  color: var(--cream-white);
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 12px rgba(232, 168, 124, 0.3);
+}
+
+.create-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(232, 168, 124, 0.4);
+}
+
+.create-btn.primary {
+  padding: 15px 25px;
+  font-size: 1.1rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  background: var(--cream-white);
+  border-radius: 12px;
+  box-shadow: 0 2px 16px var(--card-shadow);
+  border: 1px solid rgba(196, 168, 130, 0.2);
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  color: var(--warm-amber);
+  margin-bottom: 20px;
+  animation: float 3s ease-in-out infinite;
+}
+
+.empty-state h3 {
+  color: var(--dark-brown);
+  margin-bottom: 10px;
+  font-size: 1.5rem;
+}
+
+.empty-state p {
+  color: var(--warm-gray);
+  margin-bottom: 30px;
+  line-height: 1.5;
+}
+
+.songbooks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 20px;
+}
+
+.songbook-card {
+  background: var(--cream-white);
+  border-radius: 12px;
+  box-shadow: 0 2px 12px var(--card-shadow);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(196, 168, 130, 0.2);
+  animation: fadeInUp 0.4s ease-out backwards;
+}
+
+.songbook-card:nth-child(1) { animation-delay: 0.05s; }
+.songbook-card:nth-child(2) { animation-delay: 0.1s; }
+.songbook-card:nth-child(3) { animation-delay: 0.15s; }
+.songbook-card:nth-child(4) { animation-delay: 0.2s; }
+
+.songbook-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px var(--card-shadow);
+}
+
+.songbook-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background: var(--soft-beige);
+  border-bottom: 1px solid rgba(196, 168, 130, 0.2);
+}
+
+.privacy-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(137, 180, 212, 0.15);
+  color: var(--mountain-blue);
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.songbook-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.action-btn.edit {
+  background: var(--mountain-blue);
+  color: var(--cream-white);
+}
+
+.action-btn.edit:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(137, 180, 212, 0.4);
+}
+
+.action-btn.delete {
+  background: var(--sunset-red);
+  color: var(--cream-white);
+}
+
+.action-btn.delete:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(201, 123, 99, 0.4);
+}
+
+.songbook-content {
+  padding: 20px;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.songbook-content h3 {
+  color: var(--dark-brown);
+  margin-bottom: 10px;
+  font-size: 1.3rem;
+}
+
+.songbook-description {
+  color: var(--warm-gray);
+  line-height: 1.4;
+  margin-bottom: 15px;
+}
+
+.songbook-stats {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+  color: var(--stone-gray);
+}
+
+.sections-preview {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.section-tag {
+  background: var(--fire-glow);
+  color: var(--fire-orange);
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.section-tag.more {
+  background: rgba(196, 168, 130, 0.15);
+  color: var(--warm-gray);
+}
+
+.loading {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--warm-gray);
+}
+
+.loading-icon {
+  font-size: 3rem;
+  color: var(--warm-amber);
+  margin-bottom: 20px;
+  animation: spin 2s linear infinite;
+}
+
+@media (max-width: 768px) {
+  .songbooks-header {
+    flex-direction: column;
+    gap: 15px;
+    align-items: stretch;
+  }
+  
+  .songbooks-header h1 {
+    text-align: center;
+  }
+  
+  .songbooks-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .songbook-header {
+    padding: 12px 15px;
+  }
+  
+  .songbook-content {
+    padding: 15px;
+  }
+  
+  .songbook-stats {
+    justify-content: center;
+  }
+}

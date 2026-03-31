@@ -1,0 +1,143 @@
+.home-guest { text-align: center; padding: 3rem 1rem; animation: fadeIn 0.5s ease-out; }
+.hero { animation: fadeInUp 0.6s ease-out; }
+.hero-fire { font-size: 3.5rem; margin-bottom: 0.5rem; animation: float 3s ease-in-out infinite; }
+.hero h1 { font-size: 1.8rem; color: var(--dark-brown); margin-bottom: 0.25rem; }
+.hero p { color: var(--warm-gray); margin-bottom: 1.5rem; }
+.cta-btn {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--fire-orange), var(--warm-amber));
+  color: var(--cream-white); padding: 0.75rem 2rem;
+  border-radius: 12px; text-decoration: none; font-weight: 600;
+  transition: all 0.3s ease;
+}
+.cta-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(232,168,124,0.4); }
+
+.home { max-width: 700px; margin: 0 auto; padding: 0.5rem; }
+.section { margin-bottom: 1.5rem; animation: fadeInUp 0.4s ease-out backwards; }
+.section:nth-child(1) { animation-delay: 0s; }
+.section:nth-child(2) { animation-delay: 0.1s; }
+.section:nth-child(3) { animation-delay: 0.2s; }
+.section:nth-child(4) { animation-delay: 0.3s; }
+.sec-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; }
+.sec-head h2 { font-size: 1.05rem; color: var(--dark-brown); font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
+.sec-icon { font-size: 1rem; }
+.sec-subtitle { font-size: 0.75rem; color: var(--warm-gray); font-weight: 400; }
+.link-accent { font-size: 0.85rem; color: var(--fire-orange); text-decoration: none; font-weight: 500; }
+.link-accent:hover { opacity: 0.7; }
+
+/* Mini Playlist */
+.mini-pl {
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid rgba(196,168,130,0.2);
+  overflow: hidden;
+}
+.empty-pl { text-align: center; padding: 2rem 1rem; }
+.empty-pl-icon {
+  font-size: 2rem; color: var(--warm-amber); margin-bottom: 0.5rem;
+  display: block; margin-left: auto; margin-right: auto;
+  animation: float 3s ease-in-out infinite;
+}
+.empty-pl p { color: var(--warm-gray); margin-bottom: 0.5rem; }
+
+.np-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, var(--fire-orange), var(--warm-amber));
+  color: var(--cream-white);
+}
+.np-info { flex: 1; min-width: 0; }
+.np-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.8; display: block; }
+.np-title { font-weight: 600; font-size: 0.95rem; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.np-ctrls { display: flex; gap: 0.25rem; }
+.np-btn {
+  width: 34px; height: 34px;
+  border: 1.5px solid rgba(253,248,240,0.3);
+  background: rgba(253,248,240,0.1);
+  color: var(--cream-white); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 0.85rem; transition: all 0.3s ease;
+}
+.np-btn:hover { background: rgba(253,248,240,0.25); transform: scale(1.1); }
+.np-btn.main { width: 40px; height: 40px; font-size: 1rem; }
+
+.pl-list { max-height: 180px; overflow-y: auto; }
+.pl-item {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.55rem 1rem; cursor: pointer;
+  border-bottom: 1px solid rgba(196,168,130,0.1);
+  transition: background 0.2s ease;
+}
+.pl-item:last-child { border-bottom: none; }
+.pl-item:hover { background: var(--tea-steam); }
+.pl-item.active { background: var(--fire-glow); }
+.pl-num { width: 18px; text-align: center; font-size: 0.8rem; color: var(--stone-gray); }
+.pl-item.active .pl-num { color: var(--fire-orange); font-weight: 700; }
+.pl-name { font-size: 0.9rem; color: var(--dark-brown); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Songbooks grid */
+.sb-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.75rem;
+}
+.sb-card {
+  padding: 1rem; border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid rgba(196,168,130,0.2);
+  text-decoration: none;
+  display: flex; flex-direction: column; gap: 0.25rem;
+  transition: all 0.3s ease; min-height: 80px;
+  position: relative;
+}
+.sb-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px var(--card-shadow); }
+.sb-name { font-size: 0.9rem; font-weight: 600; color: var(--dark-brown); }
+.sb-cnt { font-size: 0.75rem; color: var(--stone-gray); }
+
+/* Shared songbooks */
+.sb-card.shared {
+  border-color: rgba(40, 167, 69, 0.3);
+  background: linear-gradient(135deg, #ffffff, rgba(40, 167, 69, 0.05));
+}
+.sb-card.shared:hover {
+  border-color: rgba(40, 167, 69, 0.5);
+}
+.sb-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.shared-icon {
+  color: #28a745;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+.sb-distance {
+  font-size: 0.7rem;
+  color: #28a745;
+  font-weight: 500;
+  margin-top: auto;
+}
+
+/* Public songbooks */
+.sb-card.public {
+  border-color: rgba(108, 117, 125, 0.3);
+  background: linear-gradient(135deg, #ffffff, rgba(108, 117, 125, 0.05));
+}
+.sb-card.public:hover {
+  border-color: rgba(108, 117, 125, 0.5);
+}
+
+.add-card {
+  border: 2px dashed rgba(196,168,130,0.4);
+  background: transparent; cursor: pointer;
+  align-items: center; justify-content: center;
+  color: var(--warm-gray); font-size: 0.85rem; font-weight: 500; gap: 0.4rem;
+}
+.add-card:hover { border-color: var(--fire-orange); color: var(--fire-orange); }
+.add-icon { font-size: 1.5rem; }
+
+@media (max-width: 768px) {
+  .sb-grid { grid-template-columns: repeat(2, 1fr); }
+}

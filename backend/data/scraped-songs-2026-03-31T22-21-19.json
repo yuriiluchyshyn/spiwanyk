@@ -1,0 +1,2016 @@
+{
+  "metadata": {
+    "scrapedAt": "2026-03-31T22:21:19.088Z",
+    "totalSongs": 5,
+    "sections": [
+      "avtorski",
+      "plastovi",
+      "povstanski",
+      "narodni",
+      "lemkivski",
+      "novacki"
+    ],
+    "version": "1.0.1"
+  },
+  "songs": [
+    {
+      "title": "117 стаття",
+      "author": "",
+      "category": "author",
+      "url": "https://pryvatri.de/avtorski/433-117-ctattya",
+      "youtubeUrl": "https://www.youtube.com/watch?v=YsaL105hX3k",
+      "structure": [
+        {
+          "type": "verse",
+          "number": 1,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "(Тюрма тюрма, дай мені кличку,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Стаття 117, путьовий!)",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Їде столипін, колеса стучать,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Ніч надворі, всі бродяги сплять.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Я один не сплю, думу думаю",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Про тяжку долю свою, – і 117 статтю.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "number": 1,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "        117 стаття, 117 стаття,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "        117 стаття, – доля молодьожная.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 2,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Я поклеїв малолєтку, її я полюбив,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Ну, не так, шоб полюбив, але півтижня з нев ходив.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Потім чу-чуть їй дав під хвіст, потім сказав їй бай-бай.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Вона була зовсім тупа, – любила миколайчука.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "number": 2,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "        117 стаття, 117 стаття,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "        117 стаття, – доля молодьожная.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 3,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Чувіха все повіла мамі, а та підняла шум і гам,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Гворе плати тисячу баксів, або під суд тебе віддам.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "А їй сказав, шо за ті гроші я можу виграти її,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Її сестру, і братову, – і всю родину на селі.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "number": 3,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "        117 стаття, 117 стаття,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "        117 стаття, – доля молодьожная.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "ий колір",
+      "author": "8",
+      "category": "author",
+      "url": "https://pryvatri.de/avtorski/313-8-yi-kolir",
+      "youtubeUrl": "https://www.youtube.com/watch?v=DAaLa3vF8sU",
+      "structure": [
+        {
+          "type": "verse",
+          "number": 1,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Я йшов по воді і назад озирався,",
+              "chordPositions": [
+                {
+                  "chord": "Em",
+                  "charIndex": 4
+                },
+                {
+                  "chord": "G",
+                  "charIndex": 12
+                },
+                {
+                  "chord": "Am",
+                  "charIndex": 19
+                },
+                {
+                  "chord": "B7",
+                  "charIndex": 26
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "А потім побачив тебе.",
+              "chordPositions": [
+                {
+                  "chord": "Em",
+                  "charIndex": 4
+                },
+                {
+                  "chord": "G",
+                  "charIndex": 11
+                },
+                {
+                  "chord": "Am",
+                  "charIndex": 18
+                },
+                {
+                  "chord": "B7",
+                  "charIndex": 20
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Тебе у воді, я отак закохався,",
+              "chordPositions": [
+                {
+                  "chord": "Em",
+                  "charIndex": 2
+                },
+                {
+                  "chord": "G",
+                  "charIndex": 9
+                },
+                {
+                  "chord": "Am",
+                  "charIndex": 16
+                },
+                {
+                  "chord": "B7",
+                  "charIndex": 24
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Веселка цариця небес.",
+              "chordPositions": [
+                {
+                  "chord": "Em",
+                  "charIndex": 2
+                },
+                {
+                  "chord": "G",
+                  "charIndex": 11
+                },
+                {
+                  "chord": "Am",
+                  "charIndex": 17
+                },
+                {
+                  "chord": "B7",
+                  "charIndex": 20
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Мені закортіло всі хмари за гору",
+              "chordPositions": [
+                {
+                  "chord": "C",
+                  "charIndex": 2
+                },
+                {
+                  "chord": "Am",
+                  "charIndex": 20
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Загнати і витерти бруд",
+              "chordPositions": [
+                {
+                  "chord": "D",
+                  "charIndex": 4
+                },
+                {
+                  "chord": "G",
+                  "charIndex": 19
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 2,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "З обличчя і ніг, щоб унизити сором,",
+              "chordPositions": [
+                {
+                  "chord": "C",
+                  "charIndex": 5
+                },
+                {
+                  "chord": "Am",
+                  "charIndex": 24
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Навіки залишитись тут.",
+              "chordPositions": [
+                {
+                  "chord": "C",
+                  "charIndex": 3
+                },
+                {
+                  "chord": "B7",
+                  "charIndex": 18
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "number": 1,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "     Хочеш я твоїм кольором буду,",
+              "chordPositions": [
+                {
+                  "chord": "Em",
+                  "charIndex": 5
+                },
+                {
+                  "chord": "D",
+                  "charIndex": 11
+                },
+                {
+                  "chord": "G",
+                  "charIndex": 20
+                },
+                {
+                  "chord": "Am",
+                  "charIndex": 27
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "     Восьмим кольором, восьмим чудом.",
+              "chordPositions": [
+                {
+                  "chord": "C",
+                  "charIndex": 6
+                },
+                {
+                  "chord": "G",
+                  "charIndex": 14
+                },
+                {
+                  "chord": "Am",
+                  "charIndex": 22
+                },
+                {
+                  "chord": "B7",
+                  "charIndex": 30
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "     Білим, я буду білим, як сніг,",
+              "chordPositions": [
+                {
+                  "chord": "Em",
+                  "charIndex": 5
+                },
+                {
+                  "chord": "D",
+                  "charIndex": 12
+                },
+                {
+                  "chord": "G",
+                  "charIndex": 19
+                },
+                {
+                  "chord": "Am",
+                  "charIndex": 29
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "     Якщо ти ним бути дозволиш мені.",
+              "chordPositions": [
+                {
+                  "chord": "C",
+                  "charIndex": 8
+                },
+                {
+                  "chord": "G",
+                  "charIndex": 17
+                },
+                {
+                  "chord": "Am",
+                  "charIndex": 25
+                },
+                {
+                  "chord": "B7",
+                  "charIndex": 33
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 3,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Дозволиш, я знаю, натягнуться струни,",
+              "chordPositions": [
+                {
+                  "chord": "Em",
+                  "charIndex": 3
+                },
+                {
+                  "chord": "G",
+                  "charIndex": 14
+                },
+                {
+                  "chord": "Am",
+                  "charIndex": 20
+                },
+                {
+                  "chord": "B7",
+                  "charIndex": 32
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Порвуться, і я полечу.",
+              "chordPositions": [
+                {
+                  "chord": "Em",
+                  "charIndex": 3
+                },
+                {
+                  "chord": "G",
+                  "charIndex": 13
+                },
+                {
+                  "chord": "Am",
+                  "charIndex": 19
+                },
+                {
+                  "chord": "B7",
+                  "charIndex": 21
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Я буду співати, у небі літаю,",
+              "chordPositions": [
+                {
+                  "chord": "Em",
+                  "charIndex": 2
+                },
+                {
+                  "chord": "G",
+                  "charIndex": 11
+                },
+                {
+                  "chord": "Am",
+                  "charIndex": 18
+                },
+                {
+                  "chord": "B7",
+                  "charIndex": 25
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "За мрію життям заплачу.",
+              "chordPositions": [
+                {
+                  "chord": "Em",
+                  "charIndex": 4
+                },
+                {
+                  "chord": "G",
+                  "charIndex": 11
+                },
+                {
+                  "chord": "Am",
+                  "charIndex": 20
+                },
+                {
+                  "chord": "B7",
+                  "charIndex": 22
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Я буду проміння за пальці тримати,",
+              "chordPositions": [
+                {
+                  "chord": "C",
+                  "charIndex": 3
+                },
+                {
+                  "chord": "Am",
+                  "charIndex": 19
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Гаряче, як жовті вогні.",
+              "chordPositions": [
+                {
+                  "chord": "D",
+                  "charIndex": 3
+                },
+                {
+                  "chord": "G",
+                  "charIndex": 19
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 4,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "І в губи безодню небес цілувати,",
+              "chordPositions": [
+                {
+                  "chord": "C",
+                  "charIndex": 5
+                },
+                {
+                  "chord": "Am",
+                  "charIndex": 19
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Ніхто не завадить мені.",
+              "chordPositions": [
+                {
+                  "chord": "C",
+                  "charIndex": 3
+                },
+                {
+                  "chord": "B7",
+                  "charIndex": 20
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "number": 2,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "     Хочеш я твоїм кольором буду,",
+              "chordPositions": [
+                {
+                  "chord": "Em",
+                  "charIndex": 5
+                },
+                {
+                  "chord": "D",
+                  "charIndex": 11
+                },
+                {
+                  "chord": "G",
+                  "charIndex": 20
+                },
+                {
+                  "chord": "Am",
+                  "charIndex": 27
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "     Восьмим кольором, восьмим чудом.",
+              "chordPositions": [
+                {
+                  "chord": "C",
+                  "charIndex": 6
+                },
+                {
+                  "chord": "G",
+                  "charIndex": 14
+                },
+                {
+                  "chord": "Am",
+                  "charIndex": 22
+                },
+                {
+                  "chord": "B7",
+                  "charIndex": 30
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "     Білим, я буду білим, як сніг,",
+              "chordPositions": [
+                {
+                  "chord": "Em",
+                  "charIndex": 5
+                },
+                {
+                  "chord": "D",
+                  "charIndex": 12
+                },
+                {
+                  "chord": "G",
+                  "charIndex": 19
+                },
+                {
+                  "chord": "Am",
+                  "charIndex": 29
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "     Якщо ти ним бути дозволиш мені.",
+              "chordPositions": [
+                {
+                  "chord": "C",
+                  "charIndex": 8
+                },
+                {
+                  "chord": "G",
+                  "charIndex": 17
+                },
+                {
+                  "chord": "Am",
+                  "charIndex": 25
+                },
+                {
+                  "chord": "B7",
+                  "charIndex": 33
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Ага, мила",
+      "author": "",
+      "category": "author",
+      "url": "https://pryvatri.de/avtorski/7-aha-myla",
+      "youtubeUrl": "https://www.youtube.com/watch?v=XZZ4euFX7Ck",
+      "structure": [
+        {
+          "type": "verse",
+          "number": 1,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Cиджу я край віконечка,",
+              "chordPositions": [
+                {
+                  "chord": "C",
+                  "charIndex": 4
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "На зорі споглядаю.",
+              "chordPositions": [
+                {
+                  "chord": "G7",
+                  "charIndex": 3
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 13
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Cиджу я край віконечка",
+              "chordPositions": [
+                {
+                  "chord": "C",
+                  "charIndex": 4
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Та й так собі гадаю:",
+              "chordPositions": [
+                {
+                  "chord": "G7",
+                  "charIndex": 3
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 17
+                },
+                {
+                  "chord": "C7",
+                  "charIndex": 19
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "number": 1,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "    Чи прийдеш, милий, ти чи ні,",
+              "chordPositions": [
+                {
+                  "chord": "F",
+                  "charIndex": 9
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Що часто так мені снишся.",
+              "chordPositions": [
+                {
+                  "chord": "C",
+                  "charIndex": 8
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Підходжу ближче до вікна,",
+              "chordPositions": [
+                {
+                  "chord": "C",
+                  "charIndex": 8
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    А ти стоїш смієшся.",
+              "chordPositions": [
+                {
+                  "chord": "G7",
+                  "charIndex": 6
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 18
+                },
+                {
+                  "chord": "C7",
+                  "charIndex": 22
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 2,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "«Ага, мила, ага, мила,",
+              "chordPositions": [
+                {
+                  "chord": "C",
+                  "charIndex": 3
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Як тяжко виглядати.",
+              "chordPositions": [
+                {
+                  "chord": "G7",
+                  "charIndex": 3
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 15
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Личко твоє помарніло,",
+              "chordPositions": [
+                {
+                  "chord": "C",
+                  "charIndex": 4
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Красоти не пізнати.",
+              "chordPositions": [
+                {
+                  "chord": "G7",
+                  "charIndex": 3
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 15
+                },
+                {
+                  "chord": "C7",
+                  "charIndex": 18
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "number": 2,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "    То ж дай, мила, уста свої,",
+              "chordPositions": [
+                {
+                  "chord": "F",
+                  "charIndex": 9
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Нехай ще раз поцілую,",
+              "chordPositions": [
+                {
+                  "chord": "C",
+                  "charIndex": 7
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Cерце моє горить вогнем,",
+              "chordPositions": [
+                {
+                  "chord": "C",
+                  "charIndex": 8
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Любов до тебе я чую.»",
+              "chordPositions": [
+                {
+                  "chord": "G7",
+                  "charIndex": 6
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 21
+                },
+                {
+                  "chord": "C7",
+                  "charIndex": 24
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 3,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Любов кохання мов той цвіт,",
+              "chordPositions": [
+                {
+                  "chord": "C",
+                  "charIndex": 3
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Що зрання розцвітає.",
+              "chordPositions": [
+                {
+                  "chord": "G7",
+                  "charIndex": 4
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 17
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Мов той метелик навесні –",
+              "chordPositions": [
+                {
+                  "chord": "C",
+                  "charIndex": 5
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Що зрання відлітає.",
+              "chordPositions": [
+                {
+                  "chord": "G7",
+                  "charIndex": 4
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 16
+                },
+                {
+                  "chord": "C7",
+                  "charIndex": 18
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "number": 3,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "    То ж бережіть серця свої,",
+              "chordPositions": [
+                {
+                  "chord": "F",
+                  "charIndex": 10
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Щоб не кохалися зрання,",
+              "chordPositions": [
+                {
+                  "chord": "C",
+                  "charIndex": 9
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Бо розцвітуть сади навесні,",
+              "chordPositions": [
+                {
+                  "chord": "C",
+                  "charIndex": 8
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Не вернеться кохання.",
+              "chordPositions": [
+                {
+                  "chord": "G7",
+                  "charIndex": 8
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 20
+                },
+                {
+                  "chord": "C7",
+                  "charIndex": 24
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Але ти не та",
+      "author": "",
+      "category": "author",
+      "url": "https://pryvatri.de/avtorski/314-ale-ty-ne-ta",
+      "youtubeUrl": "https://www.youtube.com/watch?v=KXs65UGrkbI",
+      "structure": [
+        {
+          "type": "verse",
+          "number": 1,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "В небеса замріяні кроки,",
+              "chordPositions": [
+                {
+                  "chord": "Am",
+                  "charIndex": 0
+                },
+                {
+                  "chord": "F",
+                  "charIndex": 7
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 15
+                },
+                {
+                  "chord": "E7",
+                  "charIndex": 19
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "А в солоний океан сльози.",
+              "chordPositions": [
+                {
+                  "chord": "Am",
+                  "charIndex": 0
+                },
+                {
+                  "chord": "F",
+                  "charIndex": 7
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 15
+                },
+                {
+                  "chord": "E7",
+                  "charIndex": 20
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Я би міг тебе кохать, доки",
+              "chordPositions": [
+                {
+                  "chord": "Am",
+                  "charIndex": 0
+                },
+                {
+                  "chord": "F",
+                  "charIndex": 6
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 16
+                },
+                {
+                  "chord": "E7",
+                  "charIndex": 22
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Сніг років не забілив коси.",
+              "chordPositions": [
+                {
+                  "chord": "Am",
+                  "charIndex": 0
+                },
+                {
+                  "chord": "F",
+                  "charIndex": 8
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 18
+                },
+                {
+                  "chord": "E7",
+                  "charIndex": 22
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "number": 1,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "     Але ти не та, але ти не та, ти не та.",
+              "chordPositions": [
+                {
+                  "chord": "Am",
+                  "charIndex": 5
+                },
+                {
+                  "chord": "F",
+                  "charIndex": 24
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 41
+                },
+                {
+                  "chord": "E7",
+                  "charIndex": 41
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "     Але ти лети, але ти лети, ти лети...",
+              "chordPositions": [
+                {
+                  "chord": "Am",
+                  "charIndex": 5
+                },
+                {
+                  "chord": "F",
+                  "charIndex": 23
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 40
+                },
+                {
+                  "chord": "E7",
+                  "charIndex": 40
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "     Але ти не та, але ти не та, ти не та.",
+              "chordPositions": [
+                {
+                  "chord": "Am",
+                  "charIndex": 5
+                },
+                {
+                  "chord": "F",
+                  "charIndex": 24
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 41
+                },
+                {
+                  "chord": "E7",
+                  "charIndex": 41
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "     Але ти лети, але ти лети, ти лети...",
+              "chordPositions": [
+                {
+                  "chord": "Am",
+                  "charIndex": 5
+                },
+                {
+                  "chord": "F",
+                  "charIndex": 23
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 40
+                },
+                {
+                  "chord": "E7",
+                  "charIndex": 40
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 2,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "І хай скрегочуть пліткарі всюди,",
+              "chordPositions": [
+                {
+                  "chord": "Am",
+                  "charIndex": 2
+                },
+                {
+                  "chord": "F",
+                  "charIndex": 10
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 23
+                },
+                {
+                  "chord": "E7",
+                  "charIndex": 27
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Білобокії рябі сороки.",
+              "chordPositions": [
+                {
+                  "chord": "Am",
+                  "charIndex": 0
+                },
+                {
+                  "chord": "F",
+                  "charIndex": 5
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 12
+                },
+                {
+                  "chord": "E7",
+                  "charIndex": 18
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Хай душа болить і рве груди.",
+              "chordPositions": [
+                {
+                  "chord": "Am",
+                  "charIndex": 0
+                },
+                {
+                  "chord": "F",
+                  "charIndex": 7
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 20
+                },
+                {
+                  "chord": "E7",
+                  "charIndex": 23
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Я себе не запитав: «Доки…",
+              "chordPositions": [
+                {
+                  "chord": "Am",
+                  "charIndex": 0
+                },
+                {
+                  "chord": "F",
+                  "charIndex": 5
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 15
+                },
+                {
+                  "chord": "E7",
+                  "charIndex": 21
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "number": 2,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "     ...Буду я таким, буду я таким, я таким, доки?»",
+              "chordPositions": [
+                {
+                  "chord": "Am",
+                  "charIndex": 8
+                },
+                {
+                  "chord": "F",
+                  "charIndex": 27
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 42
+                },
+                {
+                  "chord": "E7",
+                  "charIndex": 45
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "     Але ти лети, але ти лети, ти лети в далі.",
+              "chordPositions": [
+                {
+                  "chord": "Am",
+                  "charIndex": 5
+                },
+                {
+                  "chord": "F",
+                  "charIndex": 23
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 38
+                },
+                {
+                  "chord": "E7",
+                  "charIndex": 42
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "     На устах печать – буду я мовчать, я мовчать в докір.",
+              "chordPositions": [
+                {
+                  "chord": "Am",
+                  "charIndex": 5
+                },
+                {
+                  "chord": "F",
+                  "charIndex": 28
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 48
+                },
+                {
+                  "chord": "E7",
+                  "charIndex": 51
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "     Але ти лети, але ти лети, ти лети в далі.",
+              "chordPositions": [
+                {
+                  "chord": "Am",
+                  "charIndex": 5
+                },
+                {
+                  "chord": "F",
+                  "charIndex": 23
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 38
+                },
+                {
+                  "chord": "E7",
+                  "charIndex": 42
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 3,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "І хтось незримий жартома просто",
+              "chordPositions": [
+                {
+                  "chord": "Am",
+                  "charIndex": 0
+                },
+                {
+                  "chord": "F",
+                  "charIndex": 12
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 22
+                },
+                {
+                  "chord": "E7",
+                  "charIndex": 26
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Десь колись ховав моє щастя.",
+              "chordPositions": [
+                {
+                  "chord": "Am",
+                  "charIndex": 0
+                },
+                {
+                  "chord": "F",
+                  "charIndex": 8
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 19
+                },
+                {
+                  "chord": "E7",
+                  "charIndex": 22
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Я дарую тобі мрій простір,",
+              "chordPositions": [
+                {
+                  "chord": "Am",
+                  "charIndex": 0
+                },
+                {
+                  "chord": "F",
+                  "charIndex": 5
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 14
+                },
+                {
+                  "chord": "E7",
+                  "charIndex": 19
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Щоби в ниточці надій прястись.",
+              "chordPositions": [
+                {
+                  "chord": "Am",
+                  "charIndex": 0
+                },
+                {
+                  "chord": "F",
+                  "charIndex": 8
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 17
+                },
+                {
+                  "chord": "E7",
+                  "charIndex": 22
+                }
+              ],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "number": 3,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "     Але ти не та, але ти не та, ти не та.",
+              "chordPositions": [
+                {
+                  "chord": "Am",
+                  "charIndex": 5
+                },
+                {
+                  "chord": "F",
+                  "charIndex": 24
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 41
+                },
+                {
+                  "chord": "E7",
+                  "charIndex": 41
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "     Але ти лети, але ти лети, ти лети...",
+              "chordPositions": [
+                {
+                  "chord": "Am",
+                  "charIndex": 5
+                },
+                {
+                  "chord": "F",
+                  "charIndex": 23
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 40
+                },
+                {
+                  "chord": "E7",
+                  "charIndex": 40
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "     Але ти не та, але ти не та, ти не та.",
+              "chordPositions": [
+                {
+                  "chord": "Am",
+                  "charIndex": 5
+                },
+                {
+                  "chord": "F",
+                  "charIndex": 24
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 41
+                },
+                {
+                  "chord": "E7",
+                  "charIndex": 41
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "     Але ти лети, але ти лети, ти лети...",
+              "chordPositions": [
+                {
+                  "chord": "Am",
+                  "charIndex": 5
+                },
+                {
+                  "chord": "F",
+                  "charIndex": 23
+                },
+                {
+                  "chord": "C",
+                  "charIndex": 40
+                },
+                {
+                  "chord": "E7",
+                  "charIndex": 40
+                }
+              ],
+              "metadata": {
+                "isChorus": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Б'ютіфул Карпати",
+      "author": "",
+      "category": "author",
+      "url": "https://pryvatri.de/avtorski/22-beautiful-karpaty",
+      "youtubeUrl": "https://www.youtube.com/watch?v=M4HUq_eFHwk",
+      "structure": [
+        {
+          "type": "verse",
+          "number": 1,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Іду я плаєм в синю даль,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Висить Марічка на смерічці,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Парує сивий дим проваль,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Цвіте червлена ружа-чічка.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "number": 1,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "    Б'ютіфул Карпати!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Верховина, рідна мати,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Не дай же нам погибати!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Б'ютіфул Карпати!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 2,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "За небокраєм неба край,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Трембіти голос чути в лісі,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "А он ялинок ген розмай,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "І синьо-жовта фана в стрісі.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "number": 2,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "    Б'ютіфул Карпати!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Верховина, рідна мати,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Не дай же нам погибати!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Б'ютіфул Карпати!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 3,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Залазить п'яне сонце в річку,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Останній промінь свій кидає,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Іде Іванко до Марічки",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "І пісеньку співає.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "number": 3,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "    Б'ютіфул Карпати!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Верховина, рідна мати,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Не дай же нам погибати!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Б'ютіфул Карпати!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

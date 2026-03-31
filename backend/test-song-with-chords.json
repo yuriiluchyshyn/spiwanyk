@@ -1,0 +1,39 @@
+{
+  "title": "Тестова пісня з акордами",
+  "author": "Тест",
+  "category": "author",
+  "url": "test",
+  "youtubeUrl": "",
+  "structure": [
+    {
+      "type": "verse",
+      "number": 1,
+      "repeat": 1,
+      "lines": [
+        {
+          "text": "Я йшов по воді і назад озирався,",
+          "chordPositions": [
+            { "chord": "Em", "charIndex": 6 },
+            { "chord": "G", "charIndex": 18 },
+            { "chord": "Am", "charIndex": 25 },
+            { "chord": "B7", "charIndex": 31 }
+          ],
+          "metadata": {
+            "isChorus": false
+          }
+        },
+        {
+          "text": "А потім побачив тебе.",
+          "chordPositions": [
+            { "chord": "Em", "charIndex": 6 },
+            { "chord": "G", "charIndex": 15 },
+            { "chord": "Am", "charIndex": 20 }
+          ],
+          "metadata": {
+            "isChorus": false
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,172 @@
+.song-detail {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 0.5rem;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.detail-top {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  animation: fadeInUp 0.4s ease-out;
+}
+
+.back-link {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(196, 168, 130, 0.3);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--warm-gray);
+  text-decoration: none;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+.back-link:hover { border-color: var(--fire-orange); color: var(--fire-orange); }
+
+.detail-title { flex: 1; min-width: 0; }
+.detail-title h1 {
+  font-size: 1.3rem; color: var(--dark-brown);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.detail-author { font-size: 0.85rem; color: var(--warm-gray); font-style: italic; }
+
+.detail-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
+
+.detail-btn {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(196, 168, 130, 0.3);
+  background: transparent;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 1rem;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+.detail-btn.add { color: var(--fire-orange); border-color: rgba(232, 168, 124, 0.4); }
+.detail-btn.add:hover { background: var(--fire-orange); color: var(--cream-white); }
+.detail-btn.yt { color: var(--sunset-red); border-color: rgba(201, 123, 99, 0.3); }
+.detail-btn.yt:hover { background: var(--sunset-red); color: var(--cream-white); }
+
+.detail-toggle {
+  margin-bottom: 0.75rem;
+  display: inline-flex;
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Reuse toggle styles from SongList */
+.chords-toggle {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  cursor: pointer; padding: 0.5rem 0; user-select: none;
+}
+.chords-toggle input { display: none; }
+.toggle-slider {
+  width: 40px; height: 22px;
+  background: rgba(196, 168, 130, 0.3);
+  border-radius: 11px; position: relative;
+  transition: background 0.3s ease;
+}
+.toggle-slider::after {
+  content: ''; position: absolute;
+  width: 18px; height: 18px;
+  background: white; border-radius: 50%;
+  top: 2px; left: 2px;
+  transition: transform 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.chords-toggle input:checked + .toggle-slider { background: var(--fire-orange); }
+.chords-toggle input:checked + .toggle-slider::after { transform: translateX(18px); }
+.toggle-label { font-size: 0.85rem; color: var(--warm-gray); font-weight: 500; }
+
+.detail-content {
+  background: var(--cream-white);
+  border-radius: 14px;
+  border: 1px solid rgba(196, 168, 130, 0.2);
+  padding: 1.25rem;
+  min-height: 300px;
+  animation: fadeInUp 0.4s ease-out 0.1s backwards;
+}
+
+.detail-lyrics {
+  font-family: 'Georgia', serif;
+  font-size: 1rem; line-height: 1.8;
+  color: var(--dark-brown);
+  white-space: pre-wrap; word-wrap: break-word;
+  margin: 0;
+}
+.detail-lyrics.with-chords {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem; line-height: 1.6;
+}
+
+.swipe-hint {
+  text-align: center; font-size: 0.75rem;
+  color: var(--stone-gray); margin-top: 1rem; opacity: 0.5;
+}
+
+.loading, .error {
+  text-align: center; padding: 3rem 1rem;
+  color: var(--warm-gray); animation: fadeIn 0.4s ease-out;
+}
+.loading-icon { font-size: 2.5rem; color: var(--warm-amber); animation: spin 2s linear infinite; margin-bottom: 0.75rem; }
+.error h2 { color: var(--dark-brown); margin-bottom: 1rem; }
+
+@media (max-width: 768px) {
+  .detail-title h1 { font-size: 1.15rem; }
+  .detail-content { padding: 1rem; }
+}
+/* Метаінформація пісні */
+.song-metadata {
+  margin-top: 0.75rem;
+  padding: 1rem;
+  background: linear-gradient(145deg, #f8f6f0, #ede8dc);
+  border-radius: 8px;
+  border: 1px solid #e8dcc0;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.metadata-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.metadata-item:last-child {
+  margin-bottom: 0;
+}
+
+.metadata-label {
+  font-weight: 600;
+  color: var(--fire-orange);
+  min-width: 80px;
+  margin-right: 0.5rem;
+  font-family: 'Georgia', serif;
+}
+
+.metadata-value {
+  color: var(--dark-brown);
+  font-family: 'Georgia', serif;
+  font-style: italic;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .song-metadata {
+    padding: 0.75rem;
+    margin-top: 0.5rem;
+  }
+  
+  .metadata-item {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+  }
+  
+  .metadata-label {
+    min-width: auto;
+    margin-right: 0;
+    margin-bottom: 0.25rem;
+  }
+}
