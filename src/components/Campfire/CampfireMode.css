@@ -1,0 +1,496 @@
+/* Campfire Singing Mode - Optimized for outdoor reading and minimal scrolling */
+.campfire-mode {
+  max-width: 100%;
+  margin: 0;
+  padding: 0.5rem;
+  background: #1a1a1a; /* Dark background for better outdoor visibility */
+  min-height: 100vh;
+  color: #f5f5f5;
+}
+
+.campfire-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #ff6b35, #f7931e);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+}
+
+.back-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: white;
+  text-decoration: none;
+  font-size: 0.9rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.back-link:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.campfire-info h1 { 
+  font-size: 1.5rem; 
+  color: white; 
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+.campfire-info p { 
+  color: rgba(255,255,255,0.9); 
+  font-size: 0.9rem; 
+  margin: 0.25rem 0 0 0;
+}
+
+.campfire-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.chords-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+  padding: 0.25rem;
+}
+
+.chords-toggle input[type="checkbox"] {
+  display: none;
+}
+
+.toggle-slider {
+  width: 60px;
+  height: 32px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 16px;
+  position: relative;
+  transition: all 0.3s ease;
+  border: 2px solid rgba(255,255,255,0.3);
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  background: white;
+  border-radius: 50%;
+  top: 1px;
+  left: 1px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.chords-toggle input:checked + .toggle-slider {
+  background: rgba(255, 107, 53, 0.8);
+  border-color: rgba(255, 107, 53, 0.9);
+}
+
+.chords-toggle input:checked + .toggle-slider::before {
+  transform: translateX(28px);
+  background: #fff;
+}
+
+.toggle-label {
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.clear-btn {
+  display: flex; 
+  align-items: center; 
+  gap: 6px;
+  background: rgba(255,255,255,0.1);
+  color: white;
+  border: 1.5px solid rgba(255,255,255,0.3);
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer; 
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  min-height: 44px; /* Touch-friendly */
+}
+.clear-btn:hover { 
+  background: rgba(255,255,255,0.2); 
+  transform: translateY(-1px);
+}
+
+/* Empty campfire state */
+.empty-campfire {
+  text-align: center; 
+  padding: 4rem 2rem;
+  background: linear-gradient(135deg, #2d2d2d, #1a1a1a);
+  border-radius: 16px;
+  border: 2px solid #ff6b35;
+  margin: 2rem 0;
+}
+
+.campfire-icon { 
+  font-size: 4rem; 
+  margin-bottom: 1rem; 
+  animation: flicker 2s ease-in-out infinite;
+}
+
+@keyframes flicker {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.8; }
+}
+
+.empty-campfire h3 { 
+  color: #f5f5f5; 
+  margin-bottom: 0.75rem; 
+  font-size: 1.5rem;
+}
+.empty-campfire p { 
+  color: #cccccc; 
+  margin-bottom: 2rem; 
+  font-size: 1.1rem;
+  line-height: 1.5;
+}
+
+.browse-songs-btn {
+  display: inline-block;
+  background: linear-gradient(135deg, #ff6b35, #f7931e);
+  color: white;
+  padding: 16px 32px; 
+  border-radius: 12px;
+  text-decoration: none; 
+  font-weight: 600;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+  min-height: 44px;
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+}
+.browse-songs-btn:hover { 
+  transform: translateY(-2px); 
+  box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4); 
+}
+
+/* Campfire songs container - optimized for reading */
+.campfire-content {
+  background: transparent;
+}
+
+.campfire-songs {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.campfire-song {
+  background: linear-gradient(135deg, #2d2d2d, #1a1a1a);
+  border-radius: 16px;
+  border: 2px solid transparent;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.campfire-song.expanded {
+  border-color: #ff6b35;
+  box-shadow: 0 8px 24px rgba(255, 107, 53, 0.2);
+}
+
+.song-header {
+  display: flex;
+  align-items: center;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-height: 60px; /* Touch-friendly */
+}
+
+.song-header:hover {
+  background: rgba(255, 107, 53, 0.1);
+}
+
+.song-number {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #ff6b35, #f7931e);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  margin-right: 1rem;
+}
+
+.song-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.song-title {
+  color: #f5f5f5;
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+  line-height: 1.3;
+}
+
+.song-author {
+  color: #ff6b35;
+  font-size: 1rem;
+  margin: 0;
+  opacity: 0.9;
+}
+
+.song-performer {
+  color: #cccccc;
+  font-size: 0.9rem;
+  margin: 0.25rem 0 0 0;
+  opacity: 0.8;
+}
+
+.song-controls {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.move-btn, .expand-btn, .remove-btn {
+  width: 44px; 
+  height: 44px; /* Touch-friendly size */
+  border: none; 
+  border-radius: 12px;
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  cursor: pointer; 
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+  color: #cccccc;
+}
+
+.move-btn { 
+  background: rgba(255,255,255,0.1); 
+}
+.move-btn:hover:not(:disabled) { 
+  background: rgba(255,255,255,0.2); 
+  transform: scale(1.05); 
+  color: white;
+}
+.move-btn:disabled { 
+  opacity: 0.3; 
+  cursor: not-allowed; 
+}
+
+.expand-btn { 
+  background: rgba(255, 107, 53, 0.2); 
+  color: #ff6b35;
+}
+.expand-btn:hover { 
+  background: rgba(255, 107, 53, 0.3); 
+  transform: scale(1.05); 
+}
+
+.remove-btn { 
+  background: rgba(220, 53, 69, 0.2); 
+  color: #dc3545;
+}
+.remove-btn:hover { 
+  background: rgba(220, 53, 69, 0.3); 
+  transform: scale(1.05); 
+}
+
+/* Song content - optimized for campfire reading */
+.song-content {
+  padding: 0 1.25rem 1.25rem 1.25rem;
+  background: rgba(0,0,0,0.2);
+  border-top: 1px solid rgba(255, 107, 53, 0.2);
+}
+
+.song-youtube {
+  text-align: center;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 107, 53, 0.2);
+}
+
+.youtube-link {
+  color: #ff6b35;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.youtube-link:hover {
+  color: #f7931e;
+  text-decoration: underline;
+}
+
+/* Override FormattedSong styles for campfire mode */
+.campfire-song .formatted-song {
+  background: transparent !important;
+  border: none !important;
+  padding: 1rem 0 !important;
+  font-size: 1.2rem !important; /* Larger text for outdoor reading */
+  line-height: 1.8 !important; /* More spacing for readability */
+}
+
+.campfire-song .song-section {
+  margin-bottom: 1.5rem !important;
+  padding: 1rem !important;
+  background: rgba(255,255,255,0.05) !important;
+  border-radius: 12px !important;
+  border-left: 4px solid #ff6b35 !important;
+}
+
+.campfire-song .song-section.chorus {
+  background: rgba(255, 107, 53, 0.1) !important;
+  border-left-color: #f7931e !important;
+}
+
+.campfire-song .text-line {
+  color: #f5f5f5 !important;
+  font-size: 1.2rem !important;
+  line-height: 1.8 !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.campfire-song .chord-at-pixel-position {
+  color: #ff6b35 !important;
+  font-weight: bold !important;
+  font-size: 1rem !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important;
+}
+
+/* Mobile optimizations for campfire mode */
+@media (max-width: 768px) {
+  .campfire-mode {
+    padding: 0.25rem;
+  }
+  
+  .campfire-header { 
+    flex-direction: column; 
+    gap: 1rem; 
+    padding: 1rem 0.75rem;
+  }
+  
+  .campfire-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .song-header {
+    padding: 1rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  
+  .song-info {
+    width: 100%;
+    text-align: center;
+    margin: 0.5rem 0;
+  }
+  
+  .song-title {
+    font-size: 1.4rem;
+  }
+  
+  .song-author {
+    font-size: 1.1rem;
+  }
+  
+  .song-controls {
+    width: 100%;
+    justify-content: center;
+    gap: 1rem;
+  }
+  
+  .song-content {
+    padding: 1rem;
+  }
+  
+  .campfire-song .formatted-song {
+    font-size: 1.3rem !important; /* Even larger on mobile */
+    line-height: 2 !important;
+  }
+  
+  .campfire-song .text-line {
+    font-size: 1.3rem !important;
+    line-height: 2 !important;
+  }
+}
+
+/* Additional mobile optimizations for extreme readability */
+@media (max-width: 390px) {
+  .campfire-mode {
+    padding: 0.125rem;
+  }
+  
+  .campfire-header {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .campfire-info h1 {
+    font-size: 1.2rem;
+  }
+  
+  .song-title {
+    font-size: 1.1rem;
+  }
+  
+  .song-author {
+    font-size: 1rem;
+  }
+  
+  .campfire-song .formatted-song {
+    font-size: 1.5rem !important; /* Maximum readability on very small screens */
+    line-height: 2.4 !important;
+  }
+  
+  .campfire-song .text-line {
+    font-size: 1.5rem !important;
+    line-height: 2.4 !important;
+    margin-bottom: 0.75rem !important;
+  }
+  
+  .campfire-song .chord-at-pixel-position {
+    font-size: 1.1rem !important;
+  }
+}
+
+/* Landscape orientation optimizations */
+@media (max-height: 500px) and (orientation: landscape) {
+  .campfire-header {
+    padding: 0.5rem 1rem;
+  }
+  
+  .campfire-info h1 {
+    font-size: 1.1rem;
+  }
+  
+  .song-header {
+    padding: 0.75rem 1rem;
+  }
+  
+  .song-content {
+    padding: 0.75rem 1rem;
+  }
+  
+  .campfire-song .formatted-song {
+    font-size: 1.1rem !important;
+    line-height: 1.6 !important;
+  }
+  
+  .campfire-song .text-line {
+    font-size: 1.1rem !important;
+    line-height: 1.6 !important;
+    margin-bottom: 0.25rem !important;
+  }
+}

@@ -1,0 +1,59 @@
+.sections-nav {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 1rem;
+  background: rgba(196, 168, 130, 0.02);
+  border-bottom: 1px solid rgba(196, 168, 130, 0.1);
+}
+
+.section-btn {
+  padding: 8px 16px;
+  border: none;
+  background: rgba(196, 168, 130, 0.05);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--stone-gray);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  border-radius: 16px;
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.section-btn:hover {
+  background: rgba(196, 168, 130, 0.15);
+  color: var(--dark-brown);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.section-btn.active {
+  background: linear-gradient(135deg, var(--fire-orange), var(--warm-amber));
+  color: white;
+  font-weight: 600;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(232, 168, 124, 0.3);
+}
+
+.section-btn.drag-over {
+  background: rgba(59, 130, 246, 0.2);
+  border: 2px dashed #3b82f6;
+  transform: scale(1.05);
+}
+
+/* Мобільна адаптація */
+@media (max-width: 768px) {
+  .sections-nav {
+    padding: 0.75rem;
+    justify-content: center;
+  }
+  
+  .section-btn {
+    margin-right: 0.25rem;
+    margin-bottom: 0.25rem;
+    padding: 6px 12px;
+    font-size: 0.75rem;
+  }
+}

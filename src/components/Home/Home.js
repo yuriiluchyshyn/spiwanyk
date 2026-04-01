@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSongbook } from '../../contexts/SongbookContext';
 import { songbooksAPI } from '../../services/api';
-import { FiMusic, FiPlus, FiPlay, FiSkipForward, FiSkipBack, FiPause, FiMapPin, FiGlobe } from 'react-icons/fi';
+import { FiMusic, FiPlus, FiPlay, FiSkipForward, FiSkipBack, FiPause, FiMapPin, FiGlobe, FiEdit } from 'react-icons/fi';
 import CreateSongbookModal from '../Songbooks/CreateSongbookModal';
+import BookView from '../BookView/BookView';
 import LoadingSpinner from '../Common/LoadingSpinner';
 import './Home.css';
 
@@ -59,6 +60,7 @@ const Home = () => {
   const [publicSongbooks, setPublicSongbooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [bookSongbook, setBookSongbook] = useState(null); // для відкриття книги
 
   useEffect(() => {
     const load = async () => {
@@ -138,10 +140,20 @@ const Home = () => {
             <span>Новий співаник</span>
           </button>
           {songbooks.map(sb => (
-            <Link key={sb._id} to={'/songbooks/' + sb._id} className="sb-card">
-              <span className="sb-name">{sb.title}</span>
+            <div key={sb._id} className="sb-card" onClick={() => setBookSongbook(sb)}>
+              <div className="sb-header">
+                <span className="sb-name">{sb.title}</span>
+                <Link
+                  to={'/songbooks/' + sb._id}
+                  className="sb-edit-btn"
+                  onClick={(e) => e.stopPropagation()}
+                  title="Редагувати"
+                >
+                  <FiEdit />
+                </Link>
+              </div>
               <span className="sb-cnt">{sb.songs?.length || 0} пісень</span>
-            </Link>
+            </div>
           ))}
         </div>
       </section>
@@ -186,6 +198,13 @@ const Home = () => {
         <CreateSongbookModal
           onClose={() => setShowModal(false)}
           onSubmit={handleCreate}
+        />
+      )}
+
+      {bookSongbook && (
+        <BookView
+          onClose={() => setBookSongbook(null)}
+          songbookData={bookSongbook}
         />
       )}
     </div>

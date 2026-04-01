@@ -141,3 +141,29 @@
 @media (max-width: 768px) {
   .sb-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* Кнопка редагування на картці співаника */
+.sb-edit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background: rgba(196, 168, 130, 0.15);
+  color: var(--stone-gray);
+  text-decoration: none;
+  transition: all 0.3s;
+  flex-shrink: 0;
+  font-size: 0.75rem;
+}
+
+.sb-edit-btn:hover {
+  background: rgba(196, 168, 130, 0.3);
+  color: var(--dark-brown);
+  transform: scale(1.1);
+}
+
+.sb-card {
+  cursor: pointer;
+}

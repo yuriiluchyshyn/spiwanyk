@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { songbooksAPI } from '../../services/api';
-import { FiPlus, FiTrash2, FiEdit3, FiCheck, FiX } from 'react-icons/fi';
+import { FiPlus, FiTrash2, FiEdit3, FiCheck, FiX, FiBook } from 'react-icons/fi';
 import './SectionManager.css';
 
 const SectionManager = ({ songbook, onSectionAdded, onSectionRemoved, canEdit }) => {
@@ -69,7 +69,10 @@ const SectionManager = ({ songbook, onSectionAdded, onSectionRemoved, canEdit })
   return (
     <div className="section-manager">
       <div className="sections-header">
-        <h3>Розділи співаника</h3>
+        <h3>
+          <FiBook className="sec-icon" />
+          Розділи співаника
+        </h3>
         {canEdit && (
           <button 
             onClick={() => setIsAdding(true)}

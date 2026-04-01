@@ -1,0 +1,98 @@
+.songbook-header {
+  background: #ffffff;
+  padding: 1.5rem;
+  border-radius: 14px;
+  border: 1px solid rgba(196, 168, 130, 0.2);
+  margin-bottom: 1.5rem;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--fire-orange);
+  text-decoration: none;
+  margin-bottom: 1rem;
+  font-weight: 500;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+}
+
+.back-link:hover {
+  opacity: 0.7;
+}
+
+.songbook-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.songbook-title-section {
+  flex: 1;
+}
+
+.songbook-title-section h1 {
+  color: var(--dark-brown);
+  font-size: 1.05rem;
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.songbook-title-section .sec-icon {
+  color: var(--fire-orange);
+  font-size: 1rem;
+}
+
+.songbook-description {
+  color: var(--stone-gray);
+  font-size: 0.8rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.songbook-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+}
+
+.privacy-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background: rgba(196, 168, 130, 0.1);
+  border-radius: 12px;
+  color: var(--stone-gray);
+  font-weight: 500;
+}
+
+.owner {
+  color: var(--warm-gray);
+  font-style: italic;
+}
+
+/* Мобільна адаптація */
+@media (max-width: 768px) {
+  .songbook-info {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .songbook-title-section h1 {
+    font-size: 1rem;
+  }
+  
+  .songbook-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}

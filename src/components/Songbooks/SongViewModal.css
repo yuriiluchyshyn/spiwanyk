@@ -1,0 +1,240 @@
+.song-view-modal {
+  background: white;
+  border-radius: 12px;
+  width: 90vw;
+  max-width: 800px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.song-view-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+  gap: 1rem;
+}
+
+.song-view-modal .song-header-info h2 {
+  margin: 0 0 0.5rem 0;
+  color: #1f2937;
+  font-size: 1.5rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.song-view-modal .song-header-info .sec-icon {
+  color: #059669;
+  font-size: 1.25rem;
+}
+
+.song-view-modal .song-author {
+  margin: 0;
+  color: #6b7280;
+  font-size: 1rem;
+  font-style: italic;
+}
+
+.song-view-modal .modal-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.song-view-modal .chords-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.song-view-modal .chords-toggle-btn:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.song-view-modal .chords-toggle-btn.active {
+  background: #059669;
+  border-color: #047857;
+  color: white;
+}
+
+.song-view-modal .chords-toggle-btn.active:hover {
+  background: #047857;
+}
+
+.song-view-modal .close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.song-view-modal .close-btn:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
+.song-view-modal .modal-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+.song-view-modal .song-metadata {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.song-view-modal .metadata-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.song-view-modal .metadata-item:last-child {
+  margin-bottom: 0;
+}
+
+.song-view-modal .metadata-label {
+  font-weight: 600;
+  color: #475569;
+  min-width: 80px;
+}
+
+.song-view-modal .metadata-value {
+  color: #1e293b;
+}
+
+.song-view-modal .youtube-section {
+  margin-bottom: 1.5rem;
+}
+
+.song-view-modal .youtube-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #dc2626;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.song-view-modal .youtube-link:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+}
+
+.song-view-modal .song-content {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+}
+
+/* Адаптація FormattedSong для модального вікна */
+.song-view-modal .formatted-song {
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.song-view-modal .formatted-song .song-section {
+  margin-bottom: 1.5rem;
+}
+
+.song-view-modal .formatted-song .song-line {
+  margin-bottom: 0.75rem;
+}
+
+/* Мобільна адаптація */
+@media (max-width: 768px) {
+  .song-view-modal {
+    width: 95vw;
+    max-height: 95vh;
+    margin: 2.5vh auto;
+  }
+
+  .song-view-modal .modal-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .song-view-modal .modal-controls {
+    justify-content: space-between;
+  }
+
+  .song-view-modal .song-header-info h2 {
+    font-size: 1.25rem;
+  }
+
+  .song-view-modal .chords-toggle-btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .song-view-modal .modal-content {
+    padding: 1rem;
+  }
+
+  .song-view-modal .metadata-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .song-view-modal .metadata-label {
+    min-width: auto;
+    font-size: 0.875rem;
+  }
+}
+
+/* Анімації */
+.song-view-modal {
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}

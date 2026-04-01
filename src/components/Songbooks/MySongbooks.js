@@ -79,7 +79,10 @@ const MySongbooks = () => {
   return (
     <div className="my-songbooks">
       <div className="songbooks-header">
-        <h1>Мої співаники</h1>
+        <h1>
+          <FiBook className="sec-icon" />
+          Мої співаники
+        </h1>
         <button 
           onClick={() => setShowCreateModal(true)}
           className="create-btn"

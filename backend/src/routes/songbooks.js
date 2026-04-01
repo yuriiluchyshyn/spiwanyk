@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const { body, query, validationResult } = require('express-validator');
 const Songbook = require('../models/Songbook');
 const Song = require('../models/Song');
@@ -293,21 +294,38 @@ router.put('/:id', [
 // DELETE /api/songbooks/:id - Delete songbook
 router.delete('/:id', auth, async (req, res) => {
   try {
+    console.log('Delete songbook request:', {
+      songbookId: req.params.id,
+      userId: req.user._id,
+      userEmail: req.user.email
+    });
+
     const songbook = await Songbook.findById(req.params.id);
 
     if (!songbook) {
+      console.log('Delete songbook - not found:', req.params.id);
       return res.status(404).json({ message: 'Співаник не знайдено' });
     }
 
     // Check permissions
     if (songbook.owner.toString() !== req.user._id.toString()) {
+      console.log('Delete songbook - permission denied:', {
+        songbookOwner: songbook.owner,
+        requestUser: req.user._id
+      });
       return res.status(403).json({ message: 'Доступ заборонено' });
     }
+
+    console.log('Delete songbook - deleting:', {
+      songbookId: songbook._id,
+      songbookTitle: songbook.title
+    });
 
     // Soft delete
     songbook.isActive = false;
     await songbook.save();
 
+    console.log('Delete songbook - success');
     res.json({ message: 'Співаник видалено' });
 
   } catch (error) {
@@ -316,7 +334,7 @@ router.delete('/:id', auth, async (req, res) => {
     }
     
     console.error('Delete songbook error:', error);
-    res.status(500).json({ message: 'Помилка видалення співаника' });
+    res.status(500).json({ message: 'Внутрішня помилка сервера при видаленні співаника' });
   }
 });
 
@@ -324,7 +342,16 @@ router.delete('/:id', auth, async (req, res) => {
 router.post('/:id/songs', [
   auth,
   body('songId').notEmpty().isMongoId(),
-  body('sectionId').optional().isMongoId()
+  body('sectionId').optional().custom((value) => {
+    // Allow undefined, null, or valid MongoDB ObjectId
+    if (value === undefined || value === null || value === '') {
+      return true;
+    }
+    if (!mongoose.Types.ObjectId.isValid(value)) {
+      throw new Error('Invalid section ID');
+    }
+    return true;
+  })
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -336,6 +363,9 @@ router.post('/:id/songs', [
     }
 
     const { songId, sectionId } = req.body;
+    
+    // Normalize sectionId - convert empty string to undefined
+    const normalizedSectionId = sectionId && sectionId.trim() ? sectionId : undefined;
 
     const songbook = await Songbook.findById(req.params.id);
     if (!songbook || !songbook.isActive) {
@@ -344,25 +374,48 @@ router.post('/:id/songs', [
 
     // Check permissions
     const access = songbook.canAccess(req.user);
+    console.log('AddSong - Access check:', {
+      songbookId: songbook._id,
+      songbookTitle: songbook.title,
+      songbookOwner: songbook.owner,
+      songbookPrivacy: songbook.privacy,
+      userId: req.user._id,
+      userEmail: req.user.email,
+      access: access,
+      songId: songId,
+      normalizedSectionId: normalizedSectionId
+    });
+    
     if (!access.canAccess || access.permissions !== 'edit') {
+      console.log('AddSong - Permission denied:', { access, required: 'edit' });
       return res.status(403).json({ message: 'Недостатньо прав для редагування' });
     }
 
     // Check if song exists
     const song = await Song.findById(songId);
     if (!song) {
+      console.log('AddSong - Song not found:', songId);
       return res.status(404).json({ message: 'Пісню не знайдено' });
     }
 
     // Check if section exists (if provided)
-    if (sectionId) {
-      const section = songbook.sections.id(sectionId);
+    if (normalizedSectionId) {
+      const section = songbook.sections.id(normalizedSectionId);
       if (!section) {
         return res.status(404).json({ message: 'Розділ не знайдено' });
       }
     }
 
-    await songbook.addSong(songId, sectionId, req.user._id);
+    console.log('AddSong - About to add song:', {
+      songId: songId,
+      songTitle: song.title,
+      normalizedSectionId: normalizedSectionId,
+      userId: req.user._id
+    });
+
+    await songbook.addSong(songId, normalizedSectionId, req.user._id);
+
+    console.log('AddSong - Successfully added song');
 
     res.json({
       message: 'Пісню додано до співаника',
@@ -379,7 +432,7 @@ router.post('/:id/songs', [
     }
     
     console.error('Add song to songbook error:', error);
-    res.status(500).json({ message: 'Помилка додавання пісні' });
+    res.status(500).json({ message: 'Внутрішня помилка сервера при додаванні пісні' });
   }
 });
 
@@ -593,7 +646,18 @@ router.get('/:id/available-songs', [
 
     // Check permissions
     const access = songbook.canAccess(req.user);
+    console.log('GetAvailableSongs - Access check:', {
+      songbookId: songbook._id,
+      songbookTitle: songbook.title,
+      songbookOwner: songbook.owner,
+      songbookPrivacy: songbook.privacy,
+      userId: req.user._id,
+      userEmail: req.user.email,
+      access: access
+    });
+    
     if (!access.canAccess || access.permissions !== 'edit') {
+      console.log('GetAvailableSongs - Permission denied:', { access, required: 'edit' });
       return res.status(403).json({ message: 'Недостатньо прав для редагування' });
     }
 
@@ -630,6 +694,13 @@ router.get('/:id/available-songs', [
       .skip(parseInt(skip));
 
     const total = await Song.countDocuments(query);
+
+    console.log('GetAvailableSongs - Query result:', {
+      query: query,
+      songsFound: songs.length,
+      totalAvailable: total,
+      existingSongIds: existingSongIds.length
+    });
 
     res.json({
       songs,

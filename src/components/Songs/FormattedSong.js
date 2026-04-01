@@ -1,16 +1,16 @@
 import React from 'react';
 import './FormattedSong.css';
 
-const FormattedSong = ({ song, showChords }) => {
+const FormattedSong = ({ song, showChords, isModal = false }) => {
   if (!song) return <div className="no-lyrics">Пісня не знайдена</div>;
 
   if (song.structure && song.structure.length > 0) {
-    return renderStructuredSong(song.structure, showChords);
+    return renderStructuredSong(song.structure, showChords, isModal);
   }
 
   if (!song.lyrics) return <div className="no-lyrics">Текст пісні відсутній</div>;
 
-  return renderLegacySong(song);
+  return renderLegacySong(song, isModal);
 };
 
 // Рендер рядка з точним позиціонуванням акордів по пікселях
@@ -98,9 +98,9 @@ const calculateCharPosition = (chars, charIndex) => {
 };
 
 // Структурована пісня
-const renderStructuredSong = (structure, showChords) => {
+const renderStructuredSong = (structure, showChords, isModal = false) => {
   return (
-    <div className="formatted-song structured">
+    <div className={`formatted-song structured ${isModal ? 'modal-view' : ''}`}>
       {structure.map((section, si) => {
         const isChorus = section.type === 'chorus' ||
           section.lines.some(l => l.isChorus);
@@ -120,11 +120,11 @@ const renderStructuredSong = (structure, showChords) => {
 };
 
 // Legacy пісня
-const renderLegacySong = (song) => {
+const renderLegacySong = (song, isModal = false) => {
   const lines = (song.lyrics || '').split('\n');
 
   return (
-    <div className="formatted-song legacy">
+    <div className={`formatted-song legacy ${isModal ? 'modal-view' : ''}`}>
       {lines.map((line, i) => {
         const trimmed = line.trim();
         if (!trimmed) return <div key={i} className="song-line empty-line" />;

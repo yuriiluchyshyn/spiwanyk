@@ -1,0 +1,39 @@
+.empty-section {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--warm-gray);
+}
+
+.empty-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  opacity: 0.5;
+}
+
+.empty-section h3 {
+  margin-bottom: 1rem;
+  color: var(--stone-gray);
+  font-weight: 500;
+}
+
+.add-first-song-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, var(--fire-orange), var(--warm-amber));
+  color: var(--cream-white);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.add-first-song-btn:hover {
+  background: linear-gradient(135deg, #e8a87c, #d4a574);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}

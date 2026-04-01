@@ -122,3 +122,51 @@
     top: -1.2em;
   }
 }
+
+/* Стилі для модального режиму */
+.formatted-song.modal-view {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  max-height: none;
+}
+
+.formatted-song.modal-view .song-section {
+  margin-bottom: 1.5rem;
+}
+
+.formatted-song.modal-view .song-line {
+  margin-bottom: 0.4rem;
+}
+
+.formatted-song.modal-view .text-line {
+  font-size: 1.1rem;
+}
+
+.formatted-song.modal-view .chord-at-pixel-position {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.formatted-song.modal-view .line-with-pixel-chords.show-chords {
+  margin-top: 1.3em;
+}
+
+.formatted-song.modal-view .chords-container {
+  top: -1.4em;
+}
+
+/* Мобільна адаптація для модального режиму */
+@media (max-width: 768px) {
+  .formatted-song.modal-view {
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+  
+  .formatted-song.modal-view .text-line {
+    font-size: 1rem;
+  }
+  
+  .formatted-song.modal-view .chord-at-pixel-position {
+    font-size: 0.8rem;
+  }
+}

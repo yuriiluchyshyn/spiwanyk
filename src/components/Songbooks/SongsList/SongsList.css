@@ -1,0 +1,9 @@
+.songs-list {
+  background: white;
+  border-radius: 0 0 14px 14px;
+  overflow: hidden;
+}
+
+.songs-list .song-item:last-child {
+  border-bottom: none;
+}

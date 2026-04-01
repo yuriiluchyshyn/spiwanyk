@@ -1,6 +1,8 @@
+/* Простий дизайн в стилі головної сторінки */
 .my-songbooks {
-  max-width: 1000px;
+  max-width: 700px;
   margin: 0 auto;
+  padding: 0.5rem;
   animation: fadeIn 0.4s ease-out;
 }
 
@@ -8,124 +10,128 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
+  margin-bottom: 1.5rem;
   animation: fadeInUp 0.5s ease-out;
 }
 
 .songbooks-header h1 {
   color: var(--dark-brown);
+  font-size: 1.05rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .create-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   background: linear-gradient(135deg, var(--fire-orange), var(--warm-amber));
   color: var(--cream-white);
   border: none;
-  padding: 12px 20px;
-  border-radius: 8px;
-  font-size: 1rem;
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 12px rgba(232, 168, 124, 0.3);
 }
 
 .create-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(232, 168, 124, 0.4);
-}
-
-.create-btn.primary {
-  padding: 15px 25px;
-  font-size: 1.1rem;
+  box-shadow: 0 6px 20px rgba(232,168,124,0.4);
 }
 
 .empty-state {
   text-align: center;
-  padding: 80px 20px;
-  background: var(--cream-white);
-  border-radius: 12px;
-  box-shadow: 0 2px 16px var(--card-shadow);
-  border: 1px solid rgba(196, 168, 130, 0.2);
+  padding: 2rem 1rem;
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid rgba(196,168,130,0.2);
   animation: fadeInUp 0.5s ease-out;
 }
 
 .empty-icon {
-  font-size: 4rem;
+  font-size: 2rem;
   color: var(--warm-amber);
-  margin-bottom: 20px;
+  margin-bottom: 0.5rem;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
   animation: float 3s ease-in-out infinite;
 }
 
 .empty-state h3 {
   color: var(--dark-brown);
-  margin-bottom: 10px;
-  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
 }
 
 .empty-state p {
   color: var(--warm-gray);
-  margin-bottom: 30px;
+  margin-bottom: 0.5rem;
   line-height: 1.5;
+  font-size: 0.9rem;
 }
 
+/* Простий грід як на головній */
 .songbooks-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
 }
 
 .songbook-card {
-  background: var(--cream-white);
-  border-radius: 12px;
-  box-shadow: 0 2px 12px var(--card-shadow);
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid rgba(196,168,130,0.2);
   overflow: hidden;
   transition: all 0.3s ease;
-  border: 1px solid rgba(196, 168, 130, 0.2);
   animation: fadeInUp 0.4s ease-out backwards;
+  text-decoration: none;
+  color: inherit;
+  display: block;
 }
 
-.songbook-card:nth-child(1) { animation-delay: 0.05s; }
+.songbook-card:nth-child(1) { animation-delay: 0s; }
 .songbook-card:nth-child(2) { animation-delay: 0.1s; }
 .songbook-card:nth-child(3) { animation-delay: 0.15s; }
 .songbook-card:nth-child(4) { animation-delay: 0.2s; }
 
 .songbook-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px var(--card-shadow);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px var(--card-shadow);
 }
 
 .songbook-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 20px;
-  background: var(--soft-beige);
-  border-bottom: 1px solid rgba(196, 168, 130, 0.2);
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(196,168,130,0.1);
 }
 
 .privacy-badge {
   display: flex;
   align-items: center;
-  gap: 6px;
-  background: rgba(137, 180, 212, 0.15);
-  color: var(--mountain-blue);
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 0.8rem;
+  gap: 4px;
+  background: rgba(196,168,130,0.1);
+  color: var(--stone-gray);
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-size: 0.7rem;
   font-weight: 500;
 }
 
 .songbook-actions {
   display: flex;
-  gap: 8px;
+  gap: 4px;
 }
 
 .action-btn {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border: none;
   border-radius: 6px;
   display: flex;
@@ -134,92 +140,92 @@
   cursor: pointer;
   transition: all 0.3s ease;
   text-decoration: none;
+  font-size: 0.8rem;
 }
 
 .action-btn.edit {
-  background: var(--mountain-blue);
-  color: var(--cream-white);
+  background: rgba(196,168,130,0.1);
+  color: var(--stone-gray);
 }
 
 .action-btn.edit:hover {
-  transform: scale(1.1);
-  box-shadow: 0 2px 8px rgba(137, 180, 212, 0.4);
+  background: rgba(196,168,130,0.2);
+  transform: scale(1.05);
 }
 
 .action-btn.delete {
-  background: var(--sunset-red);
-  color: var(--cream-white);
+  background: rgba(201,123,99,0.1);
+  color: var(--sunset-red);
 }
 
 .action-btn.delete:hover {
-  transform: scale(1.1);
-  box-shadow: 0 2px 8px rgba(201, 123, 99, 0.4);
+  background: rgba(201,123,99,0.2);
+  transform: scale(1.05);
 }
 
 .songbook-content {
-  padding: 20px;
-  text-decoration: none;
-  color: inherit;
-  display: block;
+  padding: 1rem;
 }
 
 .songbook-content h3 {
   color: var(--dark-brown);
-  margin-bottom: 10px;
-  font-size: 1.3rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
 }
 
 .songbook-description {
   color: var(--warm-gray);
   line-height: 1.4;
-  margin-bottom: 15px;
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
 }
 
 .songbook-stats {
   display: flex;
-  gap: 15px;
-  margin-bottom: 15px;
-  font-size: 0.9rem;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
   color: var(--stone-gray);
 }
 
 .sections-preview {
   display: flex;
-  gap: 8px;
+  gap: 4px;
   flex-wrap: wrap;
 }
 
 .section-tag {
-  background: var(--fire-glow);
-  color: var(--fire-orange);
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 0.8rem;
+  background: rgba(196,168,130,0.1);
+  color: var(--stone-gray);
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-size: 0.7rem;
   font-weight: 500;
 }
 
 .section-tag.more {
-  background: rgba(196, 168, 130, 0.15);
+  background: rgba(196,168,130,0.15);
   color: var(--warm-gray);
 }
 
 .loading {
   text-align: center;
-  padding: 60px 20px;
+  padding: 2rem 1rem;
   color: var(--warm-gray);
 }
 
 .loading-icon {
-  font-size: 3rem;
+  font-size: 2rem;
   color: var(--warm-amber);
-  margin-bottom: 20px;
+  margin-bottom: 0.5rem;
   animation: spin 2s linear infinite;
 }
 
 @media (max-width: 768px) {
   .songbooks-header {
     flex-direction: column;
-    gap: 15px;
+    gap: 0.75rem;
     align-items: stretch;
   }
   
@@ -228,18 +234,14 @@
   }
   
   .songbooks-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
   
   .songbook-header {
-    padding: 12px 15px;
+    padding: 0.5rem 0.75rem;
   }
   
   .songbook-content {
-    padding: 15px;
-  }
-  
-  .songbook-stats {
-    justify-content: center;
+    padding: 0.75rem;
   }
 }
