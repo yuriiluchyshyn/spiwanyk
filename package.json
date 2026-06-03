@@ -29,7 +29,7 @@
     "kill-port": "lsof -ti:3001 | xargs kill -9 2>/dev/null || true",
     "setup": "npm install && cd backend && npm install",
     "clean": "rm -rf node_modules package-lock.json && rm -rf backend/node_modules backend/package-lock.json && npm install && cd backend && npm install",
-    "vercel-build": "npm run build"
+    "vercel-build": "cd backend && npm install && cd .. && npm run build"
   },
   "eslintConfig": {
     "extends": [

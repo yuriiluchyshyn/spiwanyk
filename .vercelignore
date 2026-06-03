@@ -1,4 +1,5 @@
-backend/
+backend/node_modules/
+backend/.env
 node_modules/
 .env.local
 .env.development.local
