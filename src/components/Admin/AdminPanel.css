@@ -1,0 +1,260 @@
+.admin-panel {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.admin-panel h1 {
+  font-size: 1.4rem;
+  color: var(--dark-brown);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Auth section */
+.admin-auth {
+  background: #fff;
+  border-radius: 14px;
+  padding: 2rem;
+  border: 1px solid rgba(196, 168, 130, 0.2);
+  text-align: center;
+}
+
+.admin-auth h2 {
+  font-size: 1.1rem;
+  color: var(--dark-brown);
+  margin-bottom: 1rem;
+}
+
+.admin-auth input {
+  width: 100%;
+  max-width: 300px;
+  padding: 0.7rem 1rem;
+  border: 1px solid rgba(196, 168, 130, 0.3);
+  border-radius: 10px;
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.admin-auth input:focus {
+  border-color: var(--fire-orange);
+}
+
+.admin-auth button {
+  display: block;
+  margin: 0 auto;
+  padding: 0.65rem 1.5rem;
+  background: linear-gradient(135deg, var(--fire-orange), var(--warm-amber));
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.admin-auth button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(232, 168, 124, 0.4);
+}
+
+/* Actions section */
+.admin-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-import {
+  padding: 0.65rem 1.25rem;
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-import:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+}
+
+.btn-delete-all {
+  padding: 0.65rem 1.25rem;
+  background: linear-gradient(135deg, #dc3545, #e74c3c);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-delete-all:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+}
+
+.btn-refresh {
+  padding: 0.65rem 1.25rem;
+  background: linear-gradient(135deg, #6c757d, #495057);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-refresh:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
+}
+
+.admin-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Status message */
+.admin-status {
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.admin-status.success {
+  background: rgba(40, 167, 69, 0.1);
+  border: 1px solid rgba(40, 167, 69, 0.3);
+  color: #155724;
+}
+
+.admin-status.error {
+  background: rgba(220, 53, 69, 0.1);
+  border: 1px solid rgba(220, 53, 69, 0.3);
+  color: #721c24;
+}
+
+.admin-status.info {
+  background: rgba(0, 123, 255, 0.1);
+  border: 1px solid rgba(0, 123, 255, 0.3);
+  color: #004085;
+}
+
+/* Song list */
+.admin-song-list {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid rgba(196, 168, 130, 0.2);
+  overflow: hidden;
+}
+
+.admin-song-list-header {
+  padding: 0.75rem 1rem;
+  background: rgba(196, 168, 130, 0.08);
+  border-bottom: 1px solid rgba(196, 168, 130, 0.15);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--dark-brown);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.admin-song-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid rgba(196, 168, 130, 0.1);
+  transition: background 0.2s;
+}
+
+.admin-song-item:last-child {
+  border-bottom: none;
+}
+
+.admin-song-item:hover {
+  background: rgba(196, 168, 130, 0.05);
+}
+
+.admin-song-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-song-title {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--dark-brown);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-song-meta {
+  font-size: 0.75rem;
+  color: var(--warm-gray);
+  margin-top: 0.15rem;
+}
+
+.admin-song-category {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  background: rgba(232, 168, 124, 0.15);
+  color: var(--fire-orange);
+  font-weight: 500;
+}
+
+.btn-delete-song {
+  padding: 0.4rem 0.7rem;
+  background: transparent;
+  border: 1px solid rgba(220, 53, 69, 0.3);
+  color: #dc3545;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: 0.75rem;
+  white-space: nowrap;
+}
+
+.btn-delete-song:hover {
+  background: rgba(220, 53, 69, 0.1);
+  border-color: #dc3545;
+}
+
+.admin-empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--warm-gray);
+  font-size: 0.9rem;
+}
+
+/* Loading */
+.admin-loading {
+  text-align: center;
+  padding: 2rem;
+  color: var(--warm-gray);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

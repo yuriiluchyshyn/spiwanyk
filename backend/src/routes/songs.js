@@ -114,6 +114,201 @@ router.get('/search', [
   }
 });
 
+// GET /api/songs/categories - Get available categories
+router.get('/meta/categories', (req, res) => {
+  const categories = [
+    { value: 'patriotic', label: 'Патріотичні' },
+    { value: 'camp', label: 'Табірні' },
+    { value: 'religious', label: 'Релігійні' },
+    { value: 'folk', label: 'Народні' },
+    { value: 'modern', label: 'Сучасні' },
+    { value: 'other', label: 'Інші' }
+  ];
+
+  res.json({ categories });
+});
+
+// ============================================================
+// HIDDEN ADMIN ENDPOINTS (before /:id to avoid route conflicts)
+// ============================================================
+const fs = require('fs').promises;
+const path = require('path');
+const User = require('../models/User');
+
+// Helper: перевірка секретного ключа (вимкнено — відкритий доступ)
+function checkAdminSecret(req) {
+  return true;
+}
+
+// GET /api/songs/admin/list - список пісень для адмін-панелі
+router.get('/admin/list', async (req, res) => {
+  try {
+    if (!checkAdminSecret(req)) {
+      return res.status(404).json({ message: 'Маршрут не знайдено' });
+    }
+
+    const songs = await Song.find({})
+      .select('title author category createdAt tags')
+      .sort({ createdAt: -1 });
+
+    res.json({ songs, total: songs.length });
+  } catch (error) {
+    console.error('Admin list songs error:', error);
+    res.status(500).json({ message: 'Помилка отримання списку', error: error.message });
+  }
+});
+
+// POST /api/songs/import-from-json - імпорт пісень
+router.post('/import-from-json', async (req, res) => {
+  try {
+    if (!checkAdminSecret(req)) {
+      return res.status(404).json({ message: 'Маршрут не знайдено' });
+    }
+
+    // Читаємо JSON файл
+    const jsonPath = path.join(__dirname, '../../data/latest-songs.json');
+    const jsonData = await fs.readFile(jsonPath, 'utf8');
+    const data = JSON.parse(jsonData);
+
+    if (!data.songs || !Array.isArray(data.songs)) {
+      return res.status(400).json({ message: 'Невірний формат JSON файлу' });
+    }
+
+    // Знаходимо або створюємо користувача для імпорту
+    let importUser = await User.findOne({ email: 'import@plast.org' });
+    if (!importUser) {
+      importUser = new User({
+        email: 'import@plast.org',
+        name: 'JSON Import User'
+      });
+      await importUser.save();
+    }
+
+    const categoryMap = {
+      'author': 'author',
+      'plast': 'plast',
+      'uprising': 'uprising',
+      'folk': 'folk',
+      'lemko': 'lemko',
+      'christmas': 'christmas'
+    };
+
+    let imported = 0;
+    let skipped = 0;
+    const errors = [];
+
+    for (const songData of data.songs) {
+      try {
+        const existingSong = await Song.findOne({ title: songData.title });
+        if (existingSong) {
+          skipped++;
+          continue;
+        }
+
+        const structure = (songData.structure || []).map(section => ({
+          type: section.type,
+          number: section.number,
+          repeat: section.repeat || 1,
+          lines: (section.lines || []).map(line => ({
+            text: line.text,
+            chordPositions: (line.chordPositions || line.chords || []).map(chord => ({
+              chord: chord.chord,
+              charIndex: chord.charIndex != null ? chord.charIndex : (chord.position != null ? chord.position : 0)
+            })),
+            isChorus: line.metadata?.isChorus || false
+          }))
+        }));
+
+        const lyrics = structure.map(section => {
+          const sectionTitle = section.type === 'chorus' ? 'Приспів:' : `Куплет ${section.number}:`;
+          const lines = section.lines.map(line => line.text).join('\n');
+          return `${sectionTitle}\n${lines}`;
+        }).join('\n\n');
+
+        const newSong = new Song({
+          title: songData.title || 'Без назви',
+          author: songData.author || 'Невідомий',
+          lyrics: lyrics,
+          chords: '',
+          structure: structure,
+          youtubeUrl: songData.youtubeUrl || '',
+          category: categoryMap[songData.category] || 'folk',
+          tags: [songData.category, 'imported', 'structured'].filter(Boolean),
+          isPublic: true,
+          createdBy: importUser._id,
+          sourceUrl: songData.url || '',
+          metadata: {
+            words: songData.metadata?.words || '',
+            music: songData.metadata?.music || '',
+            performer: songData.metadata?.performer || ''
+          }
+        });
+
+        await newSong.save();
+        imported++;
+      } catch (err) {
+        errors.push({ title: songData.title, error: err.message });
+      }
+    }
+
+    const totalInDb = await Song.countDocuments();
+
+    res.json({
+      message: 'Імпорт завершено',
+      results: {
+        totalInFile: data.songs.length,
+        imported,
+        skipped,
+        errors: errors.length,
+        totalInDatabase: totalInDb
+      },
+      ...(errors.length > 0 && { errors })
+    });
+
+  } catch (error) {
+    console.error('Import from JSON error:', error);
+    res.status(500).json({ message: 'Помилка імпорту', error: error.message });
+  }
+});
+
+// DELETE /api/songs/admin/all - видалити ВСІ пісні
+router.delete('/admin/all', async (req, res) => {
+  try {
+    if (!checkAdminSecret(req)) {
+      return res.status(404).json({ message: 'Маршрут не знайдено' });
+    }
+
+    const result = await Song.deleteMany({});
+    res.json({ message: 'Всі пісні видалено', deletedCount: result.deletedCount });
+  } catch (error) {
+    console.error('Delete all songs error:', error);
+    res.status(500).json({ message: 'Помилка видалення', error: error.message });
+  }
+});
+
+// DELETE /api/songs/admin/:id - видалити одну пісню (без перевірки прав)
+router.delete('/admin/:id', async (req, res) => {
+  try {
+    if (!checkAdminSecret(req)) {
+      return res.status(404).json({ message: 'Маршрут не знайдено' });
+    }
+
+    const song = await Song.findByIdAndDelete(req.params.id);
+    if (!song) {
+      return res.status(404).json({ message: 'Пісню не знайдено' });
+    }
+
+    res.json({ message: 'Пісню видалено', song: { id: song._id, title: song.title } });
+  } catch (error) {
+    console.error('Admin delete song error:', error);
+    res.status(500).json({ message: 'Помилка видалення', error: error.message });
+  }
+});
+
+// ============================================================
+// END ADMIN ENDPOINTS
+// ============================================================
+
 // GET /api/songs/:id - Get song by ID
 router.get('/:id', optionalAuth, async (req, res) => {
   try {
@@ -288,20 +483,6 @@ router.delete('/:id', auth, async (req, res) => {
     console.error('Delete song error:', error);
     res.status(500).json({ message: 'Помилка видалення пісні' });
   }
-});
-
-// GET /api/songs/categories - Get available categories
-router.get('/meta/categories', (req, res) => {
-  const categories = [
-    { value: 'patriotic', label: 'Патріотичні' },
-    { value: 'camp', label: 'Табірні' },
-    { value: 'religious', label: 'Релігійні' },
-    { value: 'folk', label: 'Народні' },
-    { value: 'modern', label: 'Сучасні' },
-    { value: 'other', label: 'Інші' }
-  ];
-
-  res.json({ categories });
 });
 
 module.exports = router;
