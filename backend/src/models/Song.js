@@ -66,7 +66,6 @@ const songSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['author', 'plast', 'uprising', 'cossack', 'lemko', 'folk', 'christmas', 'carols', 'hymns'],
     default: 'folk'
   },
   tags: [{

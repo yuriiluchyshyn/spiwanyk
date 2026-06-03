@@ -1,153 +1,70 @@
-import React, { useState, useEffect } from 'react';
-import { songbooksAPI, songsAPI } from '../../services/api';
-import { FiX, FiSearch, FiPlus, FiMusic, FiCheck } from 'react-icons/fi';
+import React, { useState, useMemo } from 'react';
+import { songbooksAPI } from '../../services/api';
+import { FiX, FiMusic } from 'react-icons/fi';
+import SongBrowser from '../Songs/SongBrowser';
 import './AddSongsModal.css';
 
 const AddSongsModal = ({ songbook, isOpen, onClose, onSongAdded }) => {
-  const [availableSongs, setAvailableSongs] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedSection, setSelectedSection] = useState('');
   const [addingSongs, setAddingSongs] = useState(new Set());
+  const [addedSongs, setAddedSongs] = useState(new Set());
+  const [removedSongs, setRemovedSongs] = useState(new Set());
+  const [removingSongs, setRemovingSongs] = useState(new Set());
+  const [selectedSection, setSelectedSection] = useState('');
 
-  useEffect(() => {
-    if (isOpen && songbook) {
-      console.log('Modal opened for songbook:', songbook);
-      loadAvailableSongs();
+  // Songs already in songbook — show as "added" but don't hide them
+  const alreadyInSongbook = useMemo(() => {
+    const ids = new Set();
+    if (songbook?.songs) {
+      songbook.songs.forEach(s => {
+        const songId = s.song?._id || s.song;
+        if (songId) ids.add(songId);
+      });
     }
-  }, [isOpen, songbook, searchQuery]);
+    return ids;
+  }, [songbook]);
 
-  const loadAvailableSongs = async () => {
-    if (!songbook) return;
-    
-    setLoading(true);
-    try {
-      console.log('Loading available songs for songbook:', songbook._id);
-      const params = {};
-      if (searchQuery.trim()) {
-        params.search = searchQuery.trim();
-      }
-      
-      const data = await songbooksAPI.getAvailableSongs(songbook._id, params);
-      console.log('Available songs response:', data);
-      setAvailableSongs(data.songs || []);
-    } catch (error) {
-      console.error('Error loading available songs:', error);
-      // Fallback: load all songs and filter out already added ones
-      try {
-        console.log('Fallback: loading all songs');
-        const allSongs = await songsAPI.getAll();
-        console.log('All songs:', allSongs);
-        
-        // Filter out songs that are already in the songbook
-        const songbookSongIds = new Set(songbook.songs?.map(s => {
-          const songId = s.song?._id || s.song;
-          console.log('Songbook song ID:', songId);
-          return songId;
-        }) || []);
-        console.log('Songbook song IDs:', Array.from(songbookSongIds));
-        
-        const availableSongs = allSongs.filter(song => {
-          const isAlreadyAdded = songbookSongIds.has(song._id);
-          console.log(`Song ${song.title} (${song._id}): already added = ${isAlreadyAdded}`);
-          return !isAlreadyAdded;
-        });
-        
-        // Apply search filter if needed
-        let filteredSongs = availableSongs;
-        if (searchQuery.trim()) {
-          const query = searchQuery.toLowerCase();
-          filteredSongs = availableSongs.filter(song => 
-            song.title?.toLowerCase().includes(query) ||
-            song.author?.toLowerCase().includes(query)
-          );
-        }
-        
-        console.log('Filtered available songs:', filteredSongs);
-        setAvailableSongs(filteredSongs);
-      } catch (fallbackError) {
-        console.error('Fallback also failed:', fallbackError);
-        setAvailableSongs([]);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Merge: (already in songbook - removed) + just added during this session
+  const allAddedSongs = useMemo(() => {
+    const merged = new Set();
+    alreadyInSongbook.forEach(id => {
+      if (!removedSongs.has(id)) merged.add(id);
+    });
+    addedSongs.forEach(id => merged.add(id));
+    return merged;
+  }, [alreadyInSongbook, addedSongs, removedSongs]);
 
   const handleAddSong = async (song) => {
     if (addingSongs.has(song._id)) return;
-    
-    // Check if song is already in songbook (client-side check)
-    const isAlreadyAdded = songbook.songs?.some(s => {
-      const songId = s.song?._id || s.song;
-      return songId === song._id;
-    });
-    
-    if (isAlreadyAdded) {
-      alert(`Пісня "${song.title}" вже додана до співаника`);
-      return;
-    }
-    
+
     setAddingSongs(prev => new Set([...prev, song._id]));
-    
+
     try {
-      console.log('Adding song to songbook:', { 
-        songbookId: songbook._id, 
-        songId: song._id, 
-        sectionId: selectedSection,
-        songTitle: song.title 
-      });
-      
-      // Don't send sectionId if it's empty
       const sectionIdToSend = selectedSection && selectedSection.trim() ? selectedSection : undefined;
-      
-      const result = await songbooksAPI.addSong(songbook._id, song._id, sectionIdToSend);
-      console.log('Add song result:', result);
-      
-      // Remove song from available list
-      setAvailableSongs(prev => prev.filter(s => s._id !== song._id));
-      
-      // Notify parent component
+      await songbooksAPI.addSong(songbook._id, song._id, sectionIdToSend);
+
+      setAddedSongs(prev => new Set([...prev, song._id]));
+      setRemovedSongs(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(song._id);
+        return newSet;
+      });
+
       if (onSongAdded) {
         onSongAdded(song, selectedSection);
       }
-      
-      // Show success message
-      console.log(`Пісню "${song.title}" успішно додано до співаника`);
-      
     } catch (error) {
       console.error('Error adding song:', error);
-      console.error('Error details:', {
-        response: error.response?.data,
-        status: error.response?.status,
-        message: error.message,
-        request: error.request ? 'Request made but no response' : 'No request'
-      });
-      
-      // More detailed error handling
+
       let errorMessage = 'Невідома помилка';
-      
       if (error.response) {
-        // Server responded with error status
-        console.log('Error response data:', error.response.data);
-        console.log('Error response status:', error.response.status);
         errorMessage = error.response.data?.message || error.response.data?.error || `Помилка сервера: ${error.response.status}`;
       } else if (error.request) {
-        // Request was made but no response received
-        console.log('Error request:', error.request);
-        errorMessage = 'Немає відповіді від сервера. Перевірте підключення до інтернету.';
+        errorMessage = 'Немає відповіді від сервера.';
       } else {
-        // Something else happened
-        console.log('Error message:', error.message);
         errorMessage = error.message || 'Помилка при відправці запиту';
       }
-      
-      // Avoid duplicate error message prefixes
-      const finalMessage = errorMessage.includes('Помилка додавання пісні') 
-        ? errorMessage 
-        : `Помилка додавання пісні "${song.title}": ${errorMessage}`;
-      
-      alert(finalMessage);
+
+      alert(`Помилка додавання пісні "${song.title}": ${errorMessage}`);
     } finally {
       setAddingSongs(prev => {
         const newSet = new Set(prev);
@@ -157,8 +74,52 @@ const AddSongsModal = ({ songbook, isOpen, onClose, onSongAdded }) => {
     }
   };
 
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
+  const handleRemoveSong = async (song) => {
+    if (removingSongs.has(song._id)) return;
+
+    setRemovingSongs(prev => new Set([...prev, song._id]));
+
+    try {
+      await songbooksAPI.removeSong(songbook._id, song._id);
+
+      setRemovedSongs(prev => new Set([...prev, song._id]));
+      setAddedSongs(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(song._id);
+        return newSet;
+      });
+
+      if (onSongAdded) {
+        onSongAdded(null, null); // trigger refresh
+      }
+    } catch (error) {
+      console.error('Error removing song:', error);
+
+      let errorMessage = 'Невідома помилка';
+      if (error.response) {
+        errorMessage = error.response.data?.message || error.response.data?.error || `Помилка сервера: ${error.response.status}`;
+      } else if (error.request) {
+        errorMessage = 'Немає відповіді від сервера.';
+      } else {
+        errorMessage = error.message || 'Помилка при відправці запиту';
+      }
+
+      alert(`Помилка видалення пісні: ${errorMessage}`);
+    } finally {
+      setRemovingSongs(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(song._id);
+        return newSet;
+      });
+    }
+  };
+
+  const handleToggleSong = (song) => {
+    if (allAddedSongs.has(song._id)) {
+      handleRemoveSong(song);
+    } else {
+      handleAddSong(song);
+    }
   };
 
   if (!isOpen) return null;
@@ -176,108 +137,33 @@ const AddSongsModal = ({ songbook, isOpen, onClose, onSongAdded }) => {
           </button>
         </div>
 
-        <div className="modal-content">
-          <div className="search-section">
-            <div className="search-input-wrapper">
-              <FiSearch className="search-icon" />
-              <input
-                type="text"
-                placeholder="Пошук пісень..."
-                value={searchQuery}
-                onChange={handleSearchChange}
-                className="search-input"
-              />
-            </div>
-            
-            {songbook.sections && songbook.sections.length > 0 && (
-              <div className="section-selector">
-                <label>Розділ:</label>
-                <select 
-                  value={selectedSection} 
-                  onChange={(e) => setSelectedSection(e.target.value)}
-                  className="section-select"
-                >
-                  <option value="">Без розділу</option>
-                  {songbook.sections
-                    .sort((a, b) => a.name.localeCompare(b.name, 'uk'))
-                    .map(section => (
-                    <option key={section._id} value={section._id}>
-                      {section.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+        {songbook.sections && songbook.sections.length > 0 && (
+          <div className="section-selector-bar">
+            <label>Розділ:</label>
+            <select 
+              value={selectedSection} 
+              onChange={(e) => setSelectedSection(e.target.value)}
+              className="section-select"
+            >
+              <option value="">Без розділу</option>
+              {songbook.sections
+                .sort((a, b) => a.name.localeCompare(b.name, 'uk'))
+                .map(section => (
+                <option key={section._id} value={section._id}>
+                  {section.name}
+                </option>
+              ))}
+            </select>
           </div>
+        )}
 
-          <div className="songs-list">
-            {loading ? (
-              <div className="loading-state">
-                <FiMusic className="loading-icon" />
-                <p>Завантаження пісень...</p>
-              </div>
-            ) : availableSongs.length === 0 ? (
-              <div className="empty-state">
-                <FiMusic className="empty-icon" />
-                <h3>
-                  {searchQuery 
-                    ? `Пісні не знайдено за запитом "${searchQuery}"` 
-                    : 'Всі пісні вже додані до співаника'
-                  }
-                </h3>
-                {searchQuery && (
-                  <p>Спробуйте змінити пошуковий запит</p>
-                )}
-                {!searchQuery && (
-                  <p>Створіть нові пісні або видаліть деякі з поточного співаника</p>
-                )}
-              </div>
-            ) : (
-              <>
-                <div style={{ marginBottom: '1rem', fontSize: '0.9rem', color: '#666' }}>
-                  Знайдено {availableSongs.length} пісень
-                </div>
-                {availableSongs.map(song => (
-                  <div key={song._id} className="song-item">
-                    <div className="song-info">
-                      <h4 className="song-title">{song.title}</h4>
-                      {song.author && (
-                        <p className="song-author">{song.author}</p>
-                      )}
-                      {song.category && (
-                        <span className="song-category">{song.category}</span>
-                      )}
-                      
-                      {/* Метаінформація */}
-                      {(song.metadata?.words || song.metadata?.music || song.metadata?.performer) && (
-                        <div className="song-metadata-compact">
-                          {song.metadata.performer && (
-                            <span className="metadata-compact">🎤 {song.metadata.performer}</span>
-                          )}
-                          {song.metadata.words && song.metadata.words !== song.metadata.performer && (
-                            <span className="metadata-compact">✍️ {song.metadata.words}</span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    
-                    <button
-                      onClick={() => handleAddSong(song)}
-                      disabled={addingSongs.has(song._id)}
-                      className="add-song-btn"
-                      title="Додати пісню"
-                    >
-                      {addingSongs.has(song._id) ? (
-                        <FiCheck className="adding-icon" />
-                      ) : (
-                        <FiPlus />
-                      )}
-                    </button>
-                  </div>
-                ))}
-              </>
-            )}
-          </div>
+        <div className="modal-browser-content">
+          <SongBrowser
+            onAddSong={handleToggleSong}
+            addingSongs={new Set([...addingSongs, ...removingSongs])}
+            addedSongs={allAddedSongs}
+            compact
+          />
         </div>
       </div>
     </div>

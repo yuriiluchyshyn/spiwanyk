@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { songbooksAPI } from '../../../services/api';
-import { useSongbook } from '../../../contexts/SongbookContext';
-import { useAuth } from '../../../contexts/AuthContext';
+
 
 // Компоненти
 import SongbookHeader from '../SongbookHeader/SongbookHeader';
@@ -31,7 +30,7 @@ interface Song {
 const SongbookDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+
   const [songbook, setSongbook] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState('all');
@@ -42,7 +41,6 @@ const SongbookDetail: React.FC = () => {
   const [draggedSong, setDraggedSong] = useState<Song | null>(null);
   const [dragOverSection, setDragOverSection] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<{ songId: string; position: 'before' | 'after' } | null>(null);
-  const { addToPlaylist, playNow } = useSongbook();
 
   useEffect(() => {
     const loadSongbook = async () => {
@@ -139,7 +137,6 @@ const SongbookDetail: React.FC = () => {
   const handleDragStart = (e: React.DragEvent, song: Song) => {
     setDraggedSong(song);
     e.dataTransfer.effectAllowed = 'move';
-    // Required for Firefox to start drag
     try {
       e.dataTransfer.setData('text/plain', song._id);
     } catch {
@@ -157,7 +154,6 @@ const SongbookDetail: React.FC = () => {
     setDragOverSection(null);
   };
 
-  // Drop on a section button = move to that section (append at end)
   const handleDrop = async (e: React.DragEvent, targetSectionId: string) => {
     e.preventDefault();
     setDragOverSection(null);
@@ -176,7 +172,6 @@ const SongbookDetail: React.FC = () => {
     }
 
     try {
-      // Append to end of target section
       const sectionSongs = (songbook?.songs || []).filter((s: any) => {
         const sec = s.section ? s.section.toString() : null;
         return sec === normalizedTarget;
@@ -198,7 +193,6 @@ const SongbookDetail: React.FC = () => {
     setDraggedSong(null);
   };
 
-  // Drag over an individual song (for reordering)
   const handleDragOverItem = (e: React.DragEvent, song: Song, index: number) => {
     if (!draggedSong || draggedSong._id === song._id) return;
     e.preventDefault();
@@ -216,7 +210,6 @@ const SongbookDetail: React.FC = () => {
 
   const handleDragLeaveItem = () => {
     // Keep the target — onDragOver on next item will overwrite it.
-    // Clearing here causes flicker.
   };
 
   const handleDropOnItem = async (e: React.DragEvent, targetSong: Song, targetIndex: number) => {
@@ -233,13 +226,10 @@ const SongbookDetail: React.FC = () => {
     const targetSectionId = targetSong.sectionId || null;
     const draggedSectionId = draggedSong.sectionId || null;
 
-    // Compute desired index within the target section
     const sectionSongs = getFilteredSongs().filter(s => (s.sectionId || null) === targetSectionId);
     const targetIdxInSection = sectionSongs.findIndex(s => s._id === targetSong._id);
     let insertAt = position === 'before' ? targetIdxInSection : targetIdxInSection + 1;
 
-    // If reordering within same section and the dragged song currently sits before
-    // the insertion point, the index shrinks by 1 once we remove it.
     if (draggedSectionId === targetSectionId) {
       const draggedIdxInSection = sectionSongs.findIndex(s => s._id === draggedSong._id);
       if (draggedIdxInSection !== -1 && draggedIdxInSection < insertAt) {
@@ -289,22 +279,15 @@ const SongbookDetail: React.FC = () => {
   };
 
   const handlePlayNow = (song: Song) => {
-    playNow(song);
+    // No-op: playlist removed
   };
 
   const handleAddToPlaylist = (song: Song) => {
-    addToPlaylist(song);
+    // No-op: playlist removed
   };
 
   const handlePlayAll = () => {
-    const songs = getFilteredSongs();
-    songs.forEach((song, index) => {
-      if (index === 0) {
-        playNow(song);
-      } else {
-        addToPlaylist(song);
-      }
-    });
+    // No-op: playlist removed
   };
 
   if (loading) {

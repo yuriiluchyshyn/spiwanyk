@@ -131,41 +131,98 @@
 /* ===== Song card ===== */
 .bv-song {
   position: relative;
-  margin: 0 0 1.25rem;
-  padding: 1rem 1.1rem 1.1rem;
+  margin: 0 0 0.5rem;
   background: rgba(255, 255, 255, 0.45);
   border: 1px solid rgba(139, 69, 19, 0.12);
   border-radius: 10px;
-  transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
+  transition: border-color 0.25s, background 0.25s, box-shadow 0.25s, opacity 0.2s;
+  overflow: hidden;
 }
 
-.bv-song.is-current {
-  border-color: rgba(139, 69, 19, 0.45);
+.bv-song.is-expanded {
+  border-color: rgba(139, 69, 19, 0.35);
   background: rgba(255, 255, 255, 0.7);
   box-shadow: 0 4px 14px rgba(139, 69, 19, 0.12);
 }
 
-.bv-song.is-current::before {
-  content: '';
-  position: absolute;
-  left: -1px;
-  top: 12px;
-  bottom: 12px;
-  width: 3px;
-  background: linear-gradient(180deg, #d2691e, #8b4513);
-  border-radius: 3px;
+.bv-song.is-dragging {
+  opacity: 0.4;
 }
 
-.bv-song-head {
-  position: relative;
-  margin-bottom: 0.85rem;
-  text-align: center;
+.bv-song.drop-before {
+  border-top: 3px solid #d2691e;
+}
+
+.bv-song.drop-after {
+  border-bottom: 3px solid #d2691e;
+}
+
+/* Collapsed row */
+.bv-song-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 0.85rem;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bv-song-row:hover {
+  background: rgba(139, 69, 19, 0.04);
+}
+
+.bv-drag-handle {
+  display: flex;
+  align-items: center;
+  color: #a0826d;
+  font-size: 0.9rem;
+  cursor: grab;
+  flex-shrink: 0;
+  padding: 0.25rem;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+.bv-song-row:hover .bv-drag-handle {
+  opacity: 1;
+}
+
+.bv-drag-handle:active {
+  cursor: grabbing;
+}
+
+.bv-song-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.bv-song-title {
+  font-family: 'Georgia', serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #3e2415;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bv-song-author {
+  font-size: 0.8rem;
+  color: #8b7355;
+  display: block;
+  margin-top: 0.1rem;
+}
+
+.bv-song-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
 }
 
 .bv-song-remove {
-  position: absolute;
-  top: -0.25rem;
-  right: -0.25rem;
   width: 30px;
   height: 30px;
   display: flex;
@@ -177,48 +234,42 @@
   color: #a0826d;
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.2s, background 0.2s, color 0.2s, border-color 0.2s;
+  transition: opacity 0.2s, background 0.2s, color 0.2s;
+  font-size: 0.85rem;
 }
 
 .bv-song:hover .bv-song-remove,
-.bv-song.is-current .bv-song-remove,
-.bv-song-remove:focus-visible {
+.bv-song.is-expanded .bv-song-remove {
   opacity: 1;
 }
 
 .bv-song-remove:hover {
   background: rgba(180, 50, 50, 0.1);
-  border-color: rgba(180, 50, 50, 0.3);
   color: #b43232;
 }
 
-@media (max-width: 640px) {
-  .bv-song-remove {
-    opacity: 1; /* На мобільному завжди видно — hover недоступний */
-  }
+.bv-expand-icon {
+  display: flex;
+  align-items: center;
+  color: #a0826d;
+  font-size: 1rem;
+  transition: transform 0.3s ease;
 }
 
-.night-mode .bv-song-remove {
-  color: #6b5a40;
+.bv-expand-icon.rotated {
+  transform: rotate(180deg);
+  color: #8b4513;
 }
 
-.night-mode .bv-song-remove:hover {
-  background: rgba(200, 80, 80, 0.15);
-  color: #e08080;
+/* Expanded content */
+.bv-song-expanded {
+  padding: 0 0.85rem 1rem;
+  animation: bv-slide-down 0.25s ease;
 }
 
-.bv-song-title {
-  font-family: 'Georgia', serif;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #3e2415;
-  margin: 0 0 0.2rem;
-}
-
-.bv-song-author {
-  font-style: italic;
-  color: #8b7355;
-  font-size: 0.85rem;
+@keyframes bv-slide-down {
+  from { opacity: 0; max-height: 0; }
+  to { opacity: 1; max-height: 5000px; }
 }
 
 .bv-song-meta {
@@ -228,7 +279,8 @@
   flex-wrap: wrap;
   font-size: 0.75rem;
   color: #8b7355;
-  margin-top: 0.3rem;
+  margin-bottom: 0.75rem;
+  padding-top: 0.25rem;
 }
 
 .bv-song-body {
@@ -341,12 +393,20 @@
     padding: 1rem 0.85rem 1.25rem;
   }
 
-  .bv-song {
-    padding: 0.85rem 0.85rem 0.95rem;
+  .bv-song-row {
+    padding: 0.65rem 0.7rem;
   }
 
   .bv-song-title {
-    font-size: 1.1rem;
+    font-size: 0.95rem;
+  }
+
+  .bv-song-remove {
+    opacity: 1;
+  }
+
+  .bv-drag-handle {
+    opacity: 1;
   }
 
   .bv-footer {
@@ -354,7 +414,7 @@
   }
 
   .bv-btn span {
-    display: none; /* На мобільному залишаємо тільки іконки */
+    display: none;
   }
 
   .bv-btn {
@@ -378,7 +438,7 @@
   border-color: rgba(139, 69, 19, 0.2);
 }
 
-.night-mode .bv-song.is-current {
+.night-mode .bv-song.is-expanded {
   background: rgba(255, 255, 255, 0.06);
   border-color: rgba(210, 105, 30, 0.5);
 }
@@ -390,4 +450,13 @@
 .night-mode .bv-song-author,
 .night-mode .bv-song-meta {
   color: #6b5a40;
+}
+
+.night-mode .bv-song-remove {
+  color: #6b5a40;
+}
+
+.night-mode .bv-song-remove:hover {
+  background: rgba(200, 80, 80, 0.15);
+  color: #e08080;
 }

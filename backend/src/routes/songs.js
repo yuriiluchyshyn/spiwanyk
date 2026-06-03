@@ -114,7 +114,35 @@ router.get('/search', [
   }
 });
 
-// GET /api/songs/categories - Get available categories
+// GET /api/songs/categories - Get available categories (public, from DB)
+router.get('/categories', async (req, res) => {
+  try {
+    const Category = require('../models/Category');
+    let categories = await Category.find({}).sort({ order: 1 });
+
+    // Fallback дефолтні якщо база порожня
+    if (categories.length === 0) {
+      categories = [
+        { id: 'author', name: 'АВТОРСЬКІ ПІСНІ', icon: '🎵', color: '#8B4513' },
+        { id: 'plast', name: 'ПЛАСТОВІ ПІСНІ', icon: '🔱', color: '#D2691E' },
+        { id: 'uprising', name: 'ПОВСТАНСЬКІ ПІСНІ', icon: '🎩', color: '#8B7355' },
+        { id: 'cossack', name: 'КОЗАЦЬКІ ПІСНІ', icon: '⚔️', color: '#654321' },
+        { id: 'lemko', name: 'ЛЕМКІВСЬКІ ПІСНІ', icon: '🏔️', color: '#228B22' },
+        { id: 'folk', name: 'НАРОДНІ ПІСНІ', icon: '🌾', color: '#6B8E23' },
+        { id: 'christmas', name: 'НОВАЦЬКІ ПІСНІ', icon: '🔥', color: '#2F4F4F' },
+        { id: 'carols', name: 'КОЛЯДКИ / ЩЕДРІВКИ', icon: '⭐', color: '#B22222' },
+        { id: 'hymns', name: 'ГІМНИ / МОЛИТВИ', icon: '🇺🇦', color: '#4682B4' }
+      ];
+    }
+
+    res.json({ categories });
+  } catch (error) {
+    console.error('Get categories error:', error);
+    res.status(500).json({ message: 'Помилка отримання категорій' });
+  }
+});
+
+// GET /api/songs/meta/categories - Legacy endpoint
 router.get('/meta/categories', (req, res) => {
   const categories = [
     { value: 'patriotic', label: 'Патріотичні' },
@@ -134,11 +162,104 @@ router.get('/meta/categories', (req, res) => {
 const fs = require('fs').promises;
 const path = require('path');
 const User = require('../models/User');
+const Category = require('../models/Category');
 
 // Helper: перевірка секретного ключа (вимкнено — відкритий доступ)
 function checkAdminSecret(req) {
   return true;
 }
+
+// GET /api/songs/admin/categories - отримати всі категорії
+router.get('/admin/categories', async (req, res) => {
+  try {
+    let categories = await Category.find({}).sort({ order: 1 });
+
+    // Якщо в базі нема категорій — створюємо дефолтні
+    if (categories.length === 0) {
+      const defaults = [
+        { id: 'author', name: 'АВТОРСЬКІ ПІСНІ', icon: '🎵', color: '#8B4513', order: 0 },
+        { id: 'plast', name: 'ПЛАСТОВІ ПІСНІ', icon: '🔱', color: '#D2691E', order: 1 },
+        { id: 'uprising', name: 'ПОВСТАНСЬКІ ПІСНІ', icon: '🎩', color: '#8B7355', order: 2 },
+        { id: 'cossack', name: 'КОЗАЦЬКІ ПІСНІ', icon: '⚔️', color: '#654321', order: 3 },
+        { id: 'lemko', name: 'ЛЕМКІВСЬКІ ПІСНІ', icon: '🏔️', color: '#228B22', order: 4 },
+        { id: 'folk', name: 'НАРОДНІ ПІСНІ', icon: '🌾', color: '#6B8E23', order: 5 },
+        { id: 'christmas', name: 'НОВАЦЬКІ ПІСНІ', icon: '🔥', color: '#2F4F4F', order: 6 },
+        { id: 'carols', name: 'КОЛЯДКИ / ЩЕДРІВКИ', icon: '⭐', color: '#B22222', order: 7 },
+        { id: 'hymns', name: 'ГІМНИ / МОЛИТВИ', icon: '🇺🇦', color: '#4682B4', order: 8 }
+      ];
+      categories = await Category.insertMany(defaults);
+    }
+
+    res.json({ categories });
+  } catch (error) {
+    console.error('Get categories error:', error);
+    res.status(500).json({ message: 'Помилка отримання категорій', error: error.message });
+  }
+});
+
+// POST /api/songs/admin/categories - створити нову категорію
+router.post('/admin/categories', async (req, res) => {
+  try {
+    const { id, name, icon, color } = req.body;
+    if (!id || !name) {
+      return res.status(400).json({ message: 'id та name обовʼязкові' });
+    }
+
+    const maxOrder = await Category.findOne({}).sort({ order: -1 });
+    const order = maxOrder ? maxOrder.order + 1 : 0;
+
+    const category = new Category({ id: id.toLowerCase(), name, icon: icon || '🎵', color: color || '#8B4513', order });
+    await category.save();
+
+    res.status(201).json({ category });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ message: 'Категорія з таким id вже існує' });
+    }
+    console.error('Create category error:', error);
+    res.status(500).json({ message: 'Помилка створення категорії', error: error.message });
+  }
+});
+
+// PUT /api/songs/admin/categories/:categoryId - оновити категорію
+router.put('/admin/categories/:categoryId', async (req, res) => {
+  try {
+    const { name, icon, color } = req.body;
+    const category = await Category.findOne({ id: req.params.categoryId });
+
+    if (!category) {
+      return res.status(404).json({ message: 'Категорію не знайдено' });
+    }
+
+    if (name) category.name = name;
+    if (icon) category.icon = icon;
+    if (color) category.color = color;
+
+    await category.save();
+    res.json({ category });
+  } catch (error) {
+    console.error('Update category error:', error);
+    res.status(500).json({ message: 'Помилка оновлення категорії', error: error.message });
+  }
+});
+
+// DELETE /api/songs/admin/categories/:categoryId - видалити категорію
+router.delete('/admin/categories/:categoryId', async (req, res) => {
+  try {
+    const category = await Category.findOneAndDelete({ id: req.params.categoryId });
+    if (!category) {
+      return res.status(404).json({ message: 'Категорію не знайдено' });
+    }
+
+    // Кількість пісень цієї категорії
+    const songCount = await Song.countDocuments({ category: req.params.categoryId });
+
+    res.json({ message: 'Категорію видалено', deletedCategory: category.name, affectedSongs: songCount });
+  } catch (error) {
+    console.error('Delete category error:', error);
+    res.status(500).json({ message: 'Помилка видалення категорії', error: error.message });
+  }
+});
 
 // GET /api/songs/admin/list - список пісень для адмін-панелі
 router.get('/admin/list', async (req, res) => {
@@ -165,10 +286,17 @@ router.post('/import-from-json', async (req, res) => {
       return res.status(404).json({ message: 'Маршрут не знайдено' });
     }
 
-    // Читаємо JSON файл
-    const jsonPath = path.join(__dirname, '../../data/latest-songs.json');
-    const jsonData = await fs.readFile(jsonPath, 'utf8');
-    const data = JSON.parse(jsonData);
+    let data;
+
+    // Якщо прийшов JSON body з піснями — використовуємо його
+    if (req.body && req.body.songs && Array.isArray(req.body.songs)) {
+      data = req.body;
+    } else {
+      // Fallback: читаємо з файлу latest-songs.json
+      const jsonPath = path.join(__dirname, '../../data/latest-songs.json');
+      const jsonData = await fs.readFile(jsonPath, 'utf8');
+      data = JSON.parse(jsonData);
+    }
 
     if (!data.songs || !Array.isArray(data.songs)) {
       return res.status(400).json({ message: 'Невірний формат JSON файлу' });

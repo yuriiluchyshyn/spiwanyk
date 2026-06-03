@@ -191,20 +191,39 @@
 /* Мобільна адаптація */
 @media (max-width: 768px) {
   .song-item {
-    padding: 0.5rem;
+    padding: 0.6rem 0.5rem;
+    gap: 0.5rem;
   }
   
   .song-actions {
-    flex-direction: column;
+    flex-direction: row;
+    gap: 4px;
   }
   
-  .action-btn.drag,
+  .action-btn.drag {
+    display: none;
+  }
+  
   .action-btn.view,
   .action-btn.play,
   .action-btn.add,
   .action-btn.remove {
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
+  }
+
+  .song-number {
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: 0.7rem;
+  }
+
+  .song-title {
+    font-size: 0.85rem;
+  }
+
+  .song-metadata-inline {
+    display: none;
   }
 }
 

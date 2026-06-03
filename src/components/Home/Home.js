@@ -1,57 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { useSongbook } from '../../contexts/SongbookContext';
 import { songbooksAPI } from '../../services/api';
-import { FiMusic, FiPlus, FiPlay, FiSkipForward, FiSkipBack, FiPause, FiMapPin, FiGlobe, FiEdit } from 'react-icons/fi';
+import { FiPlus, FiMapPin, FiGlobe, FiEdit } from 'react-icons/fi';
 import CreateSongbookModal from '../Songbooks/CreateSongbookModal';
 import BookView from '../BookView/BookView';
 import LoadingSpinner from '../Common/LoadingSpinner';
 import './Home.css';
-
-const MiniPlaylist = () => {
-  const ctx = useSongbook();
-  const { currentPlaylist, currentSong, isPlaying } = ctx;
-  const { setIsPlaying, playNow, nextSong, prevSong } = ctx;
-  if (currentPlaylist.length === 0) {
-    return (
-      <div className="mini-pl empty-pl">
-        <FiMusic className="empty-pl-icon" />
-        <p>Збірка порожня</p>
-        <Link to="/songs" className="link-accent">Додати пісні →</Link>
-      </div>
-    );
-  }
-  return (
-    <div className="mini-pl">
-      {currentSong && (
-        <div className="np-bar">
-          <div className="np-info">
-            <span className="np-label">Зараз грає</span>
-            <span className="np-title">{currentSong.title}</span>
-          </div>
-          <div className="np-ctrls">
-            <button onClick={prevSong} className="np-btn"><FiSkipBack /></button>
-            <button onClick={() => setIsPlaying(!isPlaying)} className="np-btn main">
-              {isPlaying ? <FiPause /> : <FiPlay />}
-            </button>
-            <button onClick={nextSong} className="np-btn"><FiSkipForward /></button>
-          </div>
-        </div>
-      )}
-      <div className="pl-list">
-        {currentPlaylist.map((s, i) => (
-          <div key={s._id}
-            className={'pl-item' + (currentSong?._id === s._id ? ' active' : '')}
-            onClick={() => playNow(s)}>
-            <span className="pl-num">{i + 1}</span>
-            <span className="pl-name">{s.title}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
 
 const Home = () => {
   const { user } = useAuth();
@@ -122,14 +77,6 @@ const Home = () => {
 
   return (
     <div className="home">
-      <section className="section">
-        <div className="sec-head">
-          <h2>🎵 Збірка</h2>
-          <Link to="/playlist" className="link-accent">Усі →</Link>
-        </div>
-        <MiniPlaylist />
-      </section>
-
       <section className="section">
         <div className="sec-head">
           <h2>📚 Мої співаники</h2>

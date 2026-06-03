@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { songsAPI } from '../../services/api';
-import { useSongbook } from '../../contexts/SongbookContext';
-import { FiArrowLeft, FiPlus, FiYoutube, FiMusic } from 'react-icons/fi';
+import { FiArrowLeft, FiYoutube, FiMusic } from 'react-icons/fi';
 import FormattedSong from './FormattedSong';
 import './SongDetail.css';
 
@@ -11,9 +10,6 @@ const SongDetail = () => {
   const [song, setSong] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showChords, setShowChords] = useState(false);
-  const { addToPlaylist, playNow, nextSong, prevSong } = useSongbook();
-  const touchStartX = useRef(0);
-  const touchEndX = useRef(0);
 
   useEffect(() => {
     const loadSong = async () => {
@@ -28,21 +24,6 @@ const SongDetail = () => {
     };
     loadSong();
   }, [id]);
-
-  const handleTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
-  const handleTouchMove = (e) => { touchEndX.current = e.touches[0].clientX; };
-  const handleTouchEnd = () => {
-    const diff = touchStartX.current - touchEndX.current;
-    if (Math.abs(diff) > 80) {
-      if (diff > 0) nextSong();
-      else prevSong();
-    }
-  };
-
-  const handleAdd = () => {
-    addToPlaylist(song);
-    playNow(song);
-  };
 
   if (loading) {
     return (
@@ -63,12 +44,7 @@ const SongDetail = () => {
   }
 
   return (
-    <div 
-      className="song-detail"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-    >
+    <div className="song-detail">
       <div className="detail-top">
         <Link to="/songs" className="back-link"><FiArrowLeft /></Link>
         <div className="detail-title">
@@ -100,9 +76,6 @@ const SongDetail = () => {
           )}
         </div>
         <div className="detail-actions">
-          <button onClick={handleAdd} className="detail-btn add" title="Додати">
-            <FiPlus />
-          </button>
           {song.youtubeUrl && (
             <a href={song.youtubeUrl} target="_blank" rel="noopener noreferrer" className="detail-btn yt">
               <FiYoutube />
@@ -126,8 +99,6 @@ const SongDetail = () => {
       <div className="detail-content">
         <FormattedSong song={song} showChords={showChords} />
       </div>
-
-      <p className="swipe-hint">← свайпніть для навігації →</p>
     </div>
   );
 };

@@ -1,29 +1,27 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { songbooksAPI } from '../../services/api';
-import { FiX, FiMusic, FiPlus, FiCornerDownRight, FiEye, FiEyeOff, FiTrash2 } from 'react-icons/fi';
+import { FiX, FiMusic, FiPlus, FiCornerDownRight, FiEye, FiEyeOff, FiTrash2, FiChevronDown, FiMove } from 'react-icons/fi';
 import FormattedSong from '../Songs/FormattedSong';
 import AddSongsModal from '../Songbooks/AddSongsModal';
 import LoadingSpinner from '../Common/LoadingSpinner';
 import './BookView.css';
 
-/**
- * Простий вертикальний перегляд співаника.
- * — Усі пісні скролляться згори вниз
- * — У футері: тогл акордів, додати в кінець, додати після поточної
- * "Поточна" пісня = верхня видима у viewport
- */
 const BookView = ({ onClose, songbookData }) => {
   const navigate = useNavigate();
   const [songbook, setSongbook] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showChords, setShowChords] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
-  const [addMode, setAddMode] = useState(null); // null | 'end' | 'after'
-  const [currentSongId, setCurrentSongId] = useState(null);
+  const [addMode, setAddMode] = useState(null);
+  const [expandedSongId, setExpandedSongId] = useState(null);
+
+  // Drag and drop state
+  const [draggedSong, setDraggedSong] = useState(null);
+  const [dragOverSongId, setDragOverSongId] = useState(null);
+  const [dragPosition, setDragPosition] = useState(null); // 'before' | 'after'
 
   const scrollRef = useRef(null);
-  const songRefs = useRef(new Map());
 
   // ---- Завантаження ----
   const loadSongbook = useCallback(async () => {
@@ -54,8 +52,24 @@ const BookView = ({ onClose, songbookData }) => {
           return sectionId ? sKey === sectionId.toString() : !sKey;
         })
         .sort((a, b) => (a.order || 0) - (b.order || 0))
-        .map((s) => s.song)
-        .filter(Boolean);
+        .map((s) => {
+          const song = s.song || {};
+          return { 
+            _id: song._id,
+            title: song.title,
+            author: song.author,
+            lyrics: song.lyrics,
+            chords: song.chords,
+            notes: song.notes,
+            youtubeUrl: song.youtubeUrl,
+            category: song.category,
+            structure: song.structure,
+            metadata: song.metadata,
+            hasChords: song.hasChords,
+            _sectionId: s.section ? s.section.toString() : null
+          };
+        })
+        .filter((s) => s._id);
 
     const groups = [];
     const noSection = getEntries(null);
@@ -76,39 +90,10 @@ const BookView = ({ onClose, songbookData }) => {
 
   const flatSongs = useMemo(() => groupedSongs.flatMap((g) => g.songs), [groupedSongs]);
 
-  // Ініціалізуємо першу пісню як «поточну»
-  useEffect(() => {
-    if (!currentSongId && flatSongs.length) {
-      setCurrentSongId(flatSongs[0]._id);
-    }
-  }, [flatSongs, currentSongId]);
-
-  // ---- Спостерігаємо за тим, яка пісня видима зверху ----
-  useEffect(() => {
-    if (!scrollRef.current || flatSongs.length === 0) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        // Беремо ту, що найближча до верху viewport-а серед перетинених
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-        if (visible.length > 0) {
-          const id = visible[0].target.dataset.songId;
-          if (id) setCurrentSongId(id);
-        }
-      },
-      {
-        root: scrollRef.current,
-        // Зона «активності» — верхня третина
-        rootMargin: '0px 0px -65% 0px',
-        threshold: 0,
-      }
-    );
-
-    songRefs.current.forEach((node) => node && observer.observe(node));
-    return () => observer.disconnect();
-  }, [flatSongs]);
+  // ---- Toggle expand ----
+  const handleToggleExpand = (songId) => {
+    setExpandedSongId(expandedSongId === songId ? null : songId);
+  };
 
   // ---- Видалення пісні зі співаника ----
   const handleRemoveSong = async (song, e) => {
@@ -121,15 +106,9 @@ const BookView = ({ onClose, songbookData }) => {
       const fresh = await songbooksAPI.getById(songbook._id);
       setSongbook(fresh);
 
-      // Якщо щойно видалили "поточну" — переключимось на наступну/попередню видиму
-      if (currentSongId === song._id) {
-        const nextSongs = (fresh.songs || [])
-          .map((s) => s.song)
-          .filter(Boolean);
-        setCurrentSongId(nextSongs[0]?._id || null);
+      if (expandedSongId === song._id) {
+        setExpandedSongId(null);
       }
-      // Чистимо ref на видалену пісню
-      songRefs.current.delete(song._id);
     } catch (err) {
       console.error('Error removing song:', err);
       alert(
@@ -137,6 +116,89 @@ const BookView = ({ onClose, songbookData }) => {
           (err.response?.data?.message || err.message || 'невідома помилка')
       );
     }
+  };
+
+  // ---- Drag & Drop ----
+  const handleDragStart = (e, song) => {
+    setDraggedSong(song);
+    e.dataTransfer.effectAllowed = 'move';
+    try {
+      e.dataTransfer.setData('text/plain', song._id);
+    } catch {}
+  };
+
+  const handleDragOver = (e, song) => {
+    if (!draggedSong || draggedSong._id === song._id) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const midpoint = rect.top + rect.height / 2;
+    const position = e.clientY < midpoint ? 'before' : 'after';
+
+    setDragOverSongId(song._id);
+    setDragPosition(position);
+  };
+
+  const handleDragLeave = () => {
+    // Don't clear immediately - next dragover will set it
+  };
+
+  const handleDrop = async (e, targetSong) => {
+    e.preventDefault();
+    if (!draggedSong || draggedSong._id === targetSong._id) {
+      resetDrag();
+      return;
+    }
+
+    const targetSectionId = targetSong._sectionId || null;
+    const draggedSectionId = draggedSong._sectionId || null;
+
+    // Find position within the same group
+    const group = groupedSongs.find(g => {
+      const gId = g.id ? g.id.toString() : null;
+      return gId === targetSectionId;
+    });
+
+    if (!group) {
+      resetDrag();
+      return;
+    }
+
+    const sectionSongs = group.songs;
+    const targetIdx = sectionSongs.findIndex(s => s._id === targetSong._id);
+    let insertAt = dragPosition === 'before' ? targetIdx : targetIdx + 1;
+
+    // If same section and dragged is before target, adjust
+    if (draggedSectionId === targetSectionId) {
+      const draggedIdx = sectionSongs.findIndex(s => s._id === draggedSong._id);
+      if (draggedIdx !== -1 && draggedIdx < insertAt) {
+        insertAt -= 1;
+      }
+    }
+
+    if (insertAt < 0) insertAt = 0;
+
+    try {
+      await songbooksAPI.moveSong(songbook._id, draggedSong._id, targetSectionId, insertAt);
+      const fresh = await songbooksAPI.getById(songbook._id);
+      setSongbook(fresh);
+    } catch (err) {
+      console.error('Error reordering song:', err);
+      alert('Помилка зміни порядку: ' + (err.response?.data?.message || err.message));
+    }
+
+    resetDrag();
+  };
+
+  const handleDragEnd = () => {
+    resetDrag();
+  };
+
+  const resetDrag = () => {
+    setDraggedSong(null);
+    setDragOverSongId(null);
+    setDragPosition(null);
   };
 
   const handleClose = () => {
@@ -151,22 +213,20 @@ const BookView = ({ onClose, songbookData }) => {
   const openAddEnd = () => setAddMode('end');
   const openAddAfter = () => setAddMode('after');
 
-  // Викликається з AddSongsModal після успішного додавання
   const handleSongAdded = async (newSong) => {
     try {
       const fresh = await songbooksAPI.getById(songbook._id);
 
-      if (addMode === 'after' && currentSongId && newSong?._id) {
+      if (addMode === 'after' && expandedSongId && newSong?._id) {
         const currentEntry = fresh.songs.find((s) => {
           const sid = s.song?._id || s.song;
-          return sid?.toString() === currentSongId.toString();
+          return sid?.toString() === expandedSongId.toString();
         });
 
         if (currentEntry) {
           const targetSectionId = currentEntry.section || null;
           const targetKey = targetSectionId ? targetSectionId.toString() : null;
 
-          // Ентрі цільової секції без щойно доданої пісні
           const entries = fresh.songs
             .filter((s) => {
               const sKey = s.section ? s.section.toString() : null;
@@ -180,7 +240,7 @@ const BookView = ({ onClose, songbookData }) => {
 
           const idxOfCurrent = entries.findIndex((s) => {
             const sid = s.song?._id || s.song;
-            return sid?.toString() === currentSongId.toString();
+            return sid?.toString() === expandedSongId.toString();
           });
 
           if (idxOfCurrent !== -1) {
@@ -248,51 +308,73 @@ const BookView = ({ onClose, songbookData }) => {
                   {group.name}
                 </h2>
 
-                {group.songs.map((song) => (
-                  <article
-                    key={song._id}
-                    className={`bv-song ${currentSongId === song._id ? 'is-current' : ''}`}
-                    data-song-id={song._id}
-                    ref={(node) => {
-                      if (node) songRefs.current.set(song._id, node);
-                      else songRefs.current.delete(song._id);
-                    }}
-                  >
-                    <header className="bv-song-head">
-                      <button
-                        className="bv-song-remove"
-                        onClick={(e) => handleRemoveSong(song, e)}
-                        title="Видалити пісню зі співаника"
-                        aria-label="Видалити пісню"
-                      >
-                        <FiTrash2 />
-                      </button>
-                      <h3 className="bv-song-title">{song.title}</h3>
-                      {song.author && <div className="bv-song-author">{song.author}</div>}
-                      {(song.metadata?.words || song.metadata?.music) && (
-                        <div className="bv-song-meta">
-                          {song.metadata.words && <span>Сл: {song.metadata.words}</span>}
-                          {song.metadata.music && <span>Муз: {song.metadata.music}</span>}
+                {group.songs.map((song) => {
+                  const isExpanded = expandedSongId === song._id;
+                  const isDragging = draggedSong?._id === song._id;
+                  const isDropTarget = dragOverSongId === song._id;
+                  const dropClass = isDropTarget
+                    ? dragPosition === 'before' ? 'drop-before' : 'drop-after'
+                    : '';
+
+                  return (
+                    <article
+                      key={song._id}
+                      className={`bv-song ${isExpanded ? 'is-expanded' : ''} ${isDragging ? 'is-dragging' : ''} ${dropClass}`}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, song)}
+                      onDragOver={(e) => handleDragOver(e, song)}
+                      onDragLeave={handleDragLeave}
+                      onDrop={(e) => handleDrop(e, song)}
+                      onDragEnd={handleDragEnd}
+                    >
+                      <div className="bv-song-row" onClick={() => handleToggleExpand(song._id)}>
+                        <span className="bv-drag-handle" title="Перетягнути">
+                          <FiMove />
+                        </span>
+                        <div className="bv-song-info">
+                          <h3 className="bv-song-title">{song.title}</h3>
+                          {song.author && <span className="bv-song-author">{song.author}</span>}
+                        </div>
+                        <div className="bv-song-actions">
+                          <button
+                            className="bv-song-remove"
+                            onClick={(e) => handleRemoveSong(song, e)}
+                            title="Видалити"
+                          >
+                            <FiTrash2 />
+                          </button>
+                          <span className={`bv-expand-icon ${isExpanded ? 'rotated' : ''}`}>
+                            <FiChevronDown />
+                          </span>
+                        </div>
+                      </div>
+
+                      {isExpanded && (
+                        <div className="bv-song-expanded">
+                          {(song.metadata?.words || song.metadata?.music) && (
+                            <div className="bv-song-meta">
+                              {song.metadata.words && <span>Сл: {song.metadata.words}</span>}
+                              {song.metadata.music && <span>Муз: {song.metadata.music}</span>}
+                            </div>
+                          )}
+                          <div className="bv-song-body">
+                            <FormattedSong song={song} showChords={showChords} />
+                          </div>
+                          {song.youtubeUrl && (
+                            <a
+                              className="bv-yt-link"
+                              href={song.youtubeUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              ▶ Послухати на YouTube
+                            </a>
+                          )}
                         </div>
                       )}
-                    </header>
-
-                    <div className="bv-song-body">
-                      <FormattedSong song={song} showChords={showChords} />
-                    </div>
-
-                    {song.youtubeUrl && (
-                      <a
-                        className="bv-yt-link"
-                        href={song.youtubeUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        ▶ Послухати на YouTube
-                      </a>
-                    )}
-                  </article>
-                ))}
+                    </article>
+                  );
+                })}
               </section>
             ))
           )}
@@ -312,7 +394,7 @@ const BookView = ({ onClose, songbookData }) => {
           <button
             className="bv-btn"
             onClick={openAddAfter}
-            disabled={!currentSongId}
+            disabled={!expandedSongId}
             title="Додати пісню після поточної"
           >
             <FiCornerDownRight />

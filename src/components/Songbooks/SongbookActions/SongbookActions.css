@@ -131,19 +131,27 @@
 @media (max-width: 768px) {
   .songbook-actions {
     width: 100%;
-    justify-content: center;
-    flex-direction: column;
-    gap: 0.75rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
   }
   
   .main-actions {
-    justify-content: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
     width: 100%;
   }
   
   .danger-actions {
-    justify-content: center;
     width: 100%;
     margin-left: 0;
+  }
+
+  .play-all-btn,
+  .add-songs-btn,
+  .manage-sections-btn,
+  .delete-songbook-btn {
+    font-size: 0.8rem;
+    padding: 8px 14px;
   }
 }
