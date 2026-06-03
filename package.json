@@ -25,7 +25,8 @@
     "eject": "react-scripts eject",
     "dev": "npm start",
     "backend": "cd backend && npm run dev",
-    "full-dev": "./node_modules/.bin/concurrently \"npm start\" \"cd backend && npm run dev\" --names \"frontend,backend\" --prefix-colors \"blue,green\"",
+    "full-dev": "lsof -ti:3001 | xargs kill -9 2>/dev/null; lsof -ti:5001 | xargs kill -9 2>/dev/null; sleep 1 && ./node_modules/.bin/concurrently \"npm start\" \"cd backend && npm run dev\" --names \"frontend,backend\" --prefix-colors \"blue,green\"",
+    "kill-port": "lsof -ti:3001 | xargs kill -9 2>/dev/null || true",
     "setup": "npm install && cd backend && npm install",
     "clean": "rm -rf node_modules package-lock.json && rm -rf backend/node_modules backend/package-lock.json && npm install && cd backend && npm install",
     "vercel-build": "npm run build"

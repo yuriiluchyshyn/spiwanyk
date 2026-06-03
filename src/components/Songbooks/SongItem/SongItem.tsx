@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FiMove, FiEye, FiPlay, FiPlus, FiTrash2 } from 'react-icons/fi';
+import { FiMove, FiEye, FiTrash2 } from 'react-icons/fi';
 import './SongItem.css';
 
 interface Song {
@@ -17,8 +17,12 @@ interface SongItemProps {
   song: Song;
   index: number;
   isDragging: boolean;
+  dropPosition?: 'before' | 'after' | null;
   onDragStart: (e: React.DragEvent, song: Song) => void;
   onDragEnd: () => void;
+  onDragOverItem?: (e: React.DragEvent, song: Song, index: number) => void;
+  onDragLeaveItem?: () => void;
+  onDropOnItem?: (e: React.DragEvent, song: Song, index: number) => void;
   onViewSong: (song: Song) => void;
   onPlayNow: (song: Song) => void;
   onAddToPlaylist: (song: Song) => void;
@@ -29,19 +33,32 @@ const SongItem: React.FC<SongItemProps> = ({
   song,
   index,
   isDragging,
+  dropPosition,
   onDragStart,
   onDragEnd,
+  onDragOverItem,
+  onDragLeaveItem,
+  onDropOnItem,
   onViewSong,
   onPlayNow,
   onAddToPlaylist,
   onRemoveSong
 }) => {
+  const dropClass = dropPosition === 'before'
+    ? 'drop-before'
+    : dropPosition === 'after'
+      ? 'drop-after'
+      : '';
+
   return (
     <div 
-      className={`song-item ${isDragging ? 'dragging' : ''}`}
+      className={`song-item ${isDragging ? 'dragging' : ''} ${dropClass}`}
       draggable
       onDragStart={(e) => onDragStart(e, song)}
       onDragEnd={onDragEnd}
+      onDragOver={(e) => onDragOverItem && onDragOverItem(e, song, index)}
+      onDragLeave={() => onDragLeaveItem && onDragLeaveItem()}
+      onDrop={(e) => onDropOnItem && onDropOnItem(e, song, index)}
     >
       <div className="song-number">
         {index + 1}
@@ -71,7 +88,7 @@ const SongItem: React.FC<SongItemProps> = ({
       <div className="song-actions">
         <button 
           className="action-btn drag"
-          title="Перетягнути до розділу"
+          title="Перетягнути для зміни порядку або розділу"
         >
           <FiMove />
         </button>
@@ -81,20 +98,6 @@ const SongItem: React.FC<SongItemProps> = ({
           title="Переглянути пісню"
         >
           <FiEye />
-        </button>
-        <button 
-          onClick={() => onPlayNow(song)}
-          className="action-btn play"
-          title="Грати зараз"
-        >
-          <FiPlay />
-        </button>
-        <button 
-          onClick={() => onAddToPlaylist(song)}
-          className="action-btn add"
-          title="Додати до плейлиста"
-        >
-          <FiPlus />
         </button>
         <button 
           onClick={() => onRemoveSong(song._id)}

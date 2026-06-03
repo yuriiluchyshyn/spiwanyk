@@ -29,7 +29,7 @@ make full-dev         # 3. Frontend + Backend
 ```
 
 ### Адреси локально:
-- Frontend: http://localhost:3000
+- Frontend: http://localhost:3010
 - Backend: http://localhost:5000/api
 - MongoDB: localhost:27017
 
@@ -95,7 +95,7 @@ backend/vercel.json   # Backend конфігурація Vercel
 
 ### Локально (Docker)
 ```
-React App (:3000) → Express API (:5000) → MongoDB (Docker :27017)
+React App (:3010) → Express API (:5000) → MongoDB (Docker :27017)
 ```
 
 ### Production (Vercel + Atlas)

@@ -60,6 +60,16 @@ export const songbooksAPI = {
   },
   removeSong: (songbookId, songId) => 
     api.delete(`/songbooks/${songbookId}/songs/${songId}`).then(res => res.data),
+  reorderSongs: (songbookId, sectionId, orderedSongIds) =>
+    api.put(`/songbooks/${songbookId}/songs/reorder`, {
+      sectionId: sectionId || null,
+      orderedSongIds
+    }).then(res => res.data),
+  moveSong: (songbookId, songId, sectionId, targetIndex) =>
+    api.put(`/songbooks/${songbookId}/songs/${songId}/move`, {
+      sectionId: sectionId || null,
+      targetIndex
+    }).then(res => res.data),
   addSection: (songbookId, name, description) =>
     api.post(`/songbooks/${songbookId}/sections`, { name, description }).then(res => res.data),
   removeSection: (songbookId, sectionId) =>

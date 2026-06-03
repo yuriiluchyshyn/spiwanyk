@@ -137,14 +137,78 @@ songbookSchema.methods.addSong = function(songId, sectionId, userId) {
     throw new Error('Пісня вже додана до співаника');
   }
 
+  // Compute next order within target section
+  const sectionKey = sectionId ? sectionId.toString() : null;
+  const sameSectionSongs = this.songs.filter(s => {
+    const sKey = s.section ? s.section.toString() : null;
+    return sKey === sectionKey;
+  });
+  const maxOrder = sameSectionSongs.reduce((max, s) => Math.max(max, s.order || 0), -1);
+
   const newSong = {
     song: songId,
     section: sectionId,
-    order: this.songs.length,
+    order: maxOrder + 1,
     addedBy: userId
   };
 
   this.songs.push(newSong);
+  return this.save();
+};
+
+songbookSchema.methods.reorderSongs = function(sectionId, orderedSongIds) {
+  // sectionId can be null/undefined for "no section"
+  const sectionKey = sectionId ? sectionId.toString() : null;
+
+  // Build a quick lookup of new order indexes
+  const orderMap = new Map();
+  orderedSongIds.forEach((songId, index) => {
+    orderMap.set(songId.toString(), index);
+  });
+
+  // Apply new order values to songs in the target section
+  this.songs.forEach(entry => {
+    const entrySectionKey = entry.section ? entry.section.toString() : null;
+    if (entrySectionKey !== sectionKey) return;
+
+    const songIdStr = entry.song.toString();
+    if (orderMap.has(songIdStr)) {
+      entry.order = orderMap.get(songIdStr);
+    }
+  });
+
+  return this.save();
+};
+
+songbookSchema.methods.moveSong = function(songId, targetSectionId, targetIndex) {
+  const songIdStr = songId.toString();
+  const targetSectionKey = targetSectionId ? targetSectionId.toString() : null;
+
+  const entry = this.songs.find(s => s.song.toString() === songIdStr);
+  if (!entry) {
+    throw new Error('Пісню не знайдено у співанику');
+  }
+
+  // Update section
+  entry.section = targetSectionId || undefined;
+
+  // Re-number songs in the target section so the moved song lands at targetIndex
+  const sectionEntries = this.songs
+    .filter(s => {
+      const sKey = s.section ? s.section.toString() : null;
+      return sKey === targetSectionKey;
+    })
+    .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+  // Remove the moved entry from list, then insert at desired index
+  const without = sectionEntries.filter(s => s.song.toString() !== songIdStr);
+  const insertAt = Math.max(0, Math.min(targetIndex, without.length));
+  without.splice(insertAt, 0, entry);
+
+  without.forEach((s, idx) => {
+    s.order = idx;
+  });
+
   return this.save();
 };
 

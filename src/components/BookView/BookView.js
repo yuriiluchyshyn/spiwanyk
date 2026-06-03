@@ -1,115 +1,142 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import HTMLFlipBook from 'react-pageflip';
-import { songsAPI, songbooksAPI } from '../../services/api';
-import { useSongbook } from '../../contexts/SongbookContext';
-import { FiX, FiChevronLeft, FiChevronRight, FiArrowLeft, FiHeart, FiPlay, FiPlus } from 'react-icons/fi';
+import { songbooksAPI } from '../../services/api';
+import { FiX, FiMusic, FiPlus, FiCornerDownRight, FiEye, FiEyeOff, FiTrash2 } from 'react-icons/fi';
 import FormattedSong from '../Songs/FormattedSong';
+import AddSongsModal from '../Songbooks/AddSongsModal';
+import LoadingSpinner from '../Common/LoadingSpinner';
 import './BookView.css';
 
-// Компонент сторінки ОБОВ'ЯЗКОВО має використовувати React.forwardRef для бібліотеки react-pageflip
-const Page = React.forwardRef(({ number, children, className, density }, ref) => {
-  return (
-    <div className={`book-page ${className}`} ref={ref} data-density={density || 'soft'}>
-      {children}
-      {number && <div className="page-number">{number}</div>}
-    </div>
-  );
-});
-
+/**
+ * Простий вертикальний перегляд співаника.
+ * — Усі пісні скролляться згори вниз
+ * — У футері: тогл акордів, додати в кінець, додати після поточної
+ * "Поточна" пісня = верхня видима у viewport
+ */
 const BookView = ({ onClose, songbookData }) => {
   const navigate = useNavigate();
-  const { addToPlaylist, playNow } = useSongbook();
   const [songbook, setSongbook] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showChords, setShowChords] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
-  
-  const flipBookRef = useRef(null);
+  const [addMode, setAddMode] = useState(null); // null | 'end' | 'after'
+  const [currentSongId, setCurrentSongId] = useState(null);
 
-  useEffect(() => {
-    const loadSongbook = async () => {
-      try {
-        if (songbookData) {
-          const data = await songbooksAPI.getById(songbookData._id);
-          setSongbook(data);
-        }
-      } catch (e) {
-        console.error('Error loading songbook:', e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadSongbook();
+  const scrollRef = useRef(null);
+  const songRefs = useRef(new Map());
+
+  // ---- Завантаження ----
+  const loadSongbook = useCallback(async () => {
+    if (!songbookData?._id) return;
+    try {
+      const data = await songbooksAPI.getById(songbookData._id);
+      setSongbook(data);
+    } catch (e) {
+      console.error('Error loading songbook:', e);
+    } finally {
+      setLoading(false);
+    }
   }, [songbookData]);
 
-  const getSectionSongs = useCallback((sectionId) => {
+  useEffect(() => {
+    loadSongbook();
+  }, [loadSongbook]);
+
+  // ---- Впорядкований список пісень за секціями ----
+  const groupedSongs = useMemo(() => {
     if (!songbook?.songs) return [];
-    return songbook.songs
-      .filter(s => (!sectionId ? !s.section : s.section?.toString() === sectionId.toString()))
-      .map(s => s.song)
-      .filter(Boolean)
-      .sort((a, b) => a.title.localeCompare(b.title, 'uk'));
+    const sections = songbook.sections || [];
+
+    const getEntries = (sectionId) =>
+      songbook.songs
+        .filter((s) => {
+          const sKey = s.section ? s.section.toString() : null;
+          return sectionId ? sKey === sectionId.toString() : !sKey;
+        })
+        .sort((a, b) => (a.order || 0) - (b.order || 0))
+        .map((s) => s.song)
+        .filter(Boolean);
+
+    const groups = [];
+    const noSection = getEntries(null);
+    if (noSection.length) {
+      groups.push({ id: null, name: 'Без розділу', icon: '🎵', songs: noSection });
+    }
+    sections
+      .slice()
+      .sort((a, b) => (a.order || 0) - (b.order || 0))
+      .forEach((sec) => {
+        const songs = getEntries(sec._id);
+        if (songs.length) {
+          groups.push({ id: sec._id, name: sec.name, icon: sec.icon || '🎵', songs });
+        }
+      });
+    return groups;
   }, [songbook]);
 
-  const allSections = useMemo(() => {
-    const noSectionSongs = getSectionSongs(null);
-    const sectionsWithSongs = songbook?.sections?.filter(sec => getSectionSongs(sec._id).length > 0) || [];
-    return [
-      ...(noSectionSongs.length > 0 ? [{ _id: null, name: 'Без розділу', icon: '🎵' }] : []),
-      ...sectionsWithSongs
-    ];
-  }, [songbook, getSectionSongs]);
+  const flatSongs = useMemo(() => groupedSongs.flatMap((g) => g.songs), [groupedSongs]);
 
-  // ГЕНЕРУЄМО СТРУКТУРУ КНИГИ (Масив усіх сторінок)
-  const bookPages = useMemo(() => {
-    if (!songbook) return [];
-    let pages = [];
-
-    // 0. Обкладинка (Права сторона - hard)
-    pages.push({ id: 'cover', type: 'cover', density: 'hard' });
-    // 1. Внутрішня частина обкладинки (Ліва сторона - hard)
-    pages.push({ id: 'inside-cover', type: 'blank', density: 'hard' });
-    // 2. Зміст (Права сторона - soft)
-    pages.push({ id: 'toc', type: 'toc' });
-
-    allSections.forEach(section => {
-      // Сторінка розділу
-      pages.push({ id: `sec-${section._id}`, type: 'section', data: section });
-      
-      const songs = getSectionSongs(section._id);
-      songs.forEach(song => {
-        // Кожна пісня займає розворот (дві сторінки)
-        pages.push({ id: `song-${song._id}-left`, type: 'song-left', data: song, section });
-        pages.push({ id: `song-${song._id}-right`, type: 'song-right', data: song });
-      });
-    });
-
-    // Додаємо задню обкладиннку (має бути зліва, тобто мати непарний індекс)
-    if (pages.length % 2 === 0) {
-      pages.push({ id: 'blank-padding', type: 'blank' }); // Порожня права сторінка
+  // Ініціалізуємо першу пісню як «поточну»
+  useEffect(() => {
+    if (!currentSongId && flatSongs.length) {
+      setCurrentSongId(flatSongs[0]._id);
     }
-    pages.push({ id: 'back-cover', type: 'back-cover', density: 'hard' });
+  }, [flatSongs, currentSongId]);
 
-    return pages;
-  }, [songbook, allSections, getSectionSongs]);
+  // ---- Спостерігаємо за тим, яка пісня видима зверху ----
+  useEffect(() => {
+    if (!scrollRef.current || flatSongs.length === 0) return;
 
-  const playPageTurnSound = () => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        // Беремо ту, що найближча до верху viewport-а серед перетинених
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible.length > 0) {
+          const id = visible[0].target.dataset.songId;
+          if (id) setCurrentSongId(id);
+        }
+      },
+      {
+        root: scrollRef.current,
+        // Зона «активності» — верхня третина
+        rootMargin: '0px 0px -65% 0px',
+        threshold: 0,
+      }
+    );
+
+    songRefs.current.forEach((node) => node && observer.observe(node));
+    return () => observer.disconnect();
+  }, [flatSongs]);
+
+  // ---- Видалення пісні зі співаника ----
+  const handleRemoveSong = async (song, e) => {
+    if (e) e.stopPropagation();
+    if (!song?._id) return;
+    if (!window.confirm(`Видалити пісню "${song.title}" зі співаника?`)) return;
+
     try {
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
-      oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.1);
-      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-      gainNode.gain.linearRampToValueAtTime(0.03, audioContext.currentTime + 0.01);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.15);
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.15);
-    } catch (e) {}
+      await songbooksAPI.removeSong(songbook._id, song._id);
+      const fresh = await songbooksAPI.getById(songbook._id);
+      setSongbook(fresh);
+
+      // Якщо щойно видалили "поточну" — переключимось на наступну/попередню видиму
+      if (currentSongId === song._id) {
+        const nextSongs = (fresh.songs || [])
+          .map((s) => s.song)
+          .filter(Boolean);
+        setCurrentSongId(nextSongs[0]?._id || null);
+      }
+      // Чистимо ref на видалену пісню
+      songRefs.current.delete(song._id);
+    } catch (err) {
+      console.error('Error removing song:', err);
+      alert(
+        'Помилка видалення пісні: ' +
+          (err.response?.data?.message || err.message || 'невідома помилка')
+      );
+    }
   };
 
   const handleClose = () => {
@@ -117,195 +144,196 @@ const BookView = ({ onClose, songbookData }) => {
     setTimeout(() => {
       if (onClose) onClose();
       else navigate(-1);
-    }, 300);
+    }, 220);
   };
 
-  // Навігація
-  const goToPage = (index) => {
-    if (flipBookRef.current) flipBookRef.current.pageFlip().flip(index);
+  // ---- Додавання пісні ----
+  const openAddEnd = () => setAddMode('end');
+  const openAddAfter = () => setAddMode('after');
+
+  // Викликається з AddSongsModal після успішного додавання
+  const handleSongAdded = async (newSong) => {
+    try {
+      const fresh = await songbooksAPI.getById(songbook._id);
+
+      if (addMode === 'after' && currentSongId && newSong?._id) {
+        const currentEntry = fresh.songs.find((s) => {
+          const sid = s.song?._id || s.song;
+          return sid?.toString() === currentSongId.toString();
+        });
+
+        if (currentEntry) {
+          const targetSectionId = currentEntry.section || null;
+          const targetKey = targetSectionId ? targetSectionId.toString() : null;
+
+          // Ентрі цільової секції без щойно доданої пісні
+          const entries = fresh.songs
+            .filter((s) => {
+              const sKey = s.section ? s.section.toString() : null;
+              return sKey === targetKey;
+            })
+            .filter((s) => {
+              const sid = s.song?._id || s.song;
+              return sid?.toString() !== newSong._id.toString();
+            })
+            .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+          const idxOfCurrent = entries.findIndex((s) => {
+            const sid = s.song?._id || s.song;
+            return sid?.toString() === currentSongId.toString();
+          });
+
+          if (idxOfCurrent !== -1) {
+            await songbooksAPI.moveSong(
+              songbook._id,
+              newSong._id,
+              targetSectionId,
+              idxOfCurrent + 1
+            );
+            const refreshed = await songbooksAPI.getById(songbook._id);
+            setSongbook(refreshed);
+            return;
+          }
+        }
+      }
+
+      setSongbook(fresh);
+    } catch (e) {
+      console.error('Error finalizing add:', e);
+    }
   };
 
-  const goToSection = (sectionId) => {
-    const idx = bookPages.findIndex(p => p.id === `sec-${sectionId}`);
-    if (idx !== -1) goToPage(idx);
-  };
+  // ---- Render ----
+  if (loading) {
+    return (
+      <div className={`book-view ${isClosing ? 'closing' : ''}`}>
+        <LoadingSpinner text="Завантаження..." />
+      </div>
+    );
+  }
 
-  const goToSong = (songId) => {
-    const idx = bookPages.findIndex(p => p.id === `song-${songId}-left`);
-    if (idx !== -1) goToPage(idx);
-  };
-
-  // --- Рендеринг контенту ---
-  const renderPageContent = (page) => {
-    if (page.type === 'cover') {
-      return (
-        <div className="page-inner book-title-page" style={{ justifyContent: 'center' }}>
-          <div className="title-emblem">📚</div>
-          <div className="title-main">{songbook.title?.toUpperCase() || 'СПІВАНИК'}</div>
-          {songbook.description && <div className="title-stats" style={{marginBottom: '1rem'}}>{songbook.description}</div>}
-          <div className="title-line" />
-          <div className="title-stats">{songbook.songs?.length || 0} пісень • {allSections.length} розділів</div>
-          <div className="title-hint" style={{ marginTop: '2rem' }}>Потягніть за куточок сторінки ↷</div>
-        </div>
-      );
-    }
-
-    if (page.type === 'toc') {
-      return (
-        <div className="page-inner">
-          <div className="toc-title">Розділи</div>
-          <div className="toc-sections">
-            {allSections.map((section, idx) => (
-              <div key={section._id || 'no-section'} className="toc-section" onClick={() => goToSection(section._id)}>
-                <div className="toc-number">{idx + 1}</div>
-                <div className="toc-section-info">
-                  <div className="toc-section-name">{section.icon || '🎵'} {section.name}</div>
-                  <div className="toc-section-count">{getSectionSongs(section._id).length} пісень</div>
-                </div>
-                <FiChevronRight className="toc-arrow" />
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    }
-
-    if (page.type === 'section') {
-      const sectionSongs = getSectionSongs(page.data._id);
-      return (
-        <div className="page-inner">
-          <div className="songs-page-title">Розділ: {page.data.name}</div>
-          <div className="songs-page-list">
-            {sectionSongs.map((song, idx) => (
-              <div key={song._id} className="song-entry" onClick={() => goToSong(song._id)}>
-                <span className="song-entry-number">{idx + 1}.</span>
-                <div className="song-entry-info">
-                  <div className="song-entry-title">{song.title}</div>
-                  {song.author && <div className="song-entry-meta">{song.author}</div>}
-                </div>
-                <div className="song-entry-actions">
-                  <button className="song-entry-action" onClick={(e) => { e.stopPropagation(); playNow(song); }}><FiPlay /></button>
-                  <button className="song-entry-action" onClick={(e) => { e.stopPropagation(); addToPlaylist(song); }}><FiPlus /></button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    }
-
-    if (page.type === 'song-left') {
-      const song = page.data;
-      return (
-        <div className="page-inner">
-          <button className="back-to-list" onClick={() => goToPage(2)}><FiArrowLeft /> До змісту</button>
-          <div className="song-page-header">
-            <div className="song-page-title">{song.title}</div>
-            {song.author && <div className="song-page-author">{song.author}</div>}
-            {(song.metadata?.words || song.metadata?.music) && (
-              <div className="song-page-meta">
-                {song.metadata.words && <span>Сл: {song.metadata.words}</span>}
-                {song.metadata.music && <span>Муз: {song.metadata.music}</span>}
-              </div>
-            )}
-            <div className="song-page-divider" />
-          </div>
-          <div className="song-page-lyrics">
-            <FormattedSong song={song} showChords={showChords} />
-          </div>
-        </div>
-      );
-    }
-
-    if (page.type === 'song-right') {
-      const song = page.data;
-      return (
-        <div className="page-inner">
-          <div className="songs-page-title">
-            {song.youtubeUrl && (
-              <a href={song.youtubeUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#8B4513', textDecoration: 'none', fontSize: '0.8rem' }}>
-                ▶ Послухати на YouTube
-              </a>
-            )}
-          </div>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', color: '#8B4513', fontSize: '0.8rem', marginBottom: '1rem', justifyContent: 'center' }}>
-            <input type="checkbox" checked={showChords} onChange={(e) => setShowChords(e.target.checked)} />
-            Показати акорди
-          </label>
-          {song.metadata?.performer && (
-            <div style={{ textAlign: 'center', color: '#8B7355', fontSize: '0.75rem', fontStyle: 'italic', marginBottom: '1rem' }}>
-              Виконавець: {song.metadata.performer}
-            </div>
-          )}
-          <div style={{ textAlign: 'center', color: '#8B7355', fontSize: '0.7rem', fontStyle: 'italic', marginTop: 'auto' }}>
-            ❧ {songbook?.title || 'Співаник'} ❧
-          </div>
-        </div>
-      );
-    }
-
-    if (page.type === 'blank' || page.type === 'back-cover') {
-      return (
-        <div className="page-inner empty-page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div className="empty-page-icon">❧</div>
-        </div>
-      );
-    }
-
-    return null;
-  };
-
-  if (loading || !songbook) return null; // Можна додати спінер
+  if (!songbook) return null;
 
   return (
-    <div className={`book-view ${onClose ? 'modal-mode' : ''} ${isClosing ? 'closing' : ''}`}>
-      {onClose && <div className="modal-backdrop" onClick={handleClose} />}
-      
-      <div className="book-toolbar">
-        <div className="toolbar-center">
-          <span className="toolbar-song-title">{songbook?.title || 'Співаник'}</span>
+    <div className={`book-view ${isClosing ? 'closing' : ''}`}>
+      <div className="bv-backdrop" onClick={handleClose} />
+
+      <div className="bv-modal" onClick={(e) => e.stopPropagation()}>
+        {/* Header */}
+        <header className="bv-header">
+          <div className="bv-title">
+            <FiMusic className="bv-title-icon" />
+            <span>{songbook.title}</span>
+          </div>
+          <button className="bv-close" onClick={handleClose} aria-label="Закрити">
+            <FiX />
+          </button>
+        </header>
+
+        {/* Scrollable content */}
+        <div className="bv-scroll" ref={scrollRef}>
+          {flatSongs.length === 0 ? (
+            <div className="bv-empty">
+              <div className="bv-empty-icon">🎶</div>
+              <p>У цьому співанику ще немає пісень</p>
+              <button className="bv-btn primary" onClick={openAddEnd}>
+                <FiPlus /> Додати першу пісню
+              </button>
+            </div>
+          ) : (
+            groupedSongs.map((group) => (
+              <section key={group.id || 'no-section'} className="bv-section">
+                <h2 className="bv-section-title">
+                  <span className="bv-section-icon">{group.icon}</span>
+                  {group.name}
+                </h2>
+
+                {group.songs.map((song) => (
+                  <article
+                    key={song._id}
+                    className={`bv-song ${currentSongId === song._id ? 'is-current' : ''}`}
+                    data-song-id={song._id}
+                    ref={(node) => {
+                      if (node) songRefs.current.set(song._id, node);
+                      else songRefs.current.delete(song._id);
+                    }}
+                  >
+                    <header className="bv-song-head">
+                      <button
+                        className="bv-song-remove"
+                        onClick={(e) => handleRemoveSong(song, e)}
+                        title="Видалити пісню зі співаника"
+                        aria-label="Видалити пісню"
+                      >
+                        <FiTrash2 />
+                      </button>
+                      <h3 className="bv-song-title">{song.title}</h3>
+                      {song.author && <div className="bv-song-author">{song.author}</div>}
+                      {(song.metadata?.words || song.metadata?.music) && (
+                        <div className="bv-song-meta">
+                          {song.metadata.words && <span>Сл: {song.metadata.words}</span>}
+                          {song.metadata.music && <span>Муз: {song.metadata.music}</span>}
+                        </div>
+                      )}
+                    </header>
+
+                    <div className="bv-song-body">
+                      <FormattedSong song={song} showChords={showChords} />
+                    </div>
+
+                    {song.youtubeUrl && (
+                      <a
+                        className="bv-yt-link"
+                        href={song.youtubeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        ▶ Послухати на YouTube
+                      </a>
+                    )}
+                  </article>
+                ))}
+              </section>
+            ))
+          )}
         </div>
-        <button className="book-close-btn" onClick={handleClose}><FiX /></button>
+
+        {/* Footer */}
+        <footer className="bv-footer">
+          <button
+            className={`bv-btn ${showChords ? 'active' : ''}`}
+            onClick={() => setShowChords((v) => !v)}
+            title={showChords ? 'Сховати акорди' : 'Показати акорди'}
+          >
+            {showChords ? <FiEyeOff /> : <FiEye />}
+            <span>{showChords ? 'Сховати акорди' : 'Показати акорди'}</span>
+          </button>
+
+          <button
+            className="bv-btn"
+            onClick={openAddAfter}
+            disabled={!currentSongId}
+            title="Додати пісню після поточної"
+          >
+            <FiCornerDownRight />
+            <span>Додати після поточної</span>
+          </button>
+
+          <button className="bv-btn primary" onClick={openAddEnd} title="Додати в кінець співаника">
+            <FiPlus />
+            <span>Додати в кінець</span>
+          </button>
+        </footer>
       </div>
 
-      <div className="flipbook-wrapper">
-        <HTMLFlipBook
-          width={420}       // Базова ширина сторінки
-          height={600}      // Базова висота
-          size="stretch"    // Книга розтягується під екран
-          minWidth={300}
-          maxWidth={800}
-          minHeight={400}
-          maxHeight={1000}
-          maxShadowOpacity={0.4}
-          showCover={true}  // Робить першу і останню сторінки твердими обкладинками
-          mobileScrollSupport={true}
-          onFlip={playPageTurnSound} // Звук при кожному перегортанні
-          ref={flipBookRef}
-          className="flip-book-container"
-        >
-          {bookPages.map((page, index) => {
-            // Визначаємо, права це чи ліва сторінка (парні - праві, непарні - ліві)
-            const isRightPage = index % 2 === 0;
-            const pageClass = isRightPage ? 'book-page-right' : 'book-page-left';
-            
-            return (
-              <Page 
-                key={page.id} 
-                density={page.density} 
-                className={pageClass}
-                number={index > 0 && index < bookPages.length - 1 ? index : null}
-              >
-                {renderPageContent(page)}
-              </Page>
-            );
-          })}
-        </HTMLFlipBook>
-
-        {/* Кнопки навігації (якщо користувач не хоче свайпати) */}
-        <button className="page-nav prev" onClick={() => flipBookRef.current?.pageFlip().flipPrev()}><FiChevronLeft /></button>
-        <button className="page-nav next" onClick={() => flipBookRef.current?.pageFlip().flipNext()}><FiChevronRight /></button>
-      </div>
+      {addMode && (
+        <AddSongsModal
+          songbook={songbook}
+          isOpen={true}
+          onClose={() => setAddMode(null)}
+          onSongAdded={handleSongAdded}
+        />
+      )}
     </div>
   );
 };

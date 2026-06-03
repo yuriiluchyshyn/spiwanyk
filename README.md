@@ -63,7 +63,7 @@ npm run full-dev   # Запуск frontend + backend
 
 **Окремий запуск компонентів:**
 ```bash
-# Frontend (порт 3000)
+# Frontend (порт 3010)
 ./run.sh           # Linux/Mac
 run.bat            # Windows
 npm start          # Будь-яка система
@@ -133,7 +133,7 @@ cd backend && npm run dev
 
 **Frontend:**
 ```bash
-npm start          # Запуск frontend (порт 3000)
+npm start          # Запуск frontend (порт 3010)
 npm run build      # Збірка для продакшн
 npm test           # Запуск тестів
 ```
@@ -162,7 +162,7 @@ make clean         # Очистити все
 ```
 
 ### Адреси:
-- **Frontend:** http://localhost:3000
+- **Frontend:** http://localhost:3010
 - **Backend API:** http://localhost:5000/api
 - **Health Check:** http://localhost:5000/api/health
 

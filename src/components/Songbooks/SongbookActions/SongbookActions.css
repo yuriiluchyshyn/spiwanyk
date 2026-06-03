@@ -39,28 +39,6 @@
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
-.add-songs-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 16px;
-  border: none;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background: linear-gradient(135deg, var(--fire-orange), var(--warm-amber));
-  color: var(--cream-white);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.add-songs-btn:hover {
-  background: linear-gradient(135deg, #e8a87c, #d4a574);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-}
-
 .play-all-btn {
   display: flex;
   align-items: center;
@@ -79,6 +57,28 @@
 
 .play-all-btn:hover {
   background: rgba(125, 184, 155, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.add-songs-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, var(--fire-orange), var(--warm-amber));
+  color: var(--cream-white);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.add-songs-btn:hover {
+  background: linear-gradient(135deg, #e8a87c, #d4a574);
   transform: translateY(-2px);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }

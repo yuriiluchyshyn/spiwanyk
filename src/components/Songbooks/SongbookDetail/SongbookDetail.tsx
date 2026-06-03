@@ -41,6 +41,7 @@ const SongbookDetail: React.FC = () => {
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
   const [draggedSong, setDraggedSong] = useState<Song | null>(null);
   const [dragOverSection, setDragOverSection] = useState<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<{ songId: string; position: 'before' | 'after' } | null>(null);
   const { addToPlaylist, playNow } = useSongbook();
 
   useEffect(() => {
@@ -138,6 +139,12 @@ const SongbookDetail: React.FC = () => {
   const handleDragStart = (e: React.DragEvent, song: Song) => {
     setDraggedSong(song);
     e.dataTransfer.effectAllowed = 'move';
+    // Required for Firefox to start drag
+    try {
+      e.dataTransfer.setData('text/plain', song._id);
+    } catch {
+      // ignore
+    }
   };
 
   const handleDragOver = (e: React.DragEvent, sectionId: string) => {
@@ -150,37 +157,119 @@ const SongbookDetail: React.FC = () => {
     setDragOverSection(null);
   };
 
+  // Drop on a section button = move to that section (append at end)
   const handleDrop = async (e: React.DragEvent, targetSectionId: string) => {
     e.preventDefault();
     setDragOverSection(null);
-    
+
     if (!draggedSong) return;
-    
-    const currentSectionId = draggedSong.sectionId;
-    
-    if (currentSectionId === targetSectionId) {
+
+    const sectionIdToSend =
+      targetSectionId === 'no-section' || !targetSectionId ? null : targetSectionId;
+
+    const currentSectionId = draggedSong.sectionId || null;
+    const normalizedTarget = sectionIdToSend || null;
+
+    if (currentSectionId === normalizedTarget) {
       setDraggedSong(null);
       return;
     }
-    
+
     try {
-      await songbooksAPI.removeSong(songbook._id, draggedSong._id);
-      
-      const sectionIdToSend = targetSectionId === 'no-section' ? undefined : targetSectionId;
-      await songbooksAPI.addSong(songbook._id, draggedSong._id, sectionIdToSend);
-      
+      // Append to end of target section
+      const sectionSongs = (songbook?.songs || []).filter((s: any) => {
+        const sec = s.section ? s.section.toString() : null;
+        return sec === normalizedTarget;
+      });
+
+      await songbooksAPI.moveSong(
+        songbook._id,
+        draggedSong._id,
+        normalizedTarget,
+        sectionSongs.length
+      );
+
       loadSongbook();
     } catch (error: any) {
       console.error('Error moving song:', error);
       alert('Помилка переміщення пісні: ' + (error.response?.data?.message || error.message));
     }
-    
+
     setDraggedSong(null);
+  };
+
+  // Drag over an individual song (for reordering)
+  const handleDragOverItem = (e: React.DragEvent, song: Song, index: number) => {
+    if (!draggedSong || draggedSong._id === song._id) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const midpoint = rect.top + rect.height / 2;
+    const position: 'before' | 'after' = e.clientY < midpoint ? 'before' : 'after';
+
+    setDropTarget(prev => {
+      if (prev && prev.songId === song._id && prev.position === position) return prev;
+      return { songId: song._id, position };
+    });
+  };
+
+  const handleDragLeaveItem = () => {
+    // Keep the target — onDragOver on next item will overwrite it.
+    // Clearing here causes flicker.
+  };
+
+  const handleDropOnItem = async (e: React.DragEvent, targetSong: Song, targetIndex: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!draggedSong || draggedSong._id === targetSong._id) {
+      setDraggedSong(null);
+      setDropTarget(null);
+      return;
+    }
+
+    const position = dropTarget?.position || 'after';
+    const targetSectionId = targetSong.sectionId || null;
+    const draggedSectionId = draggedSong.sectionId || null;
+
+    // Compute desired index within the target section
+    const sectionSongs = getFilteredSongs().filter(s => (s.sectionId || null) === targetSectionId);
+    const targetIdxInSection = sectionSongs.findIndex(s => s._id === targetSong._id);
+    let insertAt = position === 'before' ? targetIdxInSection : targetIdxInSection + 1;
+
+    // If reordering within same section and the dragged song currently sits before
+    // the insertion point, the index shrinks by 1 once we remove it.
+    if (draggedSectionId === targetSectionId) {
+      const draggedIdxInSection = sectionSongs.findIndex(s => s._id === draggedSong._id);
+      if (draggedIdxInSection !== -1 && draggedIdxInSection < insertAt) {
+        insertAt -= 1;
+      }
+    }
+
+    if (insertAt < 0) insertAt = 0;
+
+    try {
+      await songbooksAPI.moveSong(
+        songbook._id,
+        draggedSong._id,
+        targetSectionId,
+        insertAt
+      );
+      await loadSongbook();
+    } catch (error: any) {
+      console.error('Error reordering song:', error);
+      alert('Помилка зміни порядку: ' + (error.response?.data?.message || error.message));
+    }
+
+    setDraggedSong(null);
+    setDropTarget(null);
   };
 
   const handleDragEnd = () => {
     setDraggedSong(null);
     setDragOverSection(null);
+    setDropTarget(null);
   };
 
   const getFilteredSongs = (): Song[] => {
@@ -266,9 +355,13 @@ const SongbookDetail: React.FC = () => {
           songs={filteredSongs}
           activeSection={activeSection}
           draggedSong={draggedSong}
+          dropTarget={dropTarget}
           onShowAddSongs={() => setShowAddSongs(true)}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
+          onDragOverItem={handleDragOverItem}
+          onDragLeaveItem={handleDragLeaveItem}
+          onDropOnItem={handleDropOnItem}
           onViewSong={handleViewSong}
           onPlayNow={handlePlayNow}
           onAddToPlaylist={handleAddToPlaylist}

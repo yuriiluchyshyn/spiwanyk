@@ -94,7 +94,7 @@ curl http://localhost:5001/api/health
 ```
 
 ## Адреси після запуску
-- 🎵 **Frontend:** http://localhost:3000
+- 🎵 **Frontend:** http://localhost:3010
 - 🔧 **Backend API:** http://localhost:5001/api
 - 🗄️ **MongoDB:** localhost:27017
 

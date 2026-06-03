@@ -95,7 +95,7 @@ vercel --prod
 
 ## Окремий запуск компонентів
 
-### Frontend (порт 3000):
+### Frontend (порт 3010):
 ```bash
 npm start             # Тільки frontend
 make frontend         # Через Makefile
@@ -130,7 +130,7 @@ make deploy           # Деплой на Vercel
 ```
 
 ## Адреси після запуску:
-- 🎵 **Frontend:** http://localhost:3000
+- 🎵 **Frontend:** http://localhost:3010
 - 🔧 **Backend API:** http://localhost:5000/api
 - 🏥 **Health Check:** http://localhost:5000/api/health
 - 🗄️ **MongoDB:** localhost:27017
@@ -140,7 +140,7 @@ make deploy           # Деплой на Vercel
 ### Локальна розробка:
 ```
 Frontend (React) → Backend (Express) → MongoDB (Docker)
-     :3000              :5000            :27017
+     :3010              :5000            :27017
 ```
 
 ### Production (Vercel):

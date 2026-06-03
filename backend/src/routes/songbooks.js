@@ -140,7 +140,8 @@ router.get('/:id', optionalAuth, async (req, res) => {
     // Sort sections alphabetically
     songbook.sections.sort((a, b) => a.name.localeCompare(b.name, 'uk'));
 
-    // Sort songs within each section by title
+    // Group songs by section, preserving manual order via the `order` field.
+    // Falls back to title sort for legacy entries that share order=0.
     const songsBySection = {};
     songbook.songs.forEach(songEntry => {
       const sectionId = songEntry.section ? songEntry.section.toString() : 'no-section';
@@ -150,28 +151,28 @@ router.get('/:id', optionalAuth, async (req, res) => {
       songsBySection[sectionId].push(songEntry);
     });
 
-    // Sort songs within each section
     Object.keys(songsBySection).forEach(sectionId => {
       songsBySection[sectionId].sort((a, b) => {
+        const orderA = a.order ?? 0;
+        const orderB = b.order ?? 0;
+        if (orderA !== orderB) return orderA - orderB;
         const titleA = a.song?.title || '';
         const titleB = b.song?.title || '';
         return titleA.localeCompare(titleB, 'uk');
       });
     });
 
-    // Rebuild songs array with sorted order
+    // Rebuild songs array with the manual order
     const sortedSongs = [];
-    
-    // First add songs from sorted sections
+
     songbook.sections.forEach(section => {
       const sectionSongs = songsBySection[section._id.toString()] || [];
       sortedSongs.push(...sectionSongs);
     });
-    
-    // Then add songs without section
+
     const noSectionSongs = songsBySection['no-section'] || [];
     sortedSongs.push(...noSectionSongs);
-    
+
     songbook.songs = sortedSongs;
 
     res.json({ songbook });
@@ -464,6 +465,117 @@ router.delete('/:id/songs/:songId', auth, async (req, res) => {
     
     console.error('Remove song from songbook error:', error);
     res.status(500).json({ message: 'Помилка видалення пісні' });
+  }
+});
+
+// PUT /api/songbooks/:id/songs/reorder - Reorder songs within a section
+router.put('/:id/songs/reorder', [
+  auth,
+  body('sectionId').optional({ nullable: true }).custom((value) => {
+    if (value === undefined || value === null || value === '') return true;
+    if (!mongoose.Types.ObjectId.isValid(value)) {
+      throw new Error('Invalid section ID');
+    }
+    return true;
+  }),
+  body('orderedSongIds').isArray({ min: 1 }),
+  body('orderedSongIds.*').isMongoId()
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        message: 'Помилка валідації',
+        errors: errors.array()
+      });
+    }
+
+    const { sectionId, orderedSongIds } = req.body;
+    const normalizedSectionId = sectionId && sectionId !== '' ? sectionId : null;
+
+    const songbook = await Songbook.findById(req.params.id);
+    if (!songbook || !songbook.isActive) {
+      return res.status(404).json({ message: 'Співаник не знайдено' });
+    }
+
+    const access = songbook.canAccess(req.user);
+    if (!access.canAccess || access.permissions !== 'edit') {
+      return res.status(403).json({ message: 'Недостатньо прав для редагування' });
+    }
+
+    await songbook.reorderSongs(normalizedSectionId, orderedSongIds);
+
+    res.json({
+      message: 'Порядок пісень оновлено',
+      songbook: await songbook.populate('songs.song', 'title author')
+    });
+
+  } catch (error) {
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: 'Невірний ID' });
+    }
+    console.error('Reorder songs error:', error);
+    res.status(500).json({ message: 'Помилка зміни порядку пісень' });
+  }
+});
+
+// PUT /api/songbooks/:id/songs/:songId/move - Move a song to a section/index
+router.put('/:id/songs/:songId/move', [
+  auth,
+  body('sectionId').optional({ nullable: true }).custom((value) => {
+    if (value === undefined || value === null || value === '') return true;
+    if (!mongoose.Types.ObjectId.isValid(value)) {
+      throw new Error('Invalid section ID');
+    }
+    return true;
+  }),
+  body('targetIndex').optional().isInt({ min: 0 })
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        message: 'Помилка валідації',
+        errors: errors.array()
+      });
+    }
+
+    const { sectionId, targetIndex = 0 } = req.body;
+    const normalizedSectionId = sectionId && sectionId !== '' ? sectionId : null;
+
+    const songbook = await Songbook.findById(req.params.id);
+    if (!songbook || !songbook.isActive) {
+      return res.status(404).json({ message: 'Співаник не знайдено' });
+    }
+
+    const access = songbook.canAccess(req.user);
+    if (!access.canAccess || access.permissions !== 'edit') {
+      return res.status(403).json({ message: 'Недостатньо прав для редагування' });
+    }
+
+    if (normalizedSectionId) {
+      const section = songbook.sections.id(normalizedSectionId);
+      if (!section) {
+        return res.status(404).json({ message: 'Розділ не знайдено' });
+      }
+    }
+
+    await songbook.moveSong(req.params.songId, normalizedSectionId, parseInt(targetIndex, 10));
+
+    res.json({
+      message: 'Пісню переміщено',
+      songbook: await songbook.populate('songs.song', 'title author')
+    });
+
+  } catch (error) {
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: 'Невірний ID' });
+    }
+    if (error.message === 'Пісню не знайдено у співанику') {
+      return res.status(404).json({ message: error.message });
+    }
+    console.error('Move song error:', error);
+    res.status(500).json({ message: 'Помилка переміщення пісні' });
   }
 });
 

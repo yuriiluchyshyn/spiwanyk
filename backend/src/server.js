@@ -29,10 +29,10 @@ app.use(cors({
     if (!origin) return callback(null, true);
     
     const allowedOrigins = [
-      'http://localhost:3000',
-      'http://127.0.0.1:3000',
-      'http://localhost:3001',
-      'http://127.0.0.1:3001'
+      'http://localhost:3010',
+      'http://127.0.0.1:3010',
+      'http://localhost:3010',
+      'http://127.0.0.1:3010'
     ];
     
     if (process.env.NODE_ENV === 'production') {

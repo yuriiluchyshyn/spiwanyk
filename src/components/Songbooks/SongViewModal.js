@@ -3,10 +3,24 @@ import { FiX, FiMusic, FiEye, FiEyeOff } from 'react-icons/fi';
 import FormattedSong from '../Songs/FormattedSong';
 import './SongViewModal.css';
 
+const songHasChords = (song) => {
+  if (!song) return false;
+  if (Array.isArray(song.structure) && song.structure.length > 0) {
+    return song.structure.some(section =>
+      Array.isArray(section.lines) && section.lines.some(
+        line => Array.isArray(line.chordPositions) && line.chordPositions.length > 0
+      )
+    );
+  }
+  return false;
+};
+
 const SongViewModal = ({ song, isOpen, onClose }) => {
   const [showChords, setShowChords] = useState(false);
 
   if (!isOpen || !song) return null;
+
+  const hasChords = songHasChords(song);
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -24,9 +38,14 @@ const SongViewModal = ({ song, isOpen, onClose }) => {
           
           <div className="modal-controls">
             <button 
-              onClick={() => setShowChords(!showChords)}
+              onClick={() => hasChords && setShowChords(!showChords)}
               className={`chords-toggle-btn ${showChords ? 'active' : ''}`}
-              title={showChords ? 'Сховати акорди' : 'Показати акорди'}
+              title={
+                !hasChords
+                  ? 'Акорди для цієї пісні відсутні'
+                  : showChords ? 'Сховати акорди' : 'Показати акорди'
+              }
+              disabled={!hasChords}
             >
               {showChords ? <FiEyeOff /> : <FiEye />}
               {showChords ? 'Сховати акорди' : 'Показати акорди'}
@@ -81,7 +100,7 @@ const SongViewModal = ({ song, isOpen, onClose }) => {
           <div className="song-content">
             <FormattedSong 
               song={song} 
-              showChords={showChords}
+              showChords={showChords && hasChords}
               isModal={true}
             />
           </div>

@@ -207,3 +207,13 @@
     height: 28px;
   }
 }
+
+
+/* Drop indicators for reordering */
+.song-item.drop-before {
+  box-shadow: inset 0 3px 0 0 var(--fire-orange, #c97b63);
+}
+
+.song-item.drop-after {
+  box-shadow: inset 0 -3px 0 0 var(--fire-orange, #c97b63);
+}

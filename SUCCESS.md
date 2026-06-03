@@ -2,7 +2,7 @@
 
 ## ✅ Що працює зараз
 
-**Frontend:** ✅ Запущений на http://localhost:3000  
+**Frontend:** ✅ Запущений на http://localhost:3010  
 **Backend:** ✅ Запущений на http://localhost:5001/api  
 **MongoDB:** ⚠️ Потрібно запустити окремо  
 
@@ -36,7 +36,7 @@ make full-dev         # Повний стек з Docker
 
 ## 📱 Тестування
 
-1. **Відкрийте браузер:** http://localhost:3000
+1. **Відкрийте браузер:** http://localhost:3010
 2. **Перевірте API:** http://localhost:5001/api/health
 3. **Спробуйте увійти** за email
 
