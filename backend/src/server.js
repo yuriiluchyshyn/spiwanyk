@@ -20,30 +20,28 @@ const PORT = process.env.PORT || 5000;
 app.use(helmet({
   crossOriginEmbedderPolicy: false,
 }));
-app.use(compression()); // Стиснення відповідей
+app.use(compression());
 
-// CORS налаштування для розробки
+// CORS налаштування
 app.use(cors({
   origin: function (origin, callback) {
-    // Дозволяємо запити без origin (наприклад, мобільні додатки)
     if (!origin) return callback(null, true);
+    
+    // Дозволяємо всі vercel preview URLs
+    if (origin.endsWith('.vercel.app')) {
+      return callback(null, true);
+    }
     
     const allowedOrigins = [
       'http://localhost:3010',
       'http://127.0.0.1:3010',
-      'http://localhost:3010',
-      'http://127.0.0.1:3010'
+      'https://spiwanyk.vercel.app'
     ];
-    
-    if (process.env.NODE_ENV === 'production') {
-      allowedOrigins.push('https://your-domain.com');
-    }
     
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      console.log('CORS blocked origin:', origin);
-      callback(null, true); // Дозволяємо всі origins в development
+      callback(null, true);
     }
   },
   credentials: true,
@@ -56,10 +54,40 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-app.use(express.json({ limit: '5mb' })); // Зменшено ліміт
+app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 
-// Static files (for uploaded content)
+// MongoDB connection
+let isConnected = false;
+
+const connectDB = async () => {
+  if (isConnected) return;
+  
+  try {
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/plast-songbook', {
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
+    isConnected = true;
+    console.log('✅ MongoDB підключено');
+  } catch (err) {
+    console.error('❌ Помилка підключення до MongoDB:', err);
+    throw err;
+  }
+};
+
+// Підключення до БД перед кожним запитом (для serverless)
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    res.status(500).json({ message: 'Database connection failed' });
+  }
+});
+
+// Static files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Routes
@@ -74,17 +102,9 @@ app.get('/api/health', (req, res) => {
     message: 'Пластовий Співаник API працює!',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
-    cors: 'enabled'
+    cors: 'enabled',
+    db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
   });
-});
-
-// CORS preflight для всіх маршрутів
-app.options('*', (req, res) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.sendStatus(200);
 });
 
 // Error handling middleware
@@ -101,32 +121,15 @@ app.use('*', (req, res) => {
   res.status(404).json({ message: 'Маршрут не знайдено' });
 });
 
-// MongoDB connection з оптимізацією
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/plast-songbook', {
-  maxPoolSize: 10, // Обмеження пулу з'єднань
-  serverSelectionTimeoutMS: 5000, // Швидший timeout
-  socketTimeoutMS: 45000,
-})
-  .then(() => {
-    console.log('✅ MongoDB підключено');
-    
-    // Start server only after DB connection
+// Для локальної розробки
+if (process.env.NODE_ENV !== 'production') {
+  connectDB().then(() => {
     app.listen(PORT, () => {
       console.log(`🚀 Сервер запущено на порті ${PORT}`);
       console.log(`📍 API доступний за адресою: http://localhost:${PORT}/api`);
-      console.log(`🏥 Health check: http://localhost:${PORT}/api/health`);
     });
-  })
-  .catch(err => {
-    console.error('❌ Помилка підключення до MongoDB:', err);
-    process.exit(1);
   });
+}
 
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM отримано, закриваю сервер...');
-  mongoose.connection.close(() => {
-    console.log('MongoDB з\'єднання закрито');
-    process.exit(0);
-  });
-});
+// Export для Vercel serverless
+module.exports = app;
