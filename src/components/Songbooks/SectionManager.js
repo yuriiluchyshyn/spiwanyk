@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { songbooksAPI } from '../../services/api';
-import { FiPlus, FiTrash2, FiEdit3, FiCheck, FiX, FiBook } from 'react-icons/fi';
+import { FiPlus, FiTrash2, FiCheck, FiX, FiBook } from 'react-icons/fi';
 import './SectionManager.css';
 
 const SectionManager = ({ songbook, onSectionAdded, onSectionRemoved, canEdit }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [newSectionName, setNewSectionName] = useState('');
   const [newSectionDescription, setNewSectionDescription] = useState('');
-  const [editingSection, setEditingSection] = useState(null);
+  const [editingSection, setEditingSection] = useState(null); // eslint-disable-line no-unused-vars
   const [loading, setLoading] = useState(false);
 
   const handleAddSection = async () => {

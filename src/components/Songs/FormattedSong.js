@@ -77,7 +77,7 @@ const calculateCharPosition = (chars, charIndex) => {
     // Приблизні ширини символів в Georgia шрифті (1rem розмір)
     if (char === ' ') {
       position += 4.5; // пробіл
-    } else if (/[iIlj1\.,;:!]/.test(char)) {
+    } else if (/[iIlj1.,;:!]/.test(char)) {
       position += 4; // вузькі символи та пунктуація
     } else if (/[mMwW]/.test(char)) {
       position += 13; // широкі символи
