@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { FiX, FiLock, FiGlobe, FiUsers, FiMapPin } from 'react-icons/fi';
+import { locationAPI } from '../../services/api';
 import './CreateSongbookModal.css';
 
 const CreateSongbookModal = ({ onClose, onSubmit }) => {
@@ -24,9 +25,41 @@ const CreateSongbookModal = ({ onClose, onSubmit }) => {
     setError('');
 
     try {
+      // If privacy is 'nearby', update user's location first
+      if (formData.privacy === 'nearby') {
+        if (navigator.geolocation) {
+          await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(
+              async (position) => {
+                try {
+                  await locationAPI.updateLocation(
+                    position.coords.latitude,
+                    position.coords.longitude
+                  );
+                  resolve();
+                } catch (err) {
+                  console.error('Error updating location:', err);
+                  resolve(); // continue anyway
+                }
+              },
+              () => {
+                setError('Для розшарювання "Поруч" потрібен доступ до геолокації');
+                reject(new Error('Geolocation denied'));
+              }
+            );
+          });
+        } else {
+          setError('Ваш браузер не підтримує геолокацію');
+          setLoading(false);
+          return;
+        }
+      }
+
       await onSubmit(formData);
     } catch (err) {
-      setError(err.response?.data?.message || 'Помилка створення співаника');
+      if (err.message !== 'Geolocation denied') {
+        setError(err.response?.data?.message || 'Помилка створення співаника');
+      }
     } finally {
       setLoading(false);
     }

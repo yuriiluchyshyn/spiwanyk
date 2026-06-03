@@ -308,83 +308,54 @@ songbookSchema.statics.findPublic = function(options = {}) {
     .skip(skip);
 };
 
-songbookSchema.statics.findNearby = function(longitude, latitude, maxDistance = 500) {
-  return this.aggregate([
-    {
-      $match: {
-        privacy: 'nearby',
-        isActive: true
+songbookSchema.statics.findNearby = async function(longitude, latitude, maxDistance = 500, excludeUserId = null) {
+  const User = mongoose.model('User');
+  
+  // Step 1: Find users nearby (exclude coordinates [0,0] - not set)
+  const userQuery = {
+    'location.coordinates': { $ne: [0, 0] },
+    location: {
+      $near: {
+        $geometry: {
+          type: 'Point',
+          coordinates: [longitude, latitude]
+        },
+        $maxDistance: maxDistance
       }
     },
-    {
-      $lookup: {
-        from: 'users',
-        localField: 'owner',
-        foreignField: '_id',
-        as: 'ownerData'
-      }
-    },
-    {
-      $unwind: '$ownerData'
-    },
-    {
-      $match: {
-        'ownerData.location': {
-          $near: {
-            $geometry: {
-              type: 'Point',
-              coordinates: [longitude, latitude]
-            },
-            $maxDistance: maxDistance
-          }
-        }
-      }
-    },
-    {
-      $addFields: {
-        distance: {
-          $round: [{
-            $multiply: [
-              {
-                $acos: {
-                  $add: [
-                    {
-                      $multiply: [
-                        { $sin: { $degreesToRadians: latitude } },
-                        { $sin: { $degreesToRadians: { $arrayElemAt: ['$ownerData.location.coordinates', 1] } } }
-                      ]
-                    },
-                    {
-                      $multiply: [
-                        { $cos: { $degreesToRadians: latitude } },
-                        { $cos: { $degreesToRadians: { $arrayElemAt: ['$ownerData.location.coordinates', 1] } } },
-                        { $cos: { $degreesToRadians: { $subtract: [longitude, { $arrayElemAt: ['$ownerData.location.coordinates', 0] }] } } }
-                      ]
-                    }
-                  ]
-                }
-              },
-              6371000
-            ]
-          }, 0]
-        }
-      }
-    },
-    {
-      $project: {
-        title: 1,
-        description: 1,
-        owner: '$ownerData.email',
-        songs: 1,
-        sections: 1,
-        distance: 1,
-        createdAt: 1
-      }
-    },
-    {
-      $sort: { distance: 1 }
-    }
-  ]);
+    isActive: true
+  };
+
+  const nearbyUsers = await User.find(userQuery).select('_id email');
+
+  if (nearbyUsers.length === 0) {
+    return [];
+  }
+
+  const userIds = nearbyUsers.map(u => u._id);
+
+  // Step 2: Find songbooks with privacy 'nearby' owned by those users
+  const songbookQuery = {
+    owner: { $in: userIds },
+    privacy: 'nearby',
+    isActive: true
+  };
+
+  // Exclude own songbooks if userId provided
+  if (excludeUserId) {
+    songbookQuery.owner.$nin = [excludeUserId];
+    // Rebuild query to properly combine $in and $nin
+    songbookQuery.owner = { 
+      $in: userIds.filter(id => id.toString() !== excludeUserId.toString()) 
+    };
+  }
+
+  const songbooks = await this.find(songbookQuery)
+    .populate('owner', 'email')
+    .populate('songs.song', 'title author')
+    .sort({ createdAt: -1 });
+
+  return songbooks;
 };
 
 module.exports = mongoose.model('Songbook', songbookSchema);

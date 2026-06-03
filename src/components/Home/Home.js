@@ -36,6 +36,14 @@ const Home = () => {
             navigator.geolocation.getCurrentPosition(
               async (position) => {
                 try {
+                  // Update own location for others to find us
+                  await import('../../services/api').then(({ locationAPI }) => 
+                    locationAPI.updateLocation(
+                      position.coords.latitude,
+                      position.coords.longitude
+                    ).catch(() => {})
+                  );
+
                   const nearbyData = await songbooksAPI.getNearby(
                     position.coords.latitude,
                     position.coords.longitude

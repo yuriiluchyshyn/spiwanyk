@@ -92,7 +92,7 @@ router.get('/nearby', [
     const latitude = parseFloat(lat);
     const longitude = parseFloat(lng);
 
-    const songbooks = await Songbook.findNearby(longitude, latitude, parseInt(maxDistance));
+    const songbooks = await Songbook.findNearby(longitude, latitude, parseInt(maxDistance), req.user._id);
 
     res.json({
       songbooks,
