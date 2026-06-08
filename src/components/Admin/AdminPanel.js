@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import { FiMusic } from 'react-icons/fi';
 import './AdminPanel.css';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
@@ -204,7 +205,12 @@ function AdminPanel() {
               <span>{songs.length} шт.</span>
             </div>
 
-            {loading && <div className="admin-loading">Завантаження...</div>}
+            {loading && (
+              <div className="admin-loading">
+                <FiMusic className="loading-note" />
+                Завантаження...
+              </div>
+            )}
 
             {!loading && songs.length === 0 && (
               <div className="admin-empty">База порожня. Натисніть "Імпорт з JSON" щоб завантажити пісні.</div>

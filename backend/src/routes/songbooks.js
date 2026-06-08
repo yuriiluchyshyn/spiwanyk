@@ -11,7 +11,10 @@ const router = express.Router();
 // GET /api/songbooks/my - Get user's songbooks
 router.get('/my', auth, async (req, res) => {
   try {
-    const songbooks = await Songbook.find({ owner: req.user._id })
+    const songbooks = await Songbook.find({ 
+      owner: req.user._id,
+      isActive: { $ne: false } // Фільтруємо видалені співаники
+    })
       .populate('songs.song', 'title author')
       .sort({ lastAccessed: -1, createdAt: -1 });
 
@@ -119,9 +122,25 @@ router.get('/:id', optionalAuth, async (req, res) => {
       return res.status(404).json({ message: 'Співаник не знайдено' });
     }
 
+    // Clean up any songs with null references
+    songbook.songs = songbook.songs.filter(s => s.song !== null && s.song !== undefined);
+
     // Check access permissions
     if (req.user) {
+      console.log('Access check:', {
+        songbookId: songbook._id,
+        songbookPrivacy: songbook.privacy,
+        songbookOwner: songbook.owner,
+        user: {
+          _id: req.user._id,
+          email: req.user.email
+        },
+        sharedWith: songbook.sharedWith
+      });
+      
       const access = songbook.canAccess(req.user);
+      console.log('Access result:', access);
+      
       if (!access.canAccess) {
         return res.status(403).json({ message: 'Доступ заборонено' });
       }
@@ -144,6 +163,9 @@ router.get('/:id', optionalAuth, async (req, res) => {
     // Falls back to title sort for legacy entries that share order=0.
     const songsBySection = {};
     songbook.songs.forEach(songEntry => {
+      // Skip songs with null references
+      if (!songEntry.song) return;
+      
       const sectionId = songEntry.section ? songEntry.section.toString() : 'no-section';
       if (!songsBySection[sectionId]) {
         songsBySection[sectionId] = [];
@@ -238,7 +260,9 @@ router.put('/:id', [
   body('title').optional().trim().isLength({ min: 1, max: 200 }),
   body('description').optional().trim().isLength({ max: 1000 }),
   body('privacy').optional().isIn(['private', 'public', 'shared', 'nearby']),
-  body('tags').optional().isArray()
+  body('defaultPermissions').optional().isIn(['view', 'edit']),
+  body('tags').optional().isArray(),
+  body('sharedWith').optional().isArray()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -262,7 +286,7 @@ router.put('/:id', [
 
     // Update fields
     Object.keys(req.body).forEach(key => {
-      if (req.body[key] !== undefined) {
+      if (req.body[key] !== undefined && key !== 'sharedWith') {
         songbook[key] = req.body[key];
       }
     });
@@ -272,6 +296,23 @@ router.put('/:id', [
       songbook.tags = req.body.tags
         .filter(tag => tag && tag.trim())
         .map(tag => tag.trim().toLowerCase());
+    }
+
+    // Handle sharedWith updates
+    if (req.body.sharedWith !== undefined) {
+      // Validate shared users
+      const validSharedWith = req.body.sharedWith.filter(share => {
+        return share.email && 
+               typeof share.email === 'string' && 
+               share.email.includes('@') &&
+               ['view', 'edit'].includes(share.permissions);
+      }).map(share => ({
+        email: share.email.toLowerCase().trim(),
+        permissions: share.permissions,
+        sharedAt: new Date()
+      }));
+
+      songbook.sharedWith = validSharedWith;
     }
 
     await songbook.save();
@@ -414,9 +455,24 @@ router.post('/:id/songs', [
       userId: req.user._id
     });
 
-    await songbook.addSong(songId, normalizedSectionId, req.user._id);
-
-    console.log('AddSong - Successfully added song');
+    try {
+      await songbook.addSong(songId, normalizedSectionId, req.user._id);
+      console.log('AddSong - Successfully added song');
+    } catch (addError) {
+      console.error('AddSong - Error in addSong method:', {
+        error: addError.message,
+        name: addError.name,
+        stack: addError.stack,
+        songId: songId,
+        normalizedSectionId: normalizedSectionId
+      });
+      
+      if (addError.name === 'ValidationError') {
+        console.error('AddSong - Validation errors:', addError.errors);
+      }
+      
+      throw addError; // Re-throw to be caught by outer catch
+    }
 
     res.json({
       message: 'Пісню додано до співаника',
@@ -430,6 +486,20 @@ router.post('/:id/songs', [
     
     if (error.name === 'CastError') {
       return res.status(400).json({ message: 'Невірний ID' });
+    }
+    
+    if (error.name === 'ValidationError') {
+      console.error('AddSong - Validation error details:', {
+        errors: error.errors,
+        message: error.message
+      });
+      return res.status(400).json({ 
+        message: 'Помилка валідації при додаванні пісні',
+        details: Object.keys(error.errors).map(key => ({
+          field: key,
+          message: error.errors[key].message
+        }))
+      });
     }
     
     console.error('Add song to songbook error:', error);

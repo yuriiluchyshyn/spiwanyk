@@ -1,32 +1,25 @@
 import React from 'react';
-import { FiPlay, FiPlus, FiSettings, FiTrash2 } from 'react-icons/fi';
+import { FiPlus, FiSettings, FiTrash2 } from 'react-icons/fi';
 import './SongbookActions.css';
 
 interface SongbookActionsProps {
-  filteredSongsCount: number;
-  onPlayAll: () => void;
+  canEdit: boolean;
+  isOwner: boolean;
   onShowAddSongs: () => void;
   onToggleSectionManager: () => void;
   onDeleteSongbook: () => void;
 }
 
 const SongbookActions: React.FC<SongbookActionsProps> = ({
-  filteredSongsCount,
-  onPlayAll,
+  canEdit,
+  isOwner,
   onShowAddSongs,
   onToggleSectionManager,
   onDeleteSongbook
 }) => {
   return (
     <div className="songbook-actions">
-      {filteredSongsCount > 0 && (
-        <button onClick={onPlayAll} className="play-all-btn">
-          <FiPlay />
-          Грати все ({filteredSongsCount})
-        </button>
-      )}
-      
-      <div className="main-actions">
+      {canEdit && (
         <button 
           onClick={onShowAddSongs} 
           className="add-songs-btn"
@@ -34,6 +27,8 @@ const SongbookActions: React.FC<SongbookActionsProps> = ({
           <FiPlus />
           Додати пісні
         </button>
+      )}
+      {isOwner && (
         <button 
           onClick={onToggleSectionManager} 
           className="manage-sections-btn"
@@ -41,18 +36,16 @@ const SongbookActions: React.FC<SongbookActionsProps> = ({
           <FiSettings />
           Розділи
         </button>
-      </div>
-      
-      <div className="danger-actions">
+      )}
+      {isOwner && (
         <button 
           onClick={onDeleteSongbook}
           className="delete-songbook-btn"
           title="Видалити співаник"
         >
           <FiTrash2 />
-          Видалити співаник
         </button>
-      </div>
+      )}
     </div>
   );
 };

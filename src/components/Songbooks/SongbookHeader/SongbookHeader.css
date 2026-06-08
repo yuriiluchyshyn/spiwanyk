@@ -10,17 +10,21 @@
 .back-link {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   color: var(--fire-orange);
   text-decoration: none;
-  margin-bottom: 1rem;
-  font-weight: 500;
-  font-size: 0.85rem;
+  margin-bottom: 0.75rem;
+  font-size: 1.1rem;
   transition: all 0.3s ease;
+  background: rgba(232, 168, 124, 0.08);
 }
 
 .back-link:hover {
-  opacity: 0.7;
+  background: rgba(232, 168, 124, 0.15);
+  transform: translateX(-2px);
 }
 
 .songbook-info {
@@ -76,6 +80,48 @@
 
 .owner {
   color: var(--warm-gray);
+  font-style: italic;
+}
+
+.settings-button {
+  background: none;
+  border: 1px solid rgba(196, 168, 130, 0.3);
+  color: var(--stone-gray);
+  padding: 0.4rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.settings-button:hover {
+  background: rgba(196, 168, 130, 0.1);
+  border-color: var(--fire-orange);
+  color: var(--fire-orange);
+}
+
+.shared-count {
+  color: var(--fire-orange);
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+.shared-users-preview {
+  margin-top: 0.5rem;
+  font-size: 0.7rem;
+  color: var(--stone-gray);
+  line-height: 1.3;
+}
+
+.shared-user-preview {
+  color: var(--dark-brown);
+}
+
+.more-users {
+  color: var(--fire-orange);
   font-style: italic;
 }
 

@@ -18,6 +18,7 @@ interface SongItemProps {
   index: number;
   isDragging: boolean;
   dropPosition?: 'before' | 'after' | null;
+  canEdit: boolean;
   onDragStart: (e: React.DragEvent, song: Song) => void;
   onDragEnd: () => void;
   onDragOverItem?: (e: React.DragEvent, song: Song, index: number) => void;
@@ -34,6 +35,7 @@ const SongItem: React.FC<SongItemProps> = ({
   index,
   isDragging,
   dropPosition,
+  canEdit,
   onDragStart,
   onDragEnd,
   onDragOverItem,
@@ -53,12 +55,12 @@ const SongItem: React.FC<SongItemProps> = ({
   return (
     <div 
       className={`song-item ${isDragging ? 'dragging' : ''} ${dropClass}`}
-      draggable
-      onDragStart={(e) => onDragStart(e, song)}
-      onDragEnd={onDragEnd}
-      onDragOver={(e) => onDragOverItem && onDragOverItem(e, song, index)}
-      onDragLeave={() => onDragLeaveItem && onDragLeaveItem()}
-      onDrop={(e) => onDropOnItem && onDropOnItem(e, song, index)}
+      draggable={canEdit}
+      onDragStart={canEdit ? (e) => onDragStart(e, song) : undefined}
+      onDragEnd={canEdit ? onDragEnd : undefined}
+      onDragOver={canEdit && onDragOverItem ? (e) => onDragOverItem(e, song, index) : undefined}
+      onDragLeave={canEdit && onDragLeaveItem ? () => onDragLeaveItem() : undefined}
+      onDrop={canEdit && onDropOnItem ? (e) => onDropOnItem(e, song, index) : undefined}
     >
       <div className="song-number">
         {index + 1}
@@ -86,12 +88,14 @@ const SongItem: React.FC<SongItemProps> = ({
       </div>
       
       <div className="song-actions">
-        <button 
-          className="action-btn drag"
-          title="Перетягнути для зміни порядку або розділу"
-        >
-          <FiMove />
-        </button>
+        {canEdit && (
+          <button 
+            className="action-btn drag"
+            title="Перетягнути для зміни порядку або розділу"
+          >
+            <FiMove />
+          </button>
+        )}
         <button 
           onClick={() => onViewSong(song)}
           className="action-btn view"
@@ -99,13 +103,15 @@ const SongItem: React.FC<SongItemProps> = ({
         >
           <FiEye />
         </button>
-        <button 
-          onClick={() => onRemoveSong(song._id)}
-          className="action-btn remove"
-          title="Видалити зі співаника"
-        >
-          <FiTrash2 />
-        </button>
+        {canEdit && (
+          <button 
+            onClick={() => onRemoveSong(song._id)}
+            className="action-btn remove"
+            title="Видалити зі співаника"
+          >
+            <FiTrash2 />
+          </button>
+        )}
       </div>
     </div>
   );

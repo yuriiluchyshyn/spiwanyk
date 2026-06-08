@@ -1,4 +1,5 @@
 import React from 'react';
+import { FiMusic } from 'react-icons/fi';
 import './Button.css';
 
 const Button = ({ 
@@ -27,7 +28,7 @@ const Button = ({
     >
       {loading ? (
         <>
-          <span className="btn-spinner"></span>
+          <FiMusic className="btn-note-loader" />
           Завантаження...
         </>
       ) : (

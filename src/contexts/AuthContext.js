@@ -20,7 +20,11 @@ export const AuthProvider = ({ children }) => {
     if (token) {
       // Verify token and get user info
       authAPI.verifyToken(token)
-        .then(userData => {
+        .then(response => {
+          console.log('Auth response:', response);
+          // Витягуємо користувача з відповіді
+          const userData = response.user || response;
+          console.log('Setting user:', userData);
           setUser(userData);
         })
         .catch(() => {

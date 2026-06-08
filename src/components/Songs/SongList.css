@@ -444,6 +444,10 @@
   margin-bottom: 0.75rem;
 }
 
+.loading-icon {
+  animation: musicPulse 1.5s ease-in-out infinite;
+}
+
 .no-results h3 {
   color: var(--dark-brown);
   margin-bottom: 0.5rem;
@@ -496,5 +500,19 @@
   .metadata-compact {
     font-size: 0.7rem;
     padding: 1px 4px;
+  }
+}
+@keyframes musicPulse {
+  0% { 
+    transform: scale(1); 
+    opacity: 0.8;
+  }
+  50% { 
+    transform: scale(1.2); 
+    opacity: 1;
+  }
+  100% { 
+    transform: scale(1); 
+    opacity: 0.8;
   }
 }

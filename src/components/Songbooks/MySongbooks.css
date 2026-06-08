@@ -196,7 +196,7 @@
   transform: scale(1.08);
 }
 
-/* Контент картки (Link) */
+/* Контент картки (тепер div з onClick) */
 .songbook-content {
   padding: 1rem;
   text-decoration: none;
@@ -205,10 +205,13 @@
   flex-direction: column;
   gap: 0.5rem;
   flex: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .songbook-content:hover {
   text-decoration: none;
+  background: rgba(232, 168, 124, 0.03);
 }
 
 .songbook-content h3 {
@@ -287,7 +290,7 @@
   font-size: 2rem;
   color: var(--warm-amber);
   margin-bottom: 0.5rem;
-  animation: spin 2s linear infinite;
+  animation: musicPulse 1.5s ease-in-out infinite;
 }
 
 /* Мобільна адаптація */
@@ -323,5 +326,24 @@
 
   .songbook-content {
     padding: 0.85rem;
+  }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes musicPulse {
+  0% { 
+    transform: scale(1); 
+    opacity: 0.8;
+  }
+  50% { 
+    transform: scale(1.2); 
+    opacity: 1;
+  }
+  100% { 
+    transform: scale(1); 
+    opacity: 0.8;
   }
 }

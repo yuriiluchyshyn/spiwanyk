@@ -55,7 +55,7 @@ const Login = () => {
           {error && <div className="error-message">{error}</div>}
 
           <button type="submit" className="login-btn" disabled={loading}>
-            <FiLogIn />
+            {loading ? <FiMusic className="login-note-loader" /> : <FiLogIn />}
             {loading ? 'Вхід...' : 'Увійти'}
           </button>
         </form>

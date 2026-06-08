@@ -9,10 +9,10 @@ const router = express.Router();
 router.get('/', [
   optionalAuth,
   query('q').optional().trim().isLength({ max: 100 }),
-  query('category').optional().isIn(['patriotic', 'camp', 'religious', 'folk', 'modern', 'other']),
+  query('category').optional().isString(),
   query('difficulty').optional().isIn(['easy', 'medium', 'hard']),
   query('tags').optional().isString(),
-  query('limit').optional().isInt({ min: 1, max: 50 }),
+  query('limit').optional().isInt({ min: 1 }),
   query('skip').optional().isInt({ min: 0 })
 ], async (req, res) => {
   try {
@@ -29,15 +29,27 @@ router.get('/', [
       category,
       difficulty,
       tags,
-      limit = 20,
+      limit,
       skip = 0
     } = req.query;
+
+    // Валідуємо категорію з бази даних (якщо передана)
+    if (category) {
+      const Category = require('../models/Category');
+      const validCategory = await Category.findOne({ id: category });
+      if (!validCategory) {
+        return res.status(400).json({
+          message: 'Невірна категорія',
+          validCategories: (await Category.find({}).select('id name')).map(c => ({ id: c.id, name: c.name }))
+        });
+      }
+    }
 
     const options = {
       category,
       difficulty,
       tags: tags ? tags.split(',').map(tag => tag.trim()) : undefined,
-      limit: parseInt(limit),
+      limit: limit ? parseInt(limit) : undefined,
       skip: parseInt(skip)
     };
 
@@ -46,10 +58,18 @@ router.get('/', [
       songs = await Song.search(searchQuery, options);
     } else {
       // Get songs with virtual properties included - don't use .select() to preserve structure field
-      songs = await Song.find({ isPublic: true })
-        .sort({ createdAt: -1 })
-        .limit(options.limit)
-        .skip(options.skip);
+      let query = Song.find({ isPublic: true }).sort({ createdAt: -1 });
+      
+      // Застосовуємо фільтри
+      if (category) query = query.where('category', category);
+      if (difficulty) query = query.where('difficulty', difficulty);
+      if (options.tags && options.tags.length > 0) query = query.where('tags').in(options.tags);
+      
+      // Застосовуємо пагінацію тільки якщо є ліміт
+      if (options.skip > 0) query = query.skip(options.skip);
+      if (options.limit) query = query.limit(options.limit);
+      
+      songs = await query;
     }
 
     res.json({
@@ -66,16 +86,16 @@ router.get('/', [
 
 // GET /api/songs/popular - Get popular songs
 router.get('/popular', [
-  query('limit').optional().isInt({ min: 1, max: 50 })
+  query('limit').optional().isInt({ min: 1 })
 ], async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = req.query.limit ? parseInt(req.query.limit) : undefined;
     
     const songs = await Song.getPopular(limit);
     
     res.json({
       songs,
-      message: `Топ ${songs.length} популярних пісень`
+      message: `${limit ? `Топ ${limit}` : 'Всі'} популярні пісні`
     });
 
   } catch (error) {
@@ -87,7 +107,7 @@ router.get('/popular', [
 // GET /api/songs/search - Search songs (alternative endpoint)
 router.get('/search', [
   query('q').notEmpty().trim().isLength({ min: 1, max: 100 }),
-  query('limit').optional().isInt({ min: 1, max: 100 })
+  query('limit').optional().isInt({ min: 1 })
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -98,9 +118,9 @@ router.get('/search', [
       });
     }
 
-    const { q: searchQuery, limit = 20 } = req.query;
+    const { q: searchQuery, limit } = req.query;
     
-    const songs = await Song.search(searchQuery, { limit: parseInt(limit) });
+    const songs = await Song.search(searchQuery, { limit: limit ? parseInt(limit) : undefined });
     
     res.json({
       songs,

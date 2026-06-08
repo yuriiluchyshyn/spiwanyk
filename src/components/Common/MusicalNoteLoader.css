@@ -1,0 +1,65 @@
+.note-loader-container {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.note-loader-container.small {
+  padding: 1rem;
+}
+
+.note-loader-container.large {
+  padding: 4rem;
+}
+
+.pulsing-note {
+  font-size: 2rem;
+  color: var(--fire-orange);
+  animation: musicPulse 1.5s ease-in-out infinite;
+}
+
+.note-loader-container.small .pulsing-note {
+  font-size: 1.5rem;
+}
+
+.note-loader-container.large .pulsing-note {
+  font-size: 3rem;
+}
+
+.note-loader-container .loading-text {
+  font-size: 0.9rem;
+  margin-top: 1rem;
+  color: var(--warm-gray);
+  text-align: center;
+}
+
+@keyframes musicPulse {
+  0% { 
+    transform: scale(1); 
+    opacity: 0.8;
+  }
+  50% { 
+    transform: scale(1.2); 
+    opacity: 1;
+  }
+  100% { 
+    transform: scale(1); 
+    opacity: 0.8;
+  }
+}
+
+/* Альтернативна анімація - коливання */
+@keyframes musicSway {
+  0% { transform: rotate(-10deg) scale(1); }
+  25% { transform: rotate(10deg) scale(1.1); }
+  50% { transform: rotate(-5deg) scale(1.2); }
+  75% { transform: rotate(5deg) scale(1.1); }
+  100% { transform: rotate(-10deg) scale(1); }
+}
+
+/* Можна змінити анімацію на коливання, замінивши musicPulse на musicSway */
+.pulsing-note.sway {
+  animation: musicSway 2s ease-in-out infinite;
+}

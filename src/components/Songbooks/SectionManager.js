@@ -87,26 +87,22 @@ const SectionManager = ({ songbook, onSectionAdded, onSectionRemoved, canEdit })
 
       {isAdding && (
         <div className="add-section-form">
-          <div className="form-group">
-            <input
-              type="text"
-              placeholder="Назва розділу"
-              value={newSectionName}
-              onChange={(e) => setNewSectionName(e.target.value)}
-              className="section-name-input"
-              maxLength={100}
-            />
-          </div>
-          <div className="form-group">
-            <textarea
-              placeholder="Опис розділу (необов'язково)"
-              value={newSectionDescription}
-              onChange={(e) => setNewSectionDescription(e.target.value)}
-              className="section-description-input"
-              maxLength={500}
-              rows={2}
-            />
-          </div>
+          <input
+            type="text"
+            placeholder="Назва розділу"
+            value={newSectionName}
+            onChange={(e) => setNewSectionName(e.target.value)}
+            className="section-name-input"
+            maxLength={100}
+          />
+          <textarea
+            placeholder="Опис розділу (необов'язково)"
+            value={newSectionDescription}
+            onChange={(e) => setNewSectionDescription(e.target.value)}
+            className="section-description-input"
+            maxLength={500}
+            rows={2}
+          />
           <div className="form-actions">
             <button 
               onClick={handleAddSection}

@@ -160,7 +160,7 @@ songSchema.statics.search = function(query, options = {}) {
     category,
     tags,
     difficulty,
-    limit = 50,
+    limit,
     skip = 0
   } = options;
 
@@ -181,17 +181,24 @@ songSchema.statics.search = function(query, options = {}) {
   if (difficulty) searchQuery.difficulty = difficulty;
   if (tags && tags.length > 0) searchQuery.tags = { $in: tags };
 
-  return this.find(searchQuery)
+  let dbQuery = this.find(searchQuery)
     .sort({ createdAt: -1 })
-    .limit(limit)
-    .skip(skip)
     .populate('createdBy', 'email');
+
+  // Застосовуємо пагінацію тільки якщо є параметри
+  if (skip > 0) dbQuery = dbQuery.skip(skip);
+  if (limit) dbQuery = dbQuery.limit(limit);
+
+  return dbQuery;
 };
 
-songSchema.statics.getPopular = function(limit = 10) {
-  return this.find({ isPublic: true })
-    .sort({ playCount: -1, createdAt: -1 })
-    .limit(limit);
+songSchema.statics.getPopular = function(limit) {
+  let query = this.find({ isPublic: true })
+    .sort({ playCount: -1, createdAt: -1 });
+  
+  if (limit) query = query.limit(limit);
+  
+  return query;
 };
 
 module.exports = mongoose.model('Song', songSchema);

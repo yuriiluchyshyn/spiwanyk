@@ -66,6 +66,11 @@ const songbookSchema = new mongoose.Schema({
     enum: ['private', 'public', 'shared', 'nearby'],
     default: 'private'
   },
+  defaultPermissions: {
+    type: String,
+    enum: ['view', 'edit'],
+    default: 'view'
+  },
   sections: [sectionSchema],
   songs: [songbookSongSchema],
   sharedWith: [{
@@ -131,8 +136,11 @@ songbookSchema.set('toObject', { virtuals: true });
 
 // Methods
 songbookSchema.methods.addSong = function(songId, sectionId, userId) {
+  // Clean up null songs first
+  this.songs = this.songs.filter(s => s.song !== null && s.song !== undefined);
+  
   // Check if song already exists
-  const existingSong = this.songs.find(s => s.song.toString() === songId.toString());
+  const existingSong = this.songs.find(s => s.song && s.song.toString() === songId.toString());
   if (existingSong) {
     throw new Error('Пісня вже додана до співаника');
   }
@@ -140,6 +148,7 @@ songbookSchema.methods.addSong = function(songId, sectionId, userId) {
   // Compute next order within target section
   const sectionKey = sectionId ? sectionId.toString() : null;
   const sameSectionSongs = this.songs.filter(s => {
+    if (!s.song) return false; // Skip null songs
     const sKey = s.section ? s.section.toString() : null;
     return sKey === sectionKey;
   });
@@ -147,16 +156,23 @@ songbookSchema.methods.addSong = function(songId, sectionId, userId) {
 
   const newSong = {
     song: songId,
-    section: sectionId,
     order: maxOrder + 1,
     addedBy: userId
   };
+
+  // Only set section if sectionId is provided and valid
+  if (sectionId && sectionId.toString().trim()) {
+    newSong.section = sectionId;
+  }
 
   this.songs.push(newSong);
   return this.save();
 };
 
 songbookSchema.methods.reorderSongs = function(sectionId, orderedSongIds) {
+  // Clean up null songs first
+  this.songs = this.songs.filter(s => s.song !== null && s.song !== undefined);
+  
   // sectionId can be null/undefined for "no section"
   const sectionKey = sectionId ? sectionId.toString() : null;
 
@@ -168,6 +184,8 @@ songbookSchema.methods.reorderSongs = function(sectionId, orderedSongIds) {
 
   // Apply new order values to songs in the target section
   this.songs.forEach(entry => {
+    if (!entry.song) return; // Skip null songs
+    
     const entrySectionKey = entry.section ? entry.section.toString() : null;
     if (entrySectionKey !== sectionKey) return;
 
@@ -181,27 +199,35 @@ songbookSchema.methods.reorderSongs = function(sectionId, orderedSongIds) {
 };
 
 songbookSchema.methods.moveSong = function(songId, targetSectionId, targetIndex) {
+  // Clean up null songs first
+  this.songs = this.songs.filter(s => s.song !== null && s.song !== undefined);
+  
   const songIdStr = songId.toString();
   const targetSectionKey = targetSectionId ? targetSectionId.toString() : null;
 
-  const entry = this.songs.find(s => s.song.toString() === songIdStr);
+  const entry = this.songs.find(s => s.song && s.song.toString() === songIdStr);
   if (!entry) {
     throw new Error('Пісню не знайдено у співанику');
   }
 
-  // Update section
-  entry.section = targetSectionId || undefined;
+  // Update section - only set if targetSectionId is valid, otherwise remove field
+  if (targetSectionId && targetSectionId.toString().trim()) {
+    entry.section = targetSectionId;
+  } else {
+    entry.section = undefined;
+  }
 
   // Re-number songs in the target section so the moved song lands at targetIndex
   const sectionEntries = this.songs
     .filter(s => {
+      if (!s.song) return false; // Skip null songs
       const sKey = s.section ? s.section.toString() : null;
       return sKey === targetSectionKey;
     })
     .sort((a, b) => (a.order || 0) - (b.order || 0));
 
   // Remove the moved entry from list, then insert at desired index
-  const without = sectionEntries.filter(s => s.song.toString() !== songIdStr);
+  const without = sectionEntries.filter(s => s.song && s.song.toString() !== songIdStr);
   const insertAt = Math.max(0, Math.min(targetIndex, without.length));
   without.splice(insertAt, 0, entry);
 
@@ -213,7 +239,8 @@ songbookSchema.methods.moveSong = function(songId, targetSectionId, targetIndex)
 };
 
 songbookSchema.methods.removeSong = function(songId) {
-  this.songs = this.songs.filter(s => s.song.toString() !== songId.toString());
+  // Clean up null songs and remove the target song
+  this.songs = this.songs.filter(s => s.song && s.song.toString() !== songId.toString());
   return this.save();
 };
 
@@ -263,25 +290,55 @@ songbookSchema.methods.unshareWith = function(email) {
 };
 
 songbookSchema.methods.canAccess = function(user) {
+  console.log('canAccess called with:', {
+    songbookPrivacy: this.privacy,
+    songbookOwner: this.owner,
+    userId: user._id,
+    userEmail: user.email,
+    sharedWithCount: this.sharedWith?.length || 0
+  });
+
   // Owner can always access
   const ownerId = this.owner._id ? this.owner._id.toString() : this.owner.toString();
+  console.log('Owner check:', { ownerId, userId: user._id.toString() });
+  
   if (ownerId === user._id.toString()) {
+    console.log('Access granted: owner');
     return { canAccess: true, permissions: 'edit' };
   }
 
-  // Public songbooks
+  // Check if user is explicitly shared with (applies to all privacy types)
+  const sharedEntry = this.sharedWith?.find(s => s.email === user.email.toLowerCase());
+  if (sharedEntry) {
+    console.log('Access granted: explicitly shared with user', { permissions: sharedEntry.permissions });
+    return { canAccess: true, permissions: sharedEntry.permissions };
+  }
+
+  // Private songbooks - only owner and explicitly shared users
+  if (this.privacy === 'private') {
+    console.log('Access denied: private, not owner, not explicitly shared');
+    return { canAccess: false, permissions: null };
+  }
+
+  // Public songbooks - available to all authenticated users
   if (this.privacy === 'public') {
-    return { canAccess: true, permissions: 'view' };
+    console.log('Access granted: public');
+    return { canAccess: true, permissions: this.defaultPermissions || 'view' };
   }
 
-  // Shared songbooks
+  // Shared songbooks - only explicitly shared users (legacy behavior)
   if (this.privacy === 'shared') {
-    const sharedEntry = this.sharedWith.find(s => s.email === user.email.toLowerCase());
-    if (sharedEntry) {
-      return { canAccess: true, permissions: sharedEntry.permissions };
-    }
+    console.log('Access denied: shared privacy but not explicitly shared with user');
+    return { canAccess: false, permissions: null };
   }
 
+  // Nearby songbooks - available to all authenticated users in proximity
+  if (this.privacy === 'nearby') {
+    console.log('Access granted: nearby');
+    return { canAccess: true, permissions: this.defaultPermissions || 'view' };
+  }
+
+  console.log('Access denied: unknown privacy setting');
   return { canAccess: false, permissions: null };
 };
 

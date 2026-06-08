@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { songbooksAPI } from '../../services/api';
-import { FiPlus, FiBook, FiUsers, FiLock, FiGlobe, FiMapPin, FiEdit, FiTrash2 } from 'react-icons/fi';
+import { FiPlus, FiBook, FiUsers, FiLock, FiGlobe, FiMapPin, FiEdit, FiTrash2, FiMusic } from 'react-icons/fi';
 import CreateSongbookModal from './CreateSongbookModal';
+import BookView from '../BookView/BookView';
 import './MySongbooks.css';
 
 const MySongbooks = () => {
   const [songbooks, setSongbooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [bookSongbook, setBookSongbook] = useState(null); // для відкриття книги
 
   useEffect(() => {
     loadSongbooks();
@@ -17,6 +19,7 @@ const MySongbooks = () => {
   const loadSongbooks = async () => {
     try {
       const data = await songbooksAPI.getMy();
+      console.log('Loaded songbooks:', data);
       setSongbooks(data);
     } catch (error) {
       console.error('Error loading songbooks:', error);
@@ -70,7 +73,7 @@ const MySongbooks = () => {
   if (loading) {
     return (
       <div className="loading">
-        <FiBook className="loading-icon" />
+        <FiMusic className="loading-icon" />
         <p>Завантаження співаників...</p>
       </div>
     );
@@ -107,7 +110,9 @@ const MySongbooks = () => {
         </div>
       ) : (
         <div className="songbooks-grid">
-          {songbooks.map(songbook => (
+          {songbooks
+            .filter(songbook => songbook.isActive !== false) // Фільтруємо видалені співаники
+            .map(songbook => (
             <div key={songbook._id} className="songbook-card">
               <div className="songbook-header">
                 <div className="privacy-badge">
@@ -116,7 +121,7 @@ const MySongbooks = () => {
                 </div>
                 <div className="songbook-actions">
                   <Link 
-                    to={`/songbooks/${songbook._id}/edit`}
+                    to={`/songbooks/${songbook._id}`}
                     className="action-btn edit"
                     title="Редагувати"
                   >
@@ -132,7 +137,11 @@ const MySongbooks = () => {
                 </div>
               </div>
               
-              <Link to={`/songbooks/${songbook._id}`} className="songbook-content">
+              <div 
+                className="songbook-content" 
+                onClick={() => setBookSongbook(songbook)}
+                style={{ cursor: 'pointer' }}
+              >
                 <h3>{songbook.title}</h3>
                 {songbook.description && (
                   <p className="songbook-description">{songbook.description}</p>
@@ -157,7 +166,7 @@ const MySongbooks = () => {
                     )}
                   </div>
                 )}
-              </Link>
+              </div>
             </div>
           ))}
         </div>
@@ -167,6 +176,13 @@ const MySongbooks = () => {
         <CreateSongbookModal
           onClose={() => setShowCreateModal(false)}
           onSubmit={handleCreateSongbook}
+        />
+      )}
+
+      {bookSongbook && (
+        <BookView
+          onClose={() => setBookSongbook(null)}
+          songbookData={bookSongbook}
         />
       )}
     </div>

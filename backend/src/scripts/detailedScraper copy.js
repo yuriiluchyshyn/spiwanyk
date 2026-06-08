@@ -3,10 +3,9 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const fs = require('fs').promises;
 const path = require('path');
-const cluster = require('cluster');
 
 class DetailedSongScraper {
-  constructor(workerId = 0) {
+  constructor() {
     this.baseUrl = 'https://pryvatri.de';
     this.sections = {
       'avtorski': 'author',
@@ -18,22 +17,21 @@ class DetailedSongScraper {
     };
     this.browser = null;
     this.scrapedSongs = [];
-    this.workerId = workerId;
   }
 
   async initBrowser() {
-    console.log(`🚀 [Worker ${this.workerId}] Launching browser...`);
+    console.log('🚀 Launching browser...');
     this.browser = await puppeteer.launch({
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
-    console.log(`✅ [Worker ${this.workerId}] Browser launched`);
+    console.log('✅ Browser launched');
   }
 
   async closeBrowser() {
     if (this.browser) {
       await this.browser.close();
-      console.log(`🔌 [Worker ${this.workerId}] Browser closed`);
+      console.log('🔌 Browser closed');
     }
   }
 
@@ -357,7 +355,7 @@ class DetailedSongScraper {
 
   async scrapeSong(songUrl, title, category) {
     try {
-      console.log(`🎵 [Worker ${this.workerId}] Scraping: ${title}`);
+      console.log(`🎵 Scraping: ${title}`);
       
       const page = await this.browser.newPage();
       await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36');
@@ -454,11 +452,11 @@ class DetailedSongScraper {
                music: infoData.music,
                performer: infoData.performer
              };
-             console.log(`   ℹ️  [Worker ${this.workerId}] Found Info - Words: ${infoData.words || '-'}, Music: ${infoData.music || '-'}, Performer: ${infoData.performer || '-'}`);
+             console.log(`   ℹ️  Found Info - Words: ${infoData.words || '-'}, Music: ${infoData.music || '-'}, Performer: ${infoData.performer || '-'}`);
           }
         }
       } catch (error) {
-        console.log(`⚠️  [Worker ${this.workerId}] No info tab or error parsing it`);
+        console.log('⚠️  No info tab or error parsing it');
       }
 
       try {
@@ -486,14 +484,14 @@ class DetailedSongScraper {
       if (lyricsHtml || chordsHtml) {
         const optimalContent = this.selectOptimalContent(lyricsHtml, chordsHtml);
         songData.structure = await this.analyzeStructure(page, optimalContent.content, optimalContent.hasChords);
-        console.log(`📊 [Worker ${this.workerId}] Parsed ${songData.structure.length} sections using ${optimalContent.type}`);
+        console.log(`📊 Parsed ${songData.structure.length} sections using ${optimalContent.type}`);
       }
 
       await page.close();
       return songData;
 
     } catch (error) {
-      console.error(`❌ [Worker ${this.workerId}] Error scraping ${title}:`, error.message);
+      console.error(`❌ Error scraping ${title}:`, error.message);
       return null;
     }
   }
@@ -501,7 +499,7 @@ class DetailedSongScraper {
   async fetchSectionSongs(sectionName) {
     try {
       const sectionUrl = `${this.baseUrl}/${sectionName}`;
-      console.log(`📂 [Worker ${this.workerId}] Fetching section: ${sectionName}`);
+      console.log(`📂 Fetching section: ${sectionName}`);
       
       const response = await axios.get(sectionUrl, {
         headers: { 'User-Agent': 'Mozilla/5.0' },
@@ -527,46 +525,21 @@ class DetailedSongScraper {
     }
   }
 
-  async scrapeAssignedSongs(songBatch) {
-    try {
-      console.log(`🎵 [Worker ${this.workerId}] Starting batch of ${songBatch.length} songs...`);
-      await this.initBrowser();
-      
-      for (let i = 0; i < songBatch.length; i++) {
-        const { url, title, category } = songBatch[i];
-        if (i > 0) await new Promise(resolve => setTimeout(resolve, 2000));
-
-        const songData = await this.scrapeSong(url, title, category);
-        if (songData && songData.structure.length > 0) {
-          this.scrapedSongs.push(songData);
-          console.log(`✅ [Worker ${this.workerId}] Added: ${songData.title} (${i + 1}/${songBatch.length})`);
-        }
-      }
-
-      console.log(`🎉 [Worker ${this.workerId}] Batch completed! Songs scraped: ${this.scrapedSongs.length}`);
-      return this.scrapedSongs;
-    } catch (error) {
-      console.error(`❌ [Worker ${this.workerId}] Batch scraping failed:`, error);
-      return [];
-    } finally {
-      await this.closeBrowser();
-    }
-  }
-
   async scrapeAllSongs() {
     try {
       console.log('🎵 Starting detailed song scraping...');
       await this.initBrowser();
       
       let totalScraped = 0;
+      const maxSongs = 50000; // Збільш або прибери цей ліміт, коли будеш готовий скрепити все
       
       for (const [sectionName, category] of Object.entries(this.sections)) {
+        if (totalScraped >= maxSongs) break;
+        
         console.log(`\n📂 Processing section: ${sectionName} (${category})`);
         const songLinks = await this.fetchSectionSongs(sectionName);
         
-        console.log(`📊 Found ${songLinks.length} songs in ${sectionName}, processing all`);
-        
-        for (let i = 0; i < songLinks.length; i++) {
+        for (let i = 0; i < songLinks.length && totalScraped < maxSongs; i++) {
           const songLink = songLinks[i];
           if (i > 0) await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -574,7 +547,7 @@ class DetailedSongScraper {
           if (songData && songData.structure.length > 0) {
             this.scrapedSongs.push(songData);
             totalScraped++;
-            console.log(`✅ Added: ${songData.title} (${i + 1}/${songLinks.length}) - Total: ${totalScraped}`);
+            console.log(`✅ Added: ${songData.title} (${totalScraped}/${maxSongs})`);
           }
         }
       }
@@ -587,208 +560,41 @@ class DetailedSongScraper {
     }
   }
 
-  async saveToJson(allSongs = null) {
+  async saveToJson() {
     try {
       const dataDir = path.join(__dirname, '../../data');
       await fs.mkdir(dataDir, { recursive: true });
       
       const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-      let filename, filepath;
+      const filename = `scraped-songs-${timestamp}.json`;
+      const filepath = path.join(dataDir, filename);
       
-      if (allSongs) {
-        // Збереження загального файлу
-        filename = `scraped-songs-combined-${timestamp}.json`;
-        filepath = path.join(dataDir, filename);
-        
-        const output = {
-          metadata: {
-            scrapedAt: new Date().toISOString(),
-            totalSongs: allSongs.length,
-            sections: Object.keys(this.sections),
-            version: '1.0.5',
-            workers: 10
-          },
-          songs: allSongs
-        };
+      const output = {
+        metadata: {
+          scrapedAt: new Date().toISOString(),
+          totalSongs: this.scrapedSongs.length,
+          sections: Object.keys(this.sections),
+          version: '1.0.5'
+        },
+        songs: this.scrapedSongs
+      };
 
-        await fs.writeFile(filepath, JSON.stringify(output, null, 2), 'utf8');
-        console.log(`💾 Combined results saved to: ${filepath}`);
-        
-        const latestPath = path.join(dataDir, 'latest-songs.json');
-        await fs.writeFile(latestPath, JSON.stringify(output, null, 2), 'utf8');
-        console.log(`💾 Also saved as: ${latestPath}`);
-      } else {
-        // Збереження файлу воркера
-        filename = `scraped-songs-worker-${this.workerId}-${timestamp}.json`;
-        filepath = path.join(dataDir, filename);
-        
-        const output = {
-          metadata: {
-            scrapedAt: new Date().toISOString(),
-            totalSongs: this.scrapedSongs.length,
-            workerId: this.workerId,
-            version: '1.0.5'
-          },
-          songs: this.scrapedSongs
-        };
-
-        await fs.writeFile(filepath, JSON.stringify(output, null, 2), 'utf8');
-        console.log(`💾 [Worker ${this.workerId}] Saved to: ${filepath}`);
-      }
+      await fs.writeFile(filepath, JSON.stringify(output, null, 2), 'utf8');
+      console.log(`💾 Saved to: ${filepath}`);
+      
+      const latestPath = path.join(dataDir, 'latest-songs.json');
+      await fs.writeFile(latestPath, JSON.stringify(output, null, 2), 'utf8');
+      console.log(`💾 Also saved as: ${latestPath}`);
     } catch (error) {
       console.error('❌ Error saving JSON:', error);
     }
   }
 }
 
-// Функція для збирання всіх посилань
-async function getAllSongLinks() {
-  const scraper = new DetailedSongScraper();
-  const allSongLinks = [];
-  
-  for (const [sectionName, category] of Object.entries(scraper.sections)) {
-    console.log(`📂 Collecting links from section: ${sectionName} (${category})`);
-    const songLinks = await scraper.fetchSectionSongs(sectionName);
-    
-    console.log(`📊 Found ${songLinks.length} songs in ${sectionName}, taking all`);
-    
-    for (const songLink of songLinks) {
-      allSongLinks.push({
-        url: songLink.url,
-        title: songLink.title,
-        category: category
-      });
-    }
-  }
-  
-  console.log(`📋 Total song links collected: ${allSongLinks.length}`);
-  return allSongLinks;
-}
-
-// Функція для розподілу завдань між воркерами
-function distributeWork(songLinks, numWorkers) {
-  const batches = [];
-  const batchSize = Math.ceil(songLinks.length / numWorkers);
-  
-  for (let i = 0; i < numWorkers; i++) {
-    const start = i * batchSize;
-    const end = Math.min(start + batchSize, songLinks.length);
-    batches.push(songLinks.slice(start, end));
-  }
-  
-  return batches;
-}
-
-// Функція для збирання результатів від усіх воркерів
-async function combineResults() {
-  const dataDir = path.join(__dirname, '../../data');
-  const files = await fs.readdir(dataDir);
-  const workerFiles = files.filter(f => f.startsWith('scraped-songs-worker-') && f.endsWith('.json'));
-  
-  let allSongs = [];
-  
-  for (const file of workerFiles) {
-    try {
-      const filepath = path.join(dataDir, file);
-      const content = await fs.readFile(filepath, 'utf8');
-      const data = JSON.parse(content);
-      
-      if (data.songs && Array.isArray(data.songs)) {
-        allSongs = allSongs.concat(data.songs);
-        console.log(`📄 Loaded ${data.songs.length} songs from ${file}`);
-      }
-      
-      // Видаляємо тимчасовий файл воркера після читання
-      await fs.unlink(filepath);
-    } catch (error) {
-      console.error(`❌ Error reading ${file}:`, error.message);
-    }
-  }
-  
-  console.log(`🎉 Combined total: ${allSongs.length} songs`);
-  return allSongs;
-}
-
 async function main() {
-  const numWorkers = 10; // Повертаємо до 10 воркерів
-  
-  if (cluster.isPrimary) {
-    console.log(`🎭 Master process starting with ${numWorkers} workers...`);
-    
-    // Збираємо всі посилання на пісні
-    const allSongLinks = await getAllSongLinks();
-    const workBatches = distributeWork(allSongLinks, numWorkers);
-    
-    console.log(`📊 Work distribution:`);
-    workBatches.forEach((batch, index) => {
-      console.log(`   Worker ${index}: ${batch.length} songs`);
-    });
-    
-    // Створюємо воркери
-    const workers = [];
-    let completedWorkers = 0;
-    
-    for (let i = 0; i < numWorkers; i++) {
-      const worker = cluster.fork({ WORKER_ID: i });
-      workers.push(worker);
-      
-      worker.on('message', (message) => {
-        if (message.type === 'ready') {
-          console.log(`👷 Worker ${i} ready, sending ${workBatches[i].length} songs`);
-          worker.send({ type: 'work', batch: workBatches[i] });
-        } else if (message.type === 'completed') {
-          completedWorkers++;
-          console.log(`✅ Worker ${i} completed (${completedWorkers}/${numWorkers})`);
-          
-          if (completedWorkers === numWorkers) {
-            console.log(`🎊 All workers completed! Combining results...`);
-            
-            // Збираємо всі результати
-            setTimeout(async () => {
-              try {
-                const combinedSongs = await combineResults();
-                
-                // Зберігаємо загальний файл
-                const scraper = new DetailedSongScraper();
-                await scraper.saveToJson(combinedSongs);
-                
-                console.log(`🎉 Scraping completed successfully! Total: ${combinedSongs.length} songs`);
-                process.exit(0);
-              } catch (error) {
-                console.error('❌ Error combining results:', error);
-                process.exit(1);
-              }
-            }, 2000); // Чекаємо 2 секунди, щоб воркери закінчили запис
-          }
-        }
-      });
-    }
-    
-    // Обробляємо вихід воркерів
-    cluster.on('exit', (worker, code, signal) => {
-      console.log(`💀 Worker ${worker.process.pid} died`);
-    });
-    
-  } else {
-    // Код воркера
-    const workerId = parseInt(process.env.WORKER_ID) || 0;
-    const scraper = new DetailedSongScraper(workerId);
-    
-    process.send({ type: 'ready' });
-    
-    process.on('message', async (message) => {
-      if (message.type === 'work') {
-        try {
-          const results = await scraper.scrapeAssignedSongs(message.batch);
-          await scraper.saveToJson();
-          process.send({ type: 'completed', count: results.length });
-        } catch (error) {
-          console.error(`❌ Worker ${workerId} error:`, error);
-          process.send({ type: 'completed', count: 0 });
-        }
-      }
-    });
-  }
+  const scraper = new DetailedSongScraper();
+  await scraper.scrapeAllSongs();
+  await scraper.saveToJson();
 }
 
 if (require.main === module) {

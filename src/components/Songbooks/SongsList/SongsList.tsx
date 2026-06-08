@@ -18,6 +18,7 @@ interface SongsListProps {
   activeSection: string;
   draggedSong: Song | null;
   dropTarget?: { songId: string; position: 'before' | 'after' } | null;
+  canEdit: boolean;
   onShowAddSongs: () => void;
   onDragStart: (e: React.DragEvent, song: Song) => void;
   onDragEnd: () => void;
@@ -35,6 +36,7 @@ const SongsList: React.FC<SongsListProps> = ({
   activeSection,
   draggedSong,
   dropTarget,
+  canEdit,
   onShowAddSongs,
   onDragStart,
   onDragEnd,
@@ -50,6 +52,7 @@ const SongsList: React.FC<SongsListProps> = ({
     return (
       <EmptyState 
         activeSection={activeSection}
+        canEdit={canEdit}
         onShowAddSongs={onShowAddSongs}
       />
     );
@@ -67,6 +70,7 @@ const SongsList: React.FC<SongsListProps> = ({
             index={index}
             isDragging={draggedSong?._id === song._id}
             dropPosition={dropPosition}
+            canEdit={canEdit}
             onDragStart={onDragStart}
             onDragEnd={onDragEnd}
             onDragOverItem={onDragOverItem}

@@ -4,11 +4,13 @@ import './EmptyState.css';
 
 interface EmptyStateProps {
   activeSection: string;
+  canEdit: boolean;
   onShowAddSongs: () => void;
 }
 
 const EmptyState: React.FC<EmptyStateProps> = ({
   activeSection,
+  canEdit,
   onShowAddSongs
 }) => {
   return (
@@ -20,7 +22,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
           : 'У цьому розділі ще немає пісень'
         }
       </h3>
-      {activeSection === 'all' && (
+      {activeSection === 'all' && canEdit && (
         <button 
           onClick={onShowAddSongs} 
           className="add-first-song-btn"
@@ -28,6 +30,11 @@ const EmptyState: React.FC<EmptyStateProps> = ({
           <FiPlus />
           Додати першу пісню
         </button>
+      )}
+      {!canEdit && (
+        <p style={{ color: '#666', fontSize: '0.9rem', marginTop: '1rem' }}>
+          У вас немає прав для редагування цього співаника
+        </p>
       )}
     </div>
   );

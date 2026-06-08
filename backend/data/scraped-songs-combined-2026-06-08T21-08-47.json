@@ -1,7 +1,7 @@
 {
   "metadata": {
-    "scrapedAt": "2026-06-08T21:35:56.095Z",
-    "totalSongs": 377,
+    "scrapedAt": "2026-06-08T21:08:47.209Z",
+    "totalSongs": 378,
     "sections": [
       "avtorski",
       "plastovi",
@@ -10,7 +10,8 @@
       "lemkivski",
       "novacki"
     ],
-    "version": "1.0.5"
+    "version": "1.0.5",
+    "workers": 10
   },
   "songs": [
     {
@@ -94944,6 +94945,254 @@
               "chordPositions": [],
               "metadata": {
                 "isChorus": false,
+                "repeat": 1
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Ой, смереко",
+      "author": "",
+      "category": "folk",
+      "url": "https://pryvatri.de/narodni/191-oy-smereko",
+      "youtubeUrl": "https://www.youtube.com/watch?v=z1k84uDAeW8",
+      "metadata": {
+        "words": "",
+        "music": "Любомир Яким",
+        "performer": "Mad Heads (XL)"
+      },
+      "structure": [
+        {
+          "type": "verse",
+          "number": 1,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "На краю села хатина,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false,
+                "repeat": 1
+              }
+            },
+            {
+              "text": "Загляда в вікно смерека,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false,
+                "repeat": 1
+              }
+            },
+            {
+              "text": "А в хатині є дівчина –",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false,
+                "repeat": 1
+              }
+            },
+            {
+              "text": "Та до неї так далеко.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false,
+                "repeat": 1
+              }
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "number": 1,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "    Ой, смереко,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true,
+                "repeat": 1
+              }
+            },
+            {
+              "text": "    Розкажи мені, смереко,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true,
+                "repeat": 1
+              }
+            },
+            {
+              "text": "    Чом ростеш ти так далеко,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true,
+                "repeat": 1
+              }
+            },
+            {
+              "text": "    Чарівна моя смереко?..",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true,
+                "repeat": 1
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 2,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Вийди, мила, на озерце,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false,
+                "repeat": 1
+              }
+            },
+            {
+              "text": "Бачити тебе я мушу,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false,
+                "repeat": 1
+              }
+            },
+            {
+              "text": "Ти запала мені в серце,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false,
+                "repeat": 1
+              }
+            },
+            {
+              "text": "Полонила мою душу!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false,
+                "repeat": 1
+              }
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "number": 2,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "    Ой, смереко,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true,
+                "repeat": 1
+              }
+            },
+            {
+              "text": "    Розкажи мені, смереко,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true,
+                "repeat": 1
+              }
+            },
+            {
+              "text": "    Чом ростеш ти так далеко,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true,
+                "repeat": 1
+              }
+            },
+            {
+              "text": "    Чарівна моя смереко?..",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true,
+                "repeat": 1
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 3,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Вже весна Карпати вкрила,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false,
+                "repeat": 1
+              }
+            },
+            {
+              "text": "Журавлі вже прилетіли,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false,
+                "repeat": 1
+              }
+            },
+            {
+              "text": "Лиш свою дівчину любу",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false,
+                "repeat": 1
+              }
+            },
+            {
+              "text": "Ми з тобою не зустріли...",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false,
+                "repeat": 1
+              }
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "number": 3,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "    Ой, смереко,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true,
+                "repeat": 1
+              }
+            },
+            {
+              "text": "    Розкажи мені, смереко,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true,
+                "repeat": 1
+              }
+            },
+            {
+              "text": "    Чом ростеш ти так далеко,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true,
+                "repeat": 1
+              }
+            },
+            {
+              "text": "    Чарівна моя смереко?..",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true,
                 "repeat": 1
               }
             }

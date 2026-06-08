@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import { songbooksAPI } from '../../services/api';
 import { FiX, FiMusic, FiPlus, FiCornerDownRight, FiEye, FiEyeOff, FiTrash2, FiChevronDown, FiMove } from 'react-icons/fi';
 import FormattedSong from '../Songs/FormattedSong';
 import AddSongsModal from '../Songbooks/AddSongsModal';
-import LoadingSpinner from '../Common/LoadingSpinner';
+import MusicalNoteLoader from '../Common/MusicalNoteLoader';
 import './BookView.css';
 
 const BookView = ({ onClose, songbookData }) => {
   const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
   const [songbook, setSongbook] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showChords, setShowChords] = useState(false);
@@ -89,6 +91,62 @@ const BookView = ({ onClose, songbookData }) => {
   }, [songbook]);
 
   const flatSongs = useMemo(() => groupedSongs.flatMap((g) => g.songs), [groupedSongs]);
+
+  // ---- Права доступу ----
+  const isOwner = () => {
+    if (!currentUser || !songbook || !songbook.owner) return false;
+    
+    const ownerId = typeof songbook.owner === 'object' ? songbook.owner._id : songbook.owner;
+    const userId = currentUser._id;
+    
+    return ownerId === userId;
+  };
+
+  const canEditSongbook = () => {
+    if (!currentUser || !songbook) return false;
+    
+    console.log('BookView canEditSongbook check:', {
+      currentUser: currentUser.email,
+      songbook: {
+        title: songbook.title,
+        privacy: songbook.privacy,
+        defaultPermissions: songbook.defaultPermissions,
+        owner: songbook.owner?.email,
+        sharedWith: songbook.sharedWith
+      }
+    });
+    
+    // Власник завжди може редагувати
+    if (isOwner()) {
+      console.log('BookView access: owner can edit');
+      return true;
+    }
+    
+    // Перевіряємо права в sharedWith (для всіх типів приватності)
+    if (songbook.sharedWith) {
+      const sharedEntry = songbook.sharedWith.find((share) => 
+        share.email === currentUser.email?.toLowerCase()
+      );
+      if (sharedEntry && sharedEntry.permissions === 'edit') {
+        console.log('BookView access: explicit edit permission', sharedEntry);
+        return true;
+      }
+    }
+    
+    // Для публічних та nearby співаників перевіряємо defaultPermissions
+    if (songbook.privacy === 'public' || songbook.privacy === 'nearby') {
+      const canEditGlobal = songbook.defaultPermissions === 'edit';
+      console.log('BookView access: checking defaultPermissions', {
+        privacy: songbook.privacy,
+        defaultPermissions: songbook.defaultPermissions,
+        canEditGlobal
+      });
+      return canEditGlobal;
+    }
+    
+    console.log('BookView access: denied');
+    return false;
+  };
 
   // ---- Toggle expand ----
   const handleToggleExpand = (songId) => {
@@ -267,7 +325,7 @@ const BookView = ({ onClose, songbookData }) => {
   if (loading) {
     return (
       <div className={`book-view ${isClosing ? 'closing' : ''}`}>
-        <LoadingSpinner text="Завантаження..." />
+        <MusicalNoteLoader text="Завантаження..." />
       </div>
     );
   }
@@ -296,9 +354,11 @@ const BookView = ({ onClose, songbookData }) => {
             <div className="bv-empty">
               <div className="bv-empty-icon">🎶</div>
               <p>У цьому співанику ще немає пісень</p>
-              <button className="bv-btn primary" onClick={openAddEnd}>
-                <FiPlus /> Додати першу пісню
-              </button>
+              {canEditSongbook() && (
+                <button className="bv-btn primary" onClick={openAddEnd}>
+                  <FiPlus /> Додати першу пісню
+                </button>
+              )}
             </div>
           ) : (
             groupedSongs.map((group) => (
@@ -320,29 +380,33 @@ const BookView = ({ onClose, songbookData }) => {
                     <article
                       key={song._id}
                       className={`bv-song ${isExpanded ? 'is-expanded' : ''} ${isDragging ? 'is-dragging' : ''} ${dropClass}`}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, song)}
-                      onDragOver={(e) => handleDragOver(e, song)}
-                      onDragLeave={handleDragLeave}
-                      onDrop={(e) => handleDrop(e, song)}
-                      onDragEnd={handleDragEnd}
+                      draggable={canEditSongbook()}
+                      onDragStart={canEditSongbook() ? (e) => handleDragStart(e, song) : undefined}
+                      onDragOver={canEditSongbook() ? (e) => handleDragOver(e, song) : undefined}
+                      onDragLeave={canEditSongbook() ? handleDragLeave : undefined}
+                      onDrop={canEditSongbook() ? (e) => handleDrop(e, song) : undefined}
+                      onDragEnd={canEditSongbook() ? handleDragEnd : undefined}
                     >
                       <div className="bv-song-row" onClick={() => handleToggleExpand(song._id)}>
-                        <span className="bv-drag-handle" title="Перетягнути">
-                          <FiMove />
-                        </span>
+                        {canEditSongbook() && (
+                          <span className="bv-drag-handle" title="Перетягнути">
+                            <FiMove />
+                          </span>
+                        )}
                         <div className="bv-song-info">
                           <h3 className="bv-song-title">{song.title}</h3>
                           {song.author && <span className="bv-song-author">{song.author}</span>}
                         </div>
                         <div className="bv-song-actions">
-                          <button
-                            className="bv-song-remove"
-                            onClick={(e) => handleRemoveSong(song, e)}
-                            title="Видалити"
-                          >
-                            <FiTrash2 />
-                          </button>
+                          {canEditSongbook() && (
+                            <button
+                              className="bv-song-remove"
+                              onClick={(e) => handleRemoveSong(song, e)}
+                              title="Видалити"
+                            >
+                              <FiTrash2 />
+                            </button>
+                          )}
                           <span className={`bv-expand-icon ${isExpanded ? 'rotated' : ''}`}>
                             <FiChevronDown />
                           </span>
@@ -391,24 +455,28 @@ const BookView = ({ onClose, songbookData }) => {
             <span>{showChords ? 'Сховати акорди' : 'Показати акорди'}</span>
           </button>
 
-          <button
-            className="bv-btn"
-            onClick={openAddAfter}
-            disabled={!expandedSongId}
-            title="Додати пісню після поточної"
-          >
-            <FiCornerDownRight />
-            <span>Додати після поточної</span>
-          </button>
+          {canEditSongbook() && (
+            <>
+              <button
+                className="bv-btn"
+                onClick={openAddAfter}
+                disabled={!expandedSongId}
+                title="Додати пісню після поточної"
+              >
+                <FiCornerDownRight />
+                <span>Додати після поточної</span>
+              </button>
 
-          <button className="bv-btn primary" onClick={openAddEnd} title="Додати в кінець співаника">
-            <FiPlus />
-            <span>Додати в кінець</span>
-          </button>
+              <button className="bv-btn primary" onClick={openAddEnd} title="Додати в кінець співаника">
+                <FiPlus />
+                <span>Додати в кінець</span>
+              </button>
+            </>
+          )}
         </footer>
       </div>
 
-      {addMode && (
+      {addMode && canEditSongbook() && (
         <AddSongsModal
           songbook={songbook}
           isOpen={true}

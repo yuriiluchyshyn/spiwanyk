@@ -123,13 +123,76 @@
   transform: scale(1.1);
 }
 
-.add-section-form {
+.remove-section-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
   display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.8rem;
+  background: rgba(220, 38, 38, 0.08);
+  color: #dc2626;
+}
+
+.remove-section-btn:hover {
+  background: rgba(220, 38, 38, 0.18);
+  transform: scale(1.1);
+}
+
+.remove-section-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.add-section-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
   gap: 0.5rem;
   margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
   padding: 0.75rem;
   background: rgba(196, 168, 130, 0.05);
   border-radius: 8px;
+  align-items: start;
+}
+
+.add-section-form .section-name-input {
+  grid-column: 1;
+}
+
+.add-section-form .section-description-input {
+  grid-column: 2;
+}
+
+.add-section-form .form-actions {
+  grid-column: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.section-name-input,
+.section-description-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid rgba(196, 168, 130, 0.3);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  background: #ffffff;
+  font-family: inherit;
+}
+
+.section-name-input:focus,
+.section-description-input:focus {
+  outline: none;
+  border-color: var(--fire-orange);
+  box-shadow: 0 0 0 2px rgba(232, 168, 124, 0.2);
 }
 
 .add-section-input {
@@ -158,8 +221,19 @@
 }
 
 .save-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
   background: linear-gradient(135deg, var(--fire-orange), var(--warm-amber));
   color: white;
+  white-space: nowrap;
 }
 
 .save-btn:hover {
@@ -167,13 +241,30 @@
   box-shadow: 0 2px 8px rgba(232, 168, 124, 0.3);
 }
 
+.save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .cancel-btn {
-  background: rgba(196, 168, 130, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: rgba(196, 168, 130, 0.12);
   color: var(--stone-gray);
+  white-space: nowrap;
 }
 
 .cancel-btn:hover {
-  background: rgba(196, 168, 130, 0.2);
+  background: rgba(196, 168, 130, 0.25);
 }
 
 .edit-section-form {
@@ -210,7 +301,20 @@
   }
   
   .add-section-form {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+  }
+  
+  .add-section-form .section-name-input {
+    grid-column: 1;
+  }
+  
+  .add-section-form .section-description-input {
+    grid-column: 1;
+  }
+  
+  .add-section-form .form-actions {
+    grid-column: 1;
+    flex-direction: row;
   }
   
   .section-item {
@@ -220,6 +324,6 @@
   }
   
   .section-actions {
-    justify-content: center;
+    justify-content: flex-end;
   }
 }
