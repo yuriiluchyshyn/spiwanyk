@@ -18,60 +18,74 @@ const Home = () => {
   const [bookSongbook, setBookSongbook] = useState(null); // для відкриття книги
 
   useEffect(() => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    let refreshTimer = null;
+
+    // How often we re-announce our presence and re-check who is nearby.
+    // Must be well below the backend presence window (60 min) so our own
+    // location never goes stale while we sit at the campfire.
+    const REFRESH_INTERVAL_MS = 45 * 1000;
+
+    // Announce our current position and pull songbooks shared by people
+    // physically near us right now. Runs on mount and on every interval tick.
+    const refreshNearby = () => {
+      if (!navigator.geolocation) return;
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          if (cancelled) return;
+          const { latitude, longitude } = position.coords;
+          try {
+            // Update our own location so others nearby can find us, and so
+            // our presence stays "fresh" on the backend.
+            const { locationAPI } = await import('../../services/api');
+            await locationAPI.updateLocation(latitude, longitude).catch(() => {});
+
+            const nearbyData = await songbooksAPI.getNearby(latitude, longitude);
+            if (!cancelled) {
+              setSharedSongbooks(Array.isArray(nearbyData) ? nearbyData : []);
+            }
+          } catch (e) {
+            console.error('Nearby error:', e);
+          }
+        },
+        () => {}, // silently ignore geolocation denial
+        { enableHighAccuracy: true, maximumAge: 30000, timeout: 15000 }
+      );
+    };
+
     const load = async () => {
       try {
-        if (user) {
-          // Load my songbooks
-          const myData = await songbooksAPI.getMy();
-          setSongbooks(Array.isArray(myData) ? myData : []);
+        // Load my songbooks
+        const myData = await songbooksAPI.getMy();
+        if (!cancelled) setSongbooks(Array.isArray(myData) ? myData : []);
 
-          // Load public songbooks separately
-          try {
-            const publicData = await songbooksAPI.getPublic();
-            console.log('Public songbooks data:', publicData);
-            console.log('Current user:', user);
-            const filteredPublic = Array.isArray(publicData) ? publicData.filter(sb => {
-              const isNotOwn = sb.owner?._id !== user?._id && sb.owner?.email !== user?.email;
-              console.log('Filtering public songbook:', { 
-                title: sb.title, 
-                owner: sb.owner, 
-                currentUser: user, 
-                isNotOwn 
-              });
-              return isNotOwn;
-            }) : [];
-            console.log('Filtered public songbooks:', filteredPublic);
-            setPublicSongbooks(filteredPublic.slice(0, 6));
-          } catch (e) { console.error('Public error:', e); }
+        // Load public songbooks separately
+        try {
+          const publicData = await songbooksAPI.getPublic();
+          const filteredPublic = Array.isArray(publicData) ? publicData.filter(sb => {
+            return sb.owner?._id !== user?._id && sb.owner?.email !== user?.email;
+          }) : [];
+          if (!cancelled) setPublicSongbooks(filteredPublic.slice(0, 6));
+        } catch (e) { console.error('Public error:', e); }
 
-          // Load nearby songbooks with geolocation
-          if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-              async (position) => {
-                try {
-                  // Update own location for others to find us
-                  await import('../../services/api').then(({ locationAPI }) => 
-                    locationAPI.updateLocation(
-                      position.coords.latitude,
-                      position.coords.longitude
-                    ).catch(() => {})
-                  );
-
-                  const nearbyData = await songbooksAPI.getNearby(
-                    position.coords.latitude,
-                    position.coords.longitude
-                  );
-                  setSharedSongbooks(Array.isArray(nearbyData) ? nearbyData : []);
-                } catch (e) { console.error('Nearby error:', e); }
-              },
-              () => {} // silently ignore geolocation denial
-            );
-          }
-        }
+        // Live nearby songbooks: initial fetch + periodic refresh so new
+        // arrivals show up and our presence doesn't expire.
+        refreshNearby();
+        refreshTimer = setInterval(refreshNearby, REFRESH_INTERVAL_MS);
       } catch (e) { console.error(e); }
-      finally { setLoading(false); }
+      finally { if (!cancelled) setLoading(false); }
     };
     load();
+
+    return () => {
+      cancelled = true;
+      if (refreshTimer) clearInterval(refreshTimer);
+    };
   }, [user]);
 
   const handleCreate = async (data) => {
@@ -88,8 +102,8 @@ const Home = () => {
       <div className="home-guest">
         <div className="hero">
           <div className="hero-fire">🔥</div>
-          <h1>Пластовий Співаник</h1>
-          <p>Збірка пластових пісень</p>
+          <h1>Співаник Твоєї Душі</h1>
+          <p>Збірка українських пісень</p>
           <Link to="/login" className="cta-btn">Увійти</Link>
         </div>
       </div>

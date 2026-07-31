@@ -24,6 +24,7 @@ const BookView = ({ onClose, songbookData }) => {
   const [dragPosition, setDragPosition] = useState(null); // 'before' | 'after'
 
   const scrollRef = useRef(null);
+  const songRefs = useRef({});
 
   // ---- Завантаження ----
   const loadSongbook = useCallback(async () => {
@@ -152,6 +153,22 @@ const BookView = ({ onClose, songbookData }) => {
   const handleToggleExpand = (songId) => {
     setExpandedSongId(expandedSongId === songId ? null : songId);
   };
+
+  // When a song expands, scroll it so its title aligns to the top of the
+  // scroll area — the song opens "downward" and its beginning stays visible.
+  useEffect(() => {
+    if (!expandedSongId) return;
+    const el = songRefs.current[expandedSongId];
+    const scroller = scrollRef.current;
+    if (!el || !scroller) return;
+
+    requestAnimationFrame(() => {
+      const elRect = el.getBoundingClientRect();
+      const scRect = scroller.getBoundingClientRect();
+      const delta = elRect.top - scRect.top;
+      scroller.scrollTo({ top: scroller.scrollTop + delta - 12, behavior: 'smooth' });
+    });
+  }, [expandedSongId]);
 
   // ---- Видалення пісні зі співаника ----
   const handleRemoveSong = async (song, e) => {
@@ -379,6 +396,7 @@ const BookView = ({ onClose, songbookData }) => {
                   return (
                     <article
                       key={song._id}
+                      ref={(el) => { songRefs.current[song._id] = el; }}
                       className={`bv-song ${isExpanded ? 'is-expanded' : ''} ${isDragging ? 'is-dragging' : ''} ${dropClass}`}
                       draggable={canEditSongbook()}
                       onDragStart={canEditSongbook() ? (e) => handleDragStart(e, song) : undefined}
@@ -474,16 +492,19 @@ const BookView = ({ onClose, songbookData }) => {
             </>
           )}
         </footer>
-      </div>
 
-      {addMode && canEditSongbook() && (
-        <AddSongsModal
-          songbook={songbook}
-          isOpen={true}
-          onClose={() => setAddMode(null)}
-          onSongAdded={handleSongAdded}
-        />
-      )}
+        {addMode && canEditSongbook() && (
+          <div className="bv-add-panel">
+            <AddSongsModal
+              embedded
+              songbook={songbook}
+              isOpen={true}
+              onClose={() => setAddMode(null)}
+              onSongAdded={handleSongAdded}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 };

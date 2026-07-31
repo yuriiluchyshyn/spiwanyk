@@ -144,7 +144,7 @@ router.get('/categories', async (req, res) => {
     if (categories.length === 0) {
       categories = [
         { id: 'author', name: 'АВТОРСЬКІ ПІСНІ', icon: '🎵', color: '#8B4513' },
-        { id: 'plast', name: 'ПЛАСТОВІ ПІСНІ', icon: '🔱', color: '#D2691E' },
+        { id: 'plast', name: 'ТАБІРНІ ПІСНІ', icon: '🔱', color: '#D2691E' },
         { id: 'uprising', name: 'ПОВСТАНСЬКІ ПІСНІ', icon: '🎩', color: '#8B7355' },
         { id: 'cossack', name: 'КОЗАЦЬКІ ПІСНІ', icon: '⚔️', color: '#654321' },
         { id: 'lemko', name: 'ЛЕМКІВСЬКІ ПІСНІ', icon: '🏔️', color: '#228B22' },
@@ -198,7 +198,7 @@ router.get('/admin/categories', async (req, res) => {
     if (categories.length === 0) {
       const defaults = [
         { id: 'author', name: 'АВТОРСЬКІ ПІСНІ', icon: '🎵', color: '#8B4513', order: 0 },
-        { id: 'plast', name: 'ПЛАСТОВІ ПІСНІ', icon: '🔱', color: '#D2691E', order: 1 },
+        { id: 'plast', name: 'ТАБІРНІ ПІСНІ', icon: '🔱', color: '#D2691E', order: 1 },
         { id: 'uprising', name: 'ПОВСТАНСЬКІ ПІСНІ', icon: '🎩', color: '#8B7355', order: 2 },
         { id: 'cossack', name: 'КОЗАЦЬКІ ПІСНІ', icon: '⚔️', color: '#654321', order: 3 },
         { id: 'lemko', name: 'ЛЕМКІВСЬКІ ПІСНІ', icon: '🏔️', color: '#228B22', order: 4 },

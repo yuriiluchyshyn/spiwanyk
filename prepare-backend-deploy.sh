@@ -54,9 +54,9 @@ EOF
 # Створення README для backend
 echo "📖 Створення README..."
 cat > "$BACKEND_DIR/README.md" << 'EOF'
-# Пластовий Співаник - Backend API
+# Співаник Твоєї Душі - Backend API
 
-Backend API для Пластового Співаника.
+Backend API для Співаника Твоєї Душі.
 
 ## Деплой на Vercel
 

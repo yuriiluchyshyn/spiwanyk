@@ -1,6 +1,6 @@
-# Пластовий Співаник - Backend API
+# Співаник Твоєї Душі - Backend API
 
-REST API сервер для додатку "Пластовий Співаник" на Node.js + Express + MongoDB.
+REST API сервер для додатку "Співаник Твоєї Душі" на Node.js + Express + MongoDB.
 
 ## Технології
 

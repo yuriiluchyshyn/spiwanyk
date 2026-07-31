@@ -86,7 +86,7 @@ curl http://localhost:5001/api/health
 Має повернути:
 ```json
 {
-  "message": "Пластовий Співаник API працює!",
+  "message": "Співаник Твоєї Душі API працює!",
   "timestamp": "...",
   "environment": "development",
   "cors": "enabled"

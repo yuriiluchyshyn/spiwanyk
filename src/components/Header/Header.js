@@ -18,7 +18,7 @@ const Header = () => {
       <div className="header-content">
         <Link to="/" className="logo">
           <FiMusic />
-          <span>Пластовий Співаник</span>
+          <span>Співаник Твоєї Душі</span>
         </Link>
         
         <nav className="nav">

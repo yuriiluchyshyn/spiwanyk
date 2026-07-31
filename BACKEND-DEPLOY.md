@@ -110,7 +110,7 @@ curl https://your-backend-name.vercel.app/api/health
 Має повернути:
 ```json
 {
-  "message": "Пластовий Співаник API працює!",
+  "message": "Співаник Твоєї Душі API працює!",
   "timestamp": "...",
   "environment": "production",
   "cors": "enabled"

@@ -379,6 +379,22 @@
   background: linear-gradient(135deg, #e07b30, #a05420);
 }
 
+/* ===== Add-songs panel (in-frame, not a separate modal) ===== */
+.bv-add-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  border-radius: inherit;
+  overflow: hidden;
+  animation: bv-panel-up 0.25s ease forwards;
+}
+
+@keyframes bv-panel-up {
+  from { opacity: 0; transform: translateY(3%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* ===== Mobile ===== */
 @media (max-width: 640px) {
   .bv-modal {
@@ -459,4 +475,8 @@
 .night-mode .bv-song-remove:hover {
   background: rgba(200, 80, 80, 0.15);
   color: #e08080;
+}
+
+.night-mode .bv-add-panel .add-songs-embedded {
+  background: linear-gradient(180deg, #2a2218 0%, #1f1810 100%);
 }

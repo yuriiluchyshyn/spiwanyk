@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Скрипт для створення backend частини проекту
-echo "🔧 Налаштування Backend для Пластового Співаника"
+echo "🔧 Налаштування Backend для Співаника Твоєї Душі"
 echo "=============================================="
 
 # Створення директорії backend
@@ -31,7 +31,7 @@ if [ ! -d "backend" ]; then
 {
   "name": "plast-songbook-backend",
   "version": "1.0.0",
-  "description": "Backend для Пластового Співаника",
+  "description": "Backend для Співаника Твоєї Душі",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
@@ -83,7 +83,7 @@ app.use(express.json());
 
 // Routes
 app.get('/api/health', (req, res) => {
-  res.json({ message: 'Пластовий Співаник API працює!' });
+  res.json({ message: 'Співаник Твоєї Душі API працює!' });
 });
 
 // MongoDB connection

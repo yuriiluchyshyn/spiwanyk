@@ -91,7 +91,7 @@ const CreateSongbookModal = ({ onClose, onSubmit }) => {
               name="title"
               value={formData.title}
               onChange={handleChange}
-              placeholder="Наприклад: Мої улюблені пластові пісні"
+              placeholder="Наприклад: Мої улюблені пісні"
               required
               disabled={loading}
             />

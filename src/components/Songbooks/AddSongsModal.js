@@ -4,7 +4,7 @@ import { FiX, FiMusic } from 'react-icons/fi';
 import SongBrowser from '../Songs/SongBrowser';
 import './AddSongsModal.css';
 
-const AddSongsModal = ({ songbook, isOpen, onClose, onSongAdded }) => {
+const AddSongsModal = ({ songbook, isOpen, onClose, onSongAdded, embedded = false }) => {
   const [addingSongs, setAddingSongs] = useState(new Set());
   const [addedSongs, setAddedSongs] = useState(new Set());
   const [removedSongs, setRemovedSongs] = useState(new Set());
@@ -124,47 +124,59 @@ const AddSongsModal = ({ songbook, isOpen, onClose, onSongAdded }) => {
 
   if (!isOpen) return null;
 
+  const inner = (
+    <>
+      <div className="modal-header">
+        <h2>
+          <FiMusic className="sec-icon" />
+          Додати пісні до співаника
+        </h2>
+        <button onClick={onClose} className="close-btn">
+          <FiX />
+        </button>
+      </div>
+
+      {songbook.sections && songbook.sections.length > 0 && (
+        <div className="section-selector-bar">
+          <label>Розділ:</label>
+          <select
+            value={selectedSection}
+            onChange={(e) => setSelectedSection(e.target.value)}
+            className="section-select"
+          >
+            <option value="">Без розділу</option>
+            {songbook.sections
+              .sort((a, b) => a.name.localeCompare(b.name, 'uk'))
+              .map(section => (
+              <option key={section._id} value={section._id}>
+                {section.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      <div className="modal-browser-content">
+        <SongBrowser
+          onAddSong={handleToggleSong}
+          addingSongs={new Set([...addingSongs, ...removingSongs])}
+          addedSongs={allAddedSongs}
+          compact
+        />
+      </div>
+    </>
+  );
+
+  // Embedded mode: render inside a parent container (e.g. BookView) as a
+  // single-window panel instead of a separate floating modal-over-modal.
+  if (embedded) {
+    return <div className="add-songs-embedded">{inner}</div>;
+  }
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="add-songs-modal" onClick={e => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>
-            <FiMusic className="sec-icon" />
-            Додати пісні до співаника
-          </h2>
-          <button onClick={onClose} className="close-btn">
-            <FiX />
-          </button>
-        </div>
-
-        {songbook.sections && songbook.sections.length > 0 && (
-          <div className="section-selector-bar">
-            <label>Розділ:</label>
-            <select 
-              value={selectedSection} 
-              onChange={(e) => setSelectedSection(e.target.value)}
-              className="section-select"
-            >
-              <option value="">Без розділу</option>
-              {songbook.sections
-                .sort((a, b) => a.name.localeCompare(b.name, 'uk'))
-                .map(section => (
-                <option key={section._id} value={section._id}>
-                  {section.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        <div className="modal-browser-content">
-          <SongBrowser
-            onAddSong={handleToggleSong}
-            addingSongs={new Set([...addingSongs, ...removingSongs])}
-            addedSongs={allAddedSongs}
-            compact
-          />
-        </div>
+        {inner}
       </div>
     </div>
   );

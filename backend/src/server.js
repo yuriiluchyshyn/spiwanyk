@@ -103,7 +103,7 @@ app.use('/api/location', locationRoutes);
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ 
-    message: 'Пластовий Співаник API працює!',
+    message: 'Співаник Твоєї Душі API працює!',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
     cors: 'enabled',

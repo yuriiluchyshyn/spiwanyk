@@ -1,9 +1,9 @@
 .PHONY: install start dev build clean setup help backend frontend full-dev docker-mongo deploy prepare-backend no-docker stop
 
-# Пластовий Співаник - Makefile
+# Співаник Твоєї Душі - Makefile
 
 help: ## Показати доступні команди
-	@echo "🎵 Пластовий Співаник - Доступні команди:"
+	@echo "🎵 Співаник Твоєї Душі - Доступні команди:"
 	@echo "======================================"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
 

@@ -1,7 +1,7 @@
 {
   "name": "plast-songbook-backend",
   "version": "1.0.0",
-  "description": "Backend для Пластового Співаника",
+  "description": "Backend для Співаника Твоєї Душі",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",

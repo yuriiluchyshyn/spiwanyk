@@ -75,7 +75,8 @@ router.get('/nearby', [
   auth,
   query('lat').notEmpty().isFloat({ min: -90, max: 90 }),
   query('lng').notEmpty().isFloat({ min: -180, max: 180 }),
-  query('maxDistance').optional().isInt({ min: 100, max: 5000 })
+  query('maxDistance').optional().isInt({ min: 100, max: 5000 }),
+  query('maxAge').optional().isInt({ min: 1, max: 1440 })
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -89,19 +90,30 @@ router.get('/nearby', [
     const {
       lat,
       lng,
-      maxDistance = 500
+      maxDistance = 500,
+      maxAge
     } = req.query;
 
     const latitude = parseFloat(lat);
     const longitude = parseFloat(lng);
+    const freshnessMinutes = maxAge !== undefined
+      ? parseInt(maxAge)
+      : Songbook.PRESENCE_WINDOW_MINUTES;
 
-    const songbooks = await Songbook.findNearby(longitude, latitude, parseInt(maxDistance), req.user._id);
+    const songbooks = await Songbook.findNearby(
+      longitude,
+      latitude,
+      parseInt(maxDistance),
+      req.user._id,
+      freshnessMinutes
+    );
 
     res.json({
       songbooks,
       total: songbooks.length,
       searchCenter: { latitude, longitude },
-      maxDistance: parseInt(maxDistance)
+      maxDistance: parseInt(maxDistance),
+      maxAge: freshnessMinutes
     });
 
   } catch (error) {

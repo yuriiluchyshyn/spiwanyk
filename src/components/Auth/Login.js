@@ -31,7 +31,7 @@ const Login = () => {
       <div className="login-card">
         <div className="login-header">
           <FiMusic className="login-icon" />
-          <h1>Пластовий Співаник</h1>
+          <h1>Співаник Твоєї Душі</h1>
           <p>Увійдіть за допомогою електронної пошти</p>
         </div>
 

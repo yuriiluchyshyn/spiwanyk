@@ -9,7 +9,7 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api
 
 const defaultCategories = [
   { id: 'author', name: 'АВТОРСЬКІ ПІСНІ', icon: '🎵', color: '#8B4513' },
-  { id: 'plast', name: 'ПЛАСТОВІ ПІСНІ', icon: '🔱', color: '#D2691E' },
+  { id: 'plast', name: 'ТАБІРНІ ПІСНІ', icon: '🔱', color: '#D2691E' },
   { id: 'uprising', name: 'ПОВСТАНСЬКІ ПІСНІ', icon: '🎩', color: '#8B7355' },
   { id: 'cossack', name: 'КОЗАЦЬКІ ПІСНІ', icon: '⚔️', color: '#654321' },
   { id: 'lemko', name: 'ЛЕМКІВСЬКІ ПІСНІ', icon: '🏔️', color: '#228B22' },

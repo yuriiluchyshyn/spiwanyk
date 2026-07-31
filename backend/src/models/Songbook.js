@@ -365,12 +365,29 @@ songbookSchema.statics.findPublic = function(options = {}) {
     .skip(skip);
 };
 
-songbookSchema.statics.findNearby = async function(longitude, latitude, maxDistance = 500, excludeUserId = null) {
+// Only users whose location was updated within this window are considered
+// physically "present". This prevents stale locations (someone who was here
+// days ago) from leaking their 'nearby' songbooks forever.
+songbookSchema.statics.PRESENCE_WINDOW_MINUTES = 60;
+
+songbookSchema.statics.findNearby = async function(
+  longitude,
+  latitude,
+  maxDistance = 500,
+  excludeUserId = null,
+  freshnessMinutes = songbookSchema.statics.PRESENCE_WINDOW_MINUTES
+) {
   const User = mongoose.model('User');
-  
-  // Step 1: Find users nearby (exclude coordinates [0,0] - not set)
+
+  const freshnessThreshold = new Date(Date.now() - freshnessMinutes * 60 * 1000);
+
+  // Step 1: Find users who are physically nearby AND recently present.
+  //  - $near: within maxDistance metres of the search point (needs 2dsphere index)
+  //  - location.coordinates $ne [0,0]: skip users who never set a real location
+  //  - location.updatedAt >= threshold: skip stale locations (not here right now)
   const userQuery = {
     'location.coordinates': { $ne: [0, 0] },
+    'location.updatedAt': { $gte: freshnessThreshold },
     location: {
       $near: {
         $geometry: {
@@ -383,7 +400,12 @@ songbookSchema.statics.findNearby = async function(longitude, latitude, maxDista
     isActive: true
   };
 
-  const nearbyUsers = await User.find(userQuery).select('_id email');
+  // Exclude the requesting user so they don't match themselves.
+  if (excludeUserId) {
+    userQuery._id = { $ne: excludeUserId };
+  }
+
+  const nearbyUsers = await User.find(userQuery).select('_id');
 
   if (nearbyUsers.length === 0) {
     return [];
@@ -391,23 +413,12 @@ songbookSchema.statics.findNearby = async function(longitude, latitude, maxDista
 
   const userIds = nearbyUsers.map(u => u._id);
 
-  // Step 2: Find songbooks with privacy 'nearby' owned by those users
-  const songbookQuery = {
+  // Step 2: Find songbooks with privacy 'nearby' owned by those present users.
+  const songbooks = await this.find({
     owner: { $in: userIds },
     privacy: 'nearby',
     isActive: true
-  };
-
-  // Exclude own songbooks if userId provided
-  if (excludeUserId) {
-    songbookQuery.owner.$nin = [excludeUserId];
-    // Rebuild query to properly combine $in and $nin
-    songbookQuery.owner = { 
-      $in: userIds.filter(id => id.toString() !== excludeUserId.toString()) 
-    };
-  }
-
-  const songbooks = await this.find(songbookQuery)
+  })
     .populate('owner', 'email')
     .populate('songs.song', 'title author')
     .sort({ createdAt: -1 });
