@@ -8,17 +8,17 @@
 .add-songs-btn {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 8px 14px;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
   border: none;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 500;
+  border-radius: 8px;
+  font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.3s ease;
   background: linear-gradient(135deg, var(--fire-orange), var(--warm-amber));
   color: var(--cream-white);
-  white-space: nowrap;
 }
 
 .add-songs-btn:hover {
@@ -29,17 +29,17 @@
 .manage-sections-btn {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 8px 14px;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
   border: none;
-  border-radius: 20px;
+  border-radius: 8px;
   font-size: 0.8rem;
-  font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
   background: rgba(196, 168, 130, 0.12);
   color: var(--stone-gray);
-  white-space: nowrap;
 }
 
 .manage-sections-btn:hover {
@@ -47,16 +47,38 @@
   transform: translateY(-1px);
 }
 
+.visibility-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: rgba(196, 168, 130, 0.12);
+  color: var(--stone-gray);
+}
+
+.visibility-btn:hover {
+  background: rgba(196, 168, 130, 0.25);
+  color: var(--fire-orange);
+  transform: translateY(-1px);
+}
+
 .delete-songbook-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   border: none;
-  border-radius: 50%;
-  font-size: 0.85rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.3s ease;
   background: rgba(220, 38, 38, 0.08);
@@ -71,18 +93,7 @@
 /* Мобільна адаптація */
 @media (max-width: 768px) {
   .songbook-actions {
-    gap: 0.35rem;
-  }
-
-  .add-songs-btn,
-  .manage-sections-btn {
-    font-size: 0.75rem;
-    padding: 6px 10px;
-  }
-
-  .delete-songbook-btn {
-    width: 30px;
-    height: 30px;
-    font-size: 0.8rem;
+    gap: 0.4rem;
+    flex-wrap: wrap;
   }
 }

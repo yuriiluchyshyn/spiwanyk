@@ -261,15 +261,33 @@
   color: #8b4513;
 }
 
-/* Expanded content */
+/* Expanded content — плавно розкривається вниз, штовхаючи контент нижче */
 .bv-song-expanded {
+  display: grid;
+  grid-template-rows: 1fr;
+  animation: bv-slide-down 0.3s ease;
+}
+
+.bv-song-expanded-inner {
+  overflow: hidden;
   padding: 0 0.85rem 1rem;
-  animation: bv-slide-down 0.25s ease;
 }
 
 @keyframes bv-slide-down {
-  from { opacity: 0; max-height: 0; }
-  to { opacity: 1; max-height: 5000px; }
+  from { grid-template-rows: 0fr; opacity: 0; }
+  to { grid-template-rows: 1fr; opacity: 1; }
+}
+
+/* Плавний відкат для браузерів, де grid-template-rows не анімується */
+@supports not (grid-template-rows: 0fr) {
+  .bv-song-expanded {
+    display: block;
+    animation: bv-slide-down-fallback 0.3s ease;
+  }
+  @keyframes bv-slide-down-fallback {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 }
 
 .bv-song-meta {

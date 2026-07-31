@@ -7,6 +7,14 @@
   animation: fadeInUp 0.5s ease-out;
 }
 
+.songbook-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
 .back-link {
   display: inline-flex;
   align-items: center;
@@ -16,10 +24,10 @@
   border-radius: 8px;
   color: var(--fire-orange);
   text-decoration: none;
-  margin-bottom: 0.75rem;
   font-size: 1.1rem;
   transition: all 0.3s ease;
   background: rgba(232, 168, 124, 0.08);
+  flex-shrink: 0;
 }
 
 .back-link:hover {
@@ -36,16 +44,26 @@
 
 .songbook-title-section {
   flex: 1;
+  min-width: 0;
+}
+
+.songbook-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
 }
 
 .songbook-title-section h1 {
   color: var(--dark-brown);
-  font-size: 1.05rem;
-  margin-bottom: 0.25rem;
+  font-size: 1.15rem;
+  margin-bottom: 0;
   font-weight: 600;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  min-width: 0;
+  word-break: break-word;
 }
 
 .songbook-title-section .sec-icon {
@@ -63,7 +81,8 @@
 .songbook-meta {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
   font-size: 0.75rem;
 }
 
@@ -81,26 +100,6 @@
 .owner {
   color: var(--warm-gray);
   font-style: italic;
-}
-
-.settings-button {
-  background: none;
-  border: 1px solid rgba(196, 168, 130, 0.3);
-  color: var(--stone-gray);
-  padding: 0.4rem;
-  border-radius: 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.9rem;
-  transition: all 0.2s ease;
-}
-
-.settings-button:hover {
-  background: rgba(196, 168, 130, 0.1);
-  border-color: var(--fire-orange);
-  color: var(--fire-orange);
 }
 
 .shared-count {
@@ -127,18 +126,25 @@
 
 /* Мобільна адаптація */
 @media (max-width: 768px) {
+  .songbook-header {
+    padding: 1.15rem;
+  }
+
   .songbook-info {
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 1rem;
   }
   
   .songbook-title-section h1 {
-    font-size: 1rem;
+    font-size: 1.1rem;
   }
   
   .songbook-meta {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
+    align-items: center;
+    gap: 0.4rem 0.6rem;
+  }
+
+  .owner {
+    word-break: break-all;
   }
 }

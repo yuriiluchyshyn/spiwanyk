@@ -1,10 +1,60 @@
+/* Модальне вікно для розділів */
+.section-manager-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.section-manager-modal {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  border-radius: 14px;
+}
+
+.section-manager-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(196, 168, 130, 0.12);
+  color: var(--stone-gray);
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 1;
+}
+
+.section-manager-close:hover {
+  background: rgba(196, 168, 130, 0.25);
+  color: var(--fire-orange);
+}
+
 /* Простий дизайн в стилі головної сторінки */
 .section-manager {
   background: #ffffff;
   border-radius: 14px;
   padding: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0;
   border: 1px solid rgba(196, 168, 130, 0.2);
+}
+
+.section-manager-modal .sections-header {
+  padding-right: 2.5rem;
 }
 
 .sections-header {

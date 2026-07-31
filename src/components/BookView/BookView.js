@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { songbooksAPI } from '../../services/api';
@@ -25,6 +25,8 @@ const BookView = ({ onClose, songbookData }) => {
 
   const scrollRef = useRef(null);
   const songRefs = useRef({});
+  // Зберігає позицію клікнутого рядка, щоб компенсувати зсув при згортанні/розгортанні
+  const pendingAnchor = useRef(null);
 
   // ---- Завантаження ----
   const loadSongbook = useCallback(async () => {
@@ -151,23 +153,42 @@ const BookView = ({ onClose, songbookData }) => {
 
   // ---- Toggle expand ----
   const handleToggleExpand = (songId) => {
-    setExpandedSongId(expandedSongId === songId ? null : songId);
+    const scroller = scrollRef.current;
+    const el = songRefs.current[songId];
+
+    // Запам'ятовуємо поточну позицію клікнутого рядка відносно вікна прокрутки,
+    // щоб після зміни розкладки (згортання попередньої пісні тощо) повернути
+    // його рівно на те саме місце — сторінка не "стрибає".
+    if (scroller && el) {
+      pendingAnchor.current = {
+        id: songId,
+        top: el.getBoundingClientRect().top - scroller.getBoundingClientRect().top,
+      };
+    }
+
+    setExpandedSongId((prev) => (prev === songId ? null : songId));
   };
 
-  // When a song expands, scroll it so its title aligns to the top of the
-  // scroll area — the song opens "downward" and its beginning stays visible.
-  useEffect(() => {
-    if (!expandedSongId) return;
-    const el = songRefs.current[expandedSongId];
-    const scroller = scrollRef.current;
-    if (!el || !scroller) return;
+  // Після оновлення DOM повертаємо клікнутий рядок на його попередню позицію.
+  // Текст пісні при цьому розкривається вниз (анімація grid у CSS), а сам
+  // рядок залишається візуально нерухомим.
+  useLayoutEffect(() => {
+    const anchor = pendingAnchor.current;
+    if (!anchor) return;
+    pendingAnchor.current = null;
 
-    requestAnimationFrame(() => {
-      const elRect = el.getBoundingClientRect();
-      const scRect = scroller.getBoundingClientRect();
-      const delta = elRect.top - scRect.top;
-      scroller.scrollTo({ top: scroller.scrollTop + delta - 12, behavior: 'smooth' });
-    });
+    const scroller = scrollRef.current;
+    const el = songRefs.current[anchor.id];
+    if (!scroller || !el) return;
+
+    const newTop = el.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+    const diff = newTop - anchor.top;
+    if (Math.abs(diff) > 0.5) {
+      const prevBehavior = scroller.style.scrollBehavior;
+      scroller.style.scrollBehavior = 'auto'; // миттєво, без плавного зсуву
+      scroller.scrollTop += diff;
+      scroller.style.scrollBehavior = prevBehavior;
+    }
   }, [expandedSongId]);
 
   // ---- Видалення пісні зі співаника ----
@@ -433,25 +454,27 @@ const BookView = ({ onClose, songbookData }) => {
 
                       {isExpanded && (
                         <div className="bv-song-expanded">
-                          {(song.metadata?.words || song.metadata?.music) && (
-                            <div className="bv-song-meta">
-                              {song.metadata.words && <span>Сл: {song.metadata.words}</span>}
-                              {song.metadata.music && <span>Муз: {song.metadata.music}</span>}
+                          <div className="bv-song-expanded-inner">
+                            {(song.metadata?.words || song.metadata?.music) && (
+                              <div className="bv-song-meta">
+                                {song.metadata.words && <span>Сл: {song.metadata.words}</span>}
+                                {song.metadata.music && <span>Муз: {song.metadata.music}</span>}
+                              </div>
+                            )}
+                            <div className="bv-song-body">
+                              <FormattedSong song={song} showChords={showChords} />
                             </div>
-                          )}
-                          <div className="bv-song-body">
-                            <FormattedSong song={song} showChords={showChords} />
+                            {song.youtubeUrl && (
+                              <a
+                                className="bv-yt-link"
+                                href={song.youtubeUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                ▶ Послухати на YouTube
+                              </a>
+                            )}
                           </div>
-                          {song.youtubeUrl && (
-                            <a
-                              className="bv-yt-link"
-                              href={song.youtubeUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              ▶ Послухати на YouTube
-                            </a>
-                          )}
                         </div>
                       )}
                     </article>

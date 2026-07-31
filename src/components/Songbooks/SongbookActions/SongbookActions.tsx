@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiPlus, FiSettings, FiTrash2 } from 'react-icons/fi';
+import { FiPlus, FiSettings, FiTrash2, FiEye } from 'react-icons/fi';
 import './SongbookActions.css';
 
 interface SongbookActionsProps {
@@ -8,6 +8,7 @@ interface SongbookActionsProps {
   onShowAddSongs: () => void;
   onToggleSectionManager: () => void;
   onDeleteSongbook: () => void;
+  onShowSettings?: () => void;
 }
 
 const SongbookActions: React.FC<SongbookActionsProps> = ({
@@ -15,7 +16,8 @@ const SongbookActions: React.FC<SongbookActionsProps> = ({
   isOwner,
   onShowAddSongs,
   onToggleSectionManager,
-  onDeleteSongbook
+  onDeleteSongbook,
+  onShowSettings
 }) => {
   return (
     <div className="songbook-actions">
@@ -23,18 +25,27 @@ const SongbookActions: React.FC<SongbookActionsProps> = ({
         <button 
           onClick={onShowAddSongs} 
           className="add-songs-btn"
+          title="Додати пісні"
         >
           <FiPlus />
-          Додати пісні
         </button>
       )}
       {isOwner && (
         <button 
           onClick={onToggleSectionManager} 
           className="manage-sections-btn"
+          title="Розділи"
         >
           <FiSettings />
-          Розділи
+        </button>
+      )}
+      {isOwner && onShowSettings && (
+        <button 
+          onClick={onShowSettings}
+          className="visibility-btn"
+          title="Видимість співаника"
+        >
+          <FiEye />
         </button>
       )}
       {isOwner && (

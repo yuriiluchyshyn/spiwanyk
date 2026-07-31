@@ -114,58 +114,60 @@ const MySongbooks = () => {
             .filter(songbook => songbook.isActive !== false) // Фільтруємо видалені співаники
             .map(songbook => (
             <div key={songbook._id} className="songbook-card">
-              <div className="songbook-header">
-                <div className="privacy-badge">
-                  {getPrivacyIcon(songbook.privacy)}
-                  <span>{getPrivacyText(songbook.privacy)}</span>
-                </div>
-                <div className="songbook-actions">
-                  <Link 
-                    to={`/songbooks/${songbook._id}`}
-                    className="action-btn edit"
-                    title="Редагувати"
-                  >
-                    <FiEdit />
-                  </Link>
-                  <button 
-                    onClick={() => handleDeleteSongbook(songbook._id)}
-                    className="action-btn delete"
-                    title="Видалити"
-                  >
-                    <FiTrash2 />
-                  </button>
-                </div>
-              </div>
-              
-              <div 
-                className="songbook-content" 
-                onClick={() => setBookSongbook(songbook)}
-                style={{ cursor: 'pointer' }}
-              >
-                <h3>{songbook.title}</h3>
-                {songbook.description && (
-                  <p className="songbook-description">{songbook.description}</p>
-                )}
-                
-                <div className="songbook-stats">
-                  <span>{songbook.songs?.length || 0} пісень</span>
-                  <span>{songbook.sections?.length || 0} розділів</span>
-                </div>
-                
-                {songbook.sections && songbook.sections.length > 0 && (
-                  <div className="sections-preview">
-                    {songbook.sections.slice(0, 3).map(section => (
-                      <span key={section._id} className="section-tag">
-                        {section.name}
-                      </span>
-                    ))}
-                    {songbook.sections.length > 3 && (
-                      <span className="section-tag more">
-                        +{songbook.sections.length - 3}
-                      </span>
-                    )}
+              <div className="songbook-body">
+                <div 
+                  className="songbook-content" 
+                  onClick={() => setBookSongbook(songbook)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <h3>{songbook.title}</h3>
+                  {songbook.description && (
+                    <p className="songbook-description">{songbook.description}</p>
+                  )}
+                  
+                  <div className="songbook-stats">
+                    <span>{songbook.songs?.length || 0} пісень</span>
+                    <span>{songbook.sections?.length || 0} розділів</span>
                   </div>
-                )}
+                  
+                  {songbook.sections && songbook.sections.length > 0 && (
+                    <div className="sections-preview">
+                      {songbook.sections.slice(0, 3).map(section => (
+                        <span key={section._id} className="section-tag">
+                          {section.name}
+                        </span>
+                      ))}
+                      {songbook.sections.length > 3 && (
+                        <span className="section-tag more">
+                          +{songbook.sections.length - 3}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="songbook-side">
+                  <div className="privacy-badge">
+                    {getPrivacyIcon(songbook.privacy)}
+                    <span>{getPrivacyText(songbook.privacy)}</span>
+                  </div>
+                  <div className="songbook-actions">
+                    <Link 
+                      to={`/songbooks/${songbook._id}`}
+                      className="action-btn edit"
+                      title="Редагувати"
+                    >
+                      <FiEdit />
+                    </Link>
+                    <button 
+                      onClick={() => handleDeleteSongbook(songbook._id)}
+                      className="action-btn delete"
+                      title="Видалити"
+                    >
+                      <FiTrash2 />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           ))}

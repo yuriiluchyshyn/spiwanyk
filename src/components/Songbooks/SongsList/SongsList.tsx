@@ -7,10 +7,16 @@ interface Song {
   _id: string;
   title: string;
   author?: string;
+  sectionId?: string | null;
   metadata?: {
     performer?: string;
     words?: string;
   };
+}
+
+interface Section {
+  _id: string;
+  name: string;
 }
 
 interface SongsListProps {
@@ -19,16 +25,18 @@ interface SongsListProps {
   draggedSong: Song | null;
   dropTarget?: { songId: string; position: 'before' | 'after' } | null;
   canEdit: boolean;
+  sections?: Section[];
+  expandedSongId?: string | null;
   onShowAddSongs: () => void;
   onDragStart: (e: React.DragEvent, song: Song) => void;
   onDragEnd: () => void;
   onDragOverItem?: (e: React.DragEvent, song: Song, index: number) => void;
   onDragLeaveItem?: () => void;
   onDropOnItem?: (e: React.DragEvent, song: Song, index: number) => void;
-  onViewSong: (song: Song) => void;
-  onPlayNow: (song: Song) => void;
-  onAddToPlaylist: (song: Song) => void;
+  onToggleExpand: (song: Song) => void;
+  onRegisterRef?: (songId: string, el: HTMLElement | null) => void;
   onRemoveSong: (songId: string) => void;
+  onMoveToSection?: (song: Song, sectionId: string | null) => void;
 }
 
 const SongsList: React.FC<SongsListProps> = ({
@@ -37,16 +45,18 @@ const SongsList: React.FC<SongsListProps> = ({
   draggedSong,
   dropTarget,
   canEdit,
+  sections = [],
+  expandedSongId,
   onShowAddSongs,
   onDragStart,
   onDragEnd,
   onDragOverItem,
   onDragLeaveItem,
   onDropOnItem,
-  onViewSong,
-  onPlayNow,
-  onAddToPlaylist,
-  onRemoveSong
+  onToggleExpand,
+  onRegisterRef,
+  onRemoveSong,
+  onMoveToSection
 }) => {
   if (songs.length === 0) {
     return (
@@ -71,15 +81,17 @@ const SongsList: React.FC<SongsListProps> = ({
             isDragging={draggedSong?._id === song._id}
             dropPosition={dropPosition}
             canEdit={canEdit}
+            sections={sections}
+            isExpanded={expandedSongId === song._id}
             onDragStart={onDragStart}
             onDragEnd={onDragEnd}
             onDragOverItem={onDragOverItem}
             onDragLeaveItem={onDragLeaveItem}
             onDropOnItem={onDropOnItem}
-            onViewSong={onViewSong}
-            onPlayNow={onPlayNow}
-            onAddToPlaylist={onAddToPlaylist}
+            onToggleExpand={onToggleExpand}
+            onRegisterRef={onRegisterRef}
             onRemoveSong={onRemoveSong}
+            onMoveToSection={onMoveToSection}
           />
         );
       })}

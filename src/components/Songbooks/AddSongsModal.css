@@ -135,19 +135,6 @@
   padding: 0.75rem;
 }
 
-.modal-browser-content .categories-header {
-  margin-bottom: 1rem;
-  animation: none;
-}
-
-.modal-browser-content .categories-header h1 {
-  font-size: 1.25rem;
-}
-
-.modal-browser-content .categories-header p {
-  font-size: 0.85rem;
-}
-
 .modal-browser-content .categories-grid {
   gap: 0.5rem;
 }

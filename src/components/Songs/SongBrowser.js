@@ -209,11 +209,6 @@ const SongBrowser = ({ onAddSong, addingSongs, addedSongs, excludeSongIds, compa
 
   return (
     <div className={`song-list ${compact ? 'compact' : ''}`}>
-      <div className="categories-header">
-        <h1>Пісні</h1>
-        <p>Оберіть категорію</p>
-      </div>
-
       <div className="search-bar">
         <FiSearch className="search-icon" />
         <input

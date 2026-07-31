@@ -297,25 +297,6 @@
 }
 
 /* Categories */
-.categories-header {
-  text-align: center;
-  margin-bottom: 2rem;
-  animation: fadeInUp 0.5s ease-out;
-}
-
-.categories-header h1 {
-  font-size: 2rem;
-  color: var(--dark-brown);
-  margin: 0 0 0.5rem 0;
-  font-weight: 700;
-}
-
-.categories-header p {
-  color: var(--stone-gray);
-  font-size: 1rem;
-  margin: 0;
-}
-
 .categories-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));

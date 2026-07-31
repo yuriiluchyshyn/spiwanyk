@@ -123,18 +123,22 @@
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
 }
 
-/* Верхня панель з privacy + actions */
-.songbook-card .songbook-header {
+/* Тіло картки: контент зліва, privacy + actions справа */
+.songbook-body {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 1rem;
-  background: rgba(196, 168, 130, 0.04);
-  border-bottom: 1px solid rgba(196, 168, 130, 0.12);
-  margin: 0;
-  animation: none;
-  flex-wrap: nowrap;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  padding: 1rem;
+}
+
+/* Права колонка з privacy + діями (де раніше було порожньо) */
+.songbook-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.6rem;
+  flex-shrink: 0;
 }
 
 .privacy-badge {
@@ -198,20 +202,24 @@
 
 /* Контент картки (тепер div з onClick) */
 .songbook-content {
-  padding: 1rem;
+  padding: 0;
   text-decoration: none;
   color: inherit;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   flex: 1;
+  min-width: 0;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .songbook-content:hover {
   text-decoration: none;
-  background: rgba(232, 168, 124, 0.03);
+}
+
+.songbook-content:hover h3 {
+  color: var(--fire-orange);
 }
 
 .songbook-content h3 {
@@ -320,11 +328,7 @@
     gap: 0.75rem;
   }
 
-  .songbook-card .songbook-header {
-    padding: 0.6rem 0.85rem;
-  }
-
-  .songbook-content {
+  .songbook-body {
     padding: 0.85rem;
   }
 }

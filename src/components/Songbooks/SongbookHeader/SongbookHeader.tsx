@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FiArrowLeft, FiMusic, FiUsers, FiLock, FiGlobe, FiMapPin, FiSettings } from 'react-icons/fi';
+import { FiArrowLeft, FiMusic, FiUsers, FiLock, FiGlobe, FiMapPin } from 'react-icons/fi';
 import SongbookActions from '../SongbookActions/SongbookActions';
 import SongbookSettingsModal from '../SongbookSettingsModal/SongbookSettingsModal';
 import './SongbookHeader.css';
@@ -141,16 +141,29 @@ const SongbookHeader: React.FC<SongbookHeaderProps> = ({
 
   return (
     <div className="songbook-header">
-      <Link to="/my-songbooks" className="back-link" title="Назад до співаників">
-        <FiArrowLeft />
-      </Link>
-      
+      <div className="songbook-header-top">
+        <Link to="/my-songbooks" className="back-link" title="Назад до співаників">
+          <FiArrowLeft />
+        </Link>
+
+        <SongbookActions
+          canEdit={canEditSongbook()}
+          isOwner={isOwner()}
+          onShowAddSongs={onShowAddSongs}
+          onToggleSectionManager={onToggleSectionManager}
+          onDeleteSongbook={onDeleteSongbook}
+          onShowSettings={() => setShowSettingsModal(true)}
+        />
+      </div>
+
       <div className="songbook-info">
         <div className="songbook-title-section">
-          <h1>
-            <FiMusic className="sec-icon" />
-            {songbook.title}
-          </h1>
+          <div className="songbook-title-row">
+            <h1>
+              <FiMusic className="sec-icon" />
+              {songbook.title}
+            </h1>
+          </div>
           {songbook.description && (
             <p className="songbook-description">{songbook.description}</p>
           )}
@@ -165,15 +178,6 @@ const SongbookHeader: React.FC<SongbookHeaderProps> = ({
               )}
             </div>
             <span className="owner">від {songbook.owner?.email || ''}</span>
-            {isOwner() && (
-              <button 
-                className="settings-button"
-                onClick={() => setShowSettingsModal(true)}
-                title="Налаштування співаника"
-              >
-                <FiSettings />
-              </button>
-            )}
           </div>
 
           {songbook.sharedWith && songbook.sharedWith.length > 0 && (
@@ -192,14 +196,6 @@ const SongbookHeader: React.FC<SongbookHeaderProps> = ({
             </div>
           )}
         </div>
-        
-        <SongbookActions
-          canEdit={canEditSongbook()}
-          isOwner={isOwner()}
-          onShowAddSongs={onShowAddSongs}
-          onToggleSectionManager={onToggleSectionManager}
-          onDeleteSongbook={onDeleteSongbook}
-        />
       </div>
 
       {showSettingsModal && (

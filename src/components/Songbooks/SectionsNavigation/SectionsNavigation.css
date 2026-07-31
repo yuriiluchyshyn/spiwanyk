@@ -47,13 +47,13 @@
 @media (max-width: 768px) {
   .sections-nav {
     padding: 0.75rem;
-    justify-content: center;
+    justify-content: flex-start;
   }
   
   .section-btn {
-    margin-right: 0.25rem;
-    margin-bottom: 0.25rem;
-    padding: 6px 12px;
-    font-size: 0.75rem;
+    margin-right: 0.4rem;
+    margin-bottom: 0.4rem;
+    padding: 9px 14px;
+    font-size: 0.8rem;
   }
 }
