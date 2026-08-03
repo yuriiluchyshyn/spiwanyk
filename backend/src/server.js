@@ -113,8 +113,32 @@ app.get('/api/health', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
+  // Business errors raised by the service layer carry an HTTP status.
+  if (err.status) {
+    return res.status(err.status).json({
+      message: err.message,
+      ...(err.details || {})
+    });
+  }
+
+  // Invalid Mongo ObjectId passed straight to a query.
+  if (err.name === 'CastError') {
+    return res.status(400).json({ message: 'Невірний ID' });
+  }
+
+  // Mongoose schema validation failure.
+  if (err.name === 'ValidationError') {
+    return res.status(400).json({
+      message: 'Помилка валідації при збереженні',
+      details: Object.keys(err.errors).map((key) => ({
+        field: key,
+        message: err.errors[key].message
+      }))
+    });
+  }
+
   console.error(err.stack);
-  res.status(500).json({ 
+  res.status(500).json({
     message: 'Щось пішло не так!',
     error: process.env.NODE_ENV === 'development' ? err.message : 'Internal Server Error'
   });
