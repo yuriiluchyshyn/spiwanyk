@@ -160,15 +160,27 @@
   transform: scale(0.92);
 }
 
+/* Пісня вже у співанику — зелена галочка (успішно додано) */
 .add-btn.added {
-  background: var(--fire-orange);
-  border-color: var(--fire-orange);
-  color: white;
+  background: #4f9e7a;
+  border-color: #4f9e7a;
+  color: #ffffff;
 }
 
-.add-btn.added:hover {
-  background: #dc2626;
-  border-color: #dc2626;
+/* Hover лишаємо тільки для мишки: на тачі стан «залипає» після тапу
+   і додана пісня виглядала червоною */
+@media (hover: hover) and (pointer: fine) {
+  .add-btn:hover {
+    border-color: var(--fire-orange);
+    color: var(--fire-orange);
+  }
+
+  /* Наведення на додану пісню = дія «видалити» → червоний */
+  .add-btn.added:hover {
+    background: #dc2626;
+    border-color: #dc2626;
+    color: #ffffff;
+  }
 }
 
 .add-btn:disabled {

@@ -535,7 +535,7 @@
   position: absolute;
   bottom: 20px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateY(100%);
   background: rgba(32, 32, 32, 0.95);
   color: white;
   padding: 12px 20px;
@@ -546,21 +546,18 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(4px);
   z-index: 1000;
-  animation: bv-toast-slide-up 0.3s ease-out;
   font-size: 0.9rem;
   min-width: 280px;
   max-width: 90%;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
 }
 
-@keyframes bv-toast-slide-up {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(100%);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
+.bv-undo-toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
 }
 
 .bv-undo-text {

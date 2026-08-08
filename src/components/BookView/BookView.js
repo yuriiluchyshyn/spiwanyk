@@ -168,6 +168,7 @@ const BookView = ({ onClose, songbookData }) => {
   const [addMode, setAddMode] = useState(null);
   const [expandedSongId, setExpandedSongId] = useState(null);
   const [undoState, setUndoState] = useState(null); // { songId, title, timeoutId }
+  const [undoVisible, setUndoVisible] = useState(false); // для анімації появи/зникнення
 
   // Drag and drop state
   const [draggedSong, setDraggedSong] = useState(null);
@@ -359,7 +360,8 @@ const BookView = ({ onClose, songbookData }) => {
     // Якщо вже є активний undo, скасовуємо його
     if (undoState) {
       clearTimeout(undoState.timeoutId);
-      setUndoState(null);
+      setUndoVisible(false);
+      setTimeout(() => setUndoState(null), 300); // чекаємо завершення анімації зникнення
     }
 
     // Відразу приховуємо пісню з UI
@@ -379,7 +381,9 @@ const BookView = ({ onClose, songbookData }) => {
     const timeoutId = setTimeout(async () => {
       try {
         await songbooksAPI.removeSong(songbook._id, song._id);
-        setUndoState(null);
+        // Анімація зникнення toast
+        setUndoVisible(false);
+        setTimeout(() => setUndoState(null), 300);
       } catch (err) {
         console.error('Error removing song:', err);
         // Повертаємо пісню назад у разі помилки
@@ -389,17 +393,23 @@ const BookView = ({ onClose, songbookData }) => {
           'Помилка видалення пісні: ' +
             (err.response?.data?.message || err.message || 'невідома помилка')
         );
-        setUndoState(null);
+        setUndoVisible(false);
+        setTimeout(() => setUndoState(null), 300);
       }
     }, 10000);
 
     // Зберігаємо стан для можливості відміни
-    setUndoState({
+    const newUndoState = {
       songId: song._id,
       title: song.title,
       timeoutId,
       originalSongs: songbook.songs // зберігаємо оригінальний список
-    });
+    };
+    
+    setUndoState(newUndoState);
+    
+    // Показуємо toast з невеликою затримкою для плавної анімації
+    setTimeout(() => setUndoVisible(true), 50);
   };
 
   // Функція для відміни видалення
@@ -412,8 +422,9 @@ const BookView = ({ onClose, songbookData }) => {
     // Повертаємо оригінальний список пісень
     setSongbook(prev => ({ ...prev, songs: undoState.originalSongs }));
     
-    // Очищуємо стан undo
-    setUndoState(null);
+    // Анімовано приховуємо toast
+    setUndoVisible(false);
+    setTimeout(() => setUndoState(null), 300);
   };
 
   // ---- Drag & Drop ----
@@ -686,7 +697,7 @@ const BookView = ({ onClose, songbookData }) => {
 
         {/* Undo повідомлення */}
         {undoState && (
-          <div className="bv-undo-toast">
+          <div className={`bv-undo-toast ${undoVisible ? 'visible' : ''}`}>
             <span className="bv-undo-text">
               Пісню "{undoState.title}" видалено
             </span>
