@@ -18,8 +18,6 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(circle at 30% 70%, var(--fire-glow) 0%, transparent 50%),
-              radial-gradient(circle at 70% 30%, var(--tea-steam) 0%, transparent 50%);
   pointer-events: none;
 }
 
@@ -95,17 +93,18 @@
 
 .input-icon {
   position: absolute;
-  left: 1rem;
+  left: 1.2rem;
   top: 50%;
   transform: translateY(-50%);
   color: var(--warm-amber);
   font-size: 1.1rem;
   transition: color 0.3s ease;
+  pointer-events: none;
 }
 
 .input-wrapper input {
   width: 100%;
-  padding: 1rem 1rem 1rem 3rem;
+  padding: 1rem 1rem 1rem 3.5rem;
   border: 2px solid var(--guitar-wood);
   border-radius: 12px;
   font-size: 1rem;
