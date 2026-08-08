@@ -1,13 +1,10 @@
 .login-container {
-  min-height: calc(100vh - 3.5rem);
+  min-height: calc(100vh - 3.5rem); /* Fallback для старих браузерів */
+  min-height: calc(100dvh - 3.5rem); /* Dynamic viewport height для iOS */
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  background: linear-gradient(160deg, 
-    var(--ember-brown) 0%, 
-    var(--earth-brown) 50%, 
-    var(--guitar-wood) 100%);
   position: relative;
 }
 
@@ -190,7 +187,8 @@
 
 @media (max-width: 768px) {
   .login-container {
-    min-height: calc(100vh - 3rem);
+    min-height: calc(100vh - 3rem); /* Fallback для старих браузерів */
+    min-height: calc(100dvh - 3rem); /* Dynamic viewport height для iOS */
     padding: 0.5rem;
   }
   

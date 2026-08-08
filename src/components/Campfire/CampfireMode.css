@@ -4,7 +4,8 @@
   margin: 0;
   padding: 0.5rem;
   background: #1a1a1a; /* Dark background for better outdoor visibility */
-  min-height: 100vh;
+  min-height: 100vh; /* Fallback для старих браузерів */
+  min-height: 100dvh; /* Dynamic viewport height для iOS */
   color: #f5f5f5;
 }
 

@@ -1,5 +1,6 @@
 .error-boundary {
-  min-height: 100vh;
+  min-height: 100vh; /* Fallback для старих браузерів */
+  min-height: 100dvh; /* Dynamic viewport height для iOS */
   display: flex;
   align-items: center;
   justify-content: center;

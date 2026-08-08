@@ -18,7 +18,8 @@
   border-radius: 16px;
   width: 100%;
   max-width: 700px;
-  max-height: 85vh;
+  max-height: 85vh; /* Fallback для старих браузерів */
+  max-height: 85dvh; /* Dynamic viewport height для iOS */
   display: flex;
   flex-direction: column;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
@@ -42,6 +43,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 1.25rem 1.5rem;
+  padding-top: max(1.25rem, env(safe-area-inset-top)); /* Safe Area для iOS */
   border-bottom: 1px solid rgba(196, 168, 130, 0.2);
   background: #ffffff;
   flex-shrink: 0;
@@ -168,14 +170,17 @@
   }
 
   .add-songs-modal {
-    max-height: 100vh;
-    height: 100vh;
+    max-height: 100vh; /* Fallback для старих браузерів */
+    max-height: 100dvh; /* Dynamic viewport height для iOS */
+    height: 100vh; /* Fallback для старих браузерів */
+    height: 100dvh; /* Dynamic viewport height для iOS */
     border-radius: 0;
     max-width: 100%;
   }
 
   .modal-header {
     padding: 1rem;
+    padding-top: max(1rem, env(safe-area-inset-top)); /* Safe Area для iOS */
   }
 
   .modal-header h2 {

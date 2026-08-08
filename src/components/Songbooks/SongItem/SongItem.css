@@ -392,7 +392,8 @@
   top: 50%;
   transform: translate(-50%, -50%);
   width: min(340px, calc(100vw - 2rem));
-  max-height: 70vh;
+  max-height: 70vh; /* Fallback для старих браузерів */
+  max-height: 70dvh; /* Dynamic viewport height для iOS */
   overflow-y: auto;
   background: #ffffff;
   border-radius: 16px;

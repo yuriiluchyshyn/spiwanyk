@@ -39,7 +39,8 @@ body {
   background: #f6f4f1;
   line-height: 1.5;
   color: var(--dark-brown);
-  min-height: 100vh;
+  min-height: 100vh; /* Fallback для старих браузерів */
+  min-height: 100dvh; /* Dynamic viewport height для iOS */
 }
 
 /* Оптимізація для мобільних */

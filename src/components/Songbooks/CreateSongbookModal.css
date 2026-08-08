@@ -19,7 +19,8 @@
   border-radius: 16px;
   width: 100%;
   max-width: 500px;
-  max-height: 90vh;
+  max-height: 90vh; /* Fallback для старих браузерів */
+  max-height: 90dvh; /* Dynamic viewport height для iOS */
   overflow-y: auto;
   box-shadow: 0 16px 48px rgba(74, 63, 53, 0.25);
   border: 1px solid rgba(196, 168, 130, 0.3);
@@ -31,6 +32,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
+  padding-top: max(20px, env(safe-area-inset-top)); /* Safe Area для iOS */
   border-bottom: 1px solid rgba(196, 168, 130, 0.2);
 }
 
@@ -166,6 +168,7 @@
   display: flex;
   gap: 12px;
   justify-content: flex-end;
+  padding-bottom: max(0px, env(safe-area-inset-bottom)); /* Safe Area для iOS */
 }
 
 .cancel-btn,
@@ -211,6 +214,7 @@
 @media (max-width: 768px) {
   .modal-overlay {
     padding: 10px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom)); /* Safe Area для iOS */
   }
   
   .modal-header {

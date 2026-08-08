@@ -28,7 +28,8 @@
   border-radius: 14px;
   width: 100%;
   max-width: 600px;
-  max-height: 90vh;
+  max-height: 90vh; /* Fallback для старих браузерів */
+  max-height: 90dvh; /* Dynamic viewport height для iOS */
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
@@ -40,6 +41,7 @@
   align-items: center;
   gap: 0.75rem;
   padding: 1rem;
+  padding-top: max(1rem, env(safe-area-inset-top)); /* Safe Area для iOS */
   border-bottom: 1px solid rgba(196, 168, 130, 0.2);
   flex-shrink: 0;
 }
@@ -405,6 +407,7 @@
   gap: 0.5rem;
   justify-content: flex-end;
   padding: 1rem;
+  padding-bottom: max(1rem, env(safe-area-inset-bottom)); /* Safe Area для iOS */
   border-top: 1px solid rgba(196, 168, 130, 0.2);
   flex-shrink: 0;
 }
@@ -476,7 +479,8 @@
   }
 
   .settings-modal {
-    max-height: 95vh;
+    max-height: 95vh; /* Fallback для старих браузерів */
+    max-height: 95dvh; /* Dynamic viewport height для iOS */
   }
 
   .settings-modal .shared-user {

@@ -531,7 +531,8 @@
 @media (max-width: 640px) {
   .bv-modal {
     width: 100vw;
-    height: 100vh;
+    height: 100vh; /* Fallback для старих браузерів */
+    height: 100dvh; /* Dynamic viewport height для iOS */
     max-height: none;
     border-radius: 0;
     border: 0;
