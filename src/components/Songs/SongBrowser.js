@@ -21,9 +21,101 @@ const defaultCategories = [
 
 const SongCard = ({ song, isExpanded, onToggleExpand, onAddSong, isAdding, isAdded }) => {
   const [showChords, setShowChords] = useState(false);
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [isSwipeActive, setIsSwipeActive] = useState(false);
+
+  // Minimum distance for a swipe
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+    setIsSwipeActive(true);
+  };
+
+  const onTouchMove = (e) => {
+    if (!touchStart || !isSwipeActive) return;
+    
+    const currentTouch = e.targetTouches[0].clientX;
+    const distance = currentTouch - touchStart;
+    
+    // Only allow horizontal swipes within reasonable bounds
+    if (Math.abs(distance) <= 150) {
+      setSwipeOffset(distance);
+    }
+  };
+
+  const onTouchEnd = (e) => {
+    if (!touchStart || !isSwipeActive) return;
+    
+    const touch = e.changedTouches[0];
+    setTouchEnd(touch.clientX);
+    
+    const distance = touch.clientX - touchStart;
+    
+    // Reset swipe animation
+    setSwipeOffset(0);
+    setIsSwipeActive(false);
+    
+    // Check if swipe distance is sufficient and onAddSong is provided
+    if (Math.abs(distance) >= minSwipeDistance && onAddSong && !isAdding) {
+      if (distance > 0) {
+        // Swipe right (left to right) - add song
+        if (!isAdded) {
+          onAddSong(song);
+        }
+      } else {
+        // Swipe left (right to left) - remove song
+        if (isAdded) {
+          onAddSong(song);
+        }
+      }
+    }
+  };
+
+  const cardStyle = {
+    transform: isSwipeActive ? `translateX(${swipeOffset}px)` : 'translateX(0)',
+    transition: isSwipeActive ? 'none' : 'transform 0.2s ease-out'
+  };
+
+  // Show visual indicator during swipe
+  const getSwipeIndicator = () => {
+    if (!isSwipeActive || Math.abs(swipeOffset) < 30) return null;
+    
+    if (swipeOffset > 0) {
+      // Right swipe - show add indicator if not already added
+      if (!isAdded) {
+        return (
+          <div className="swipe-indicator swipe-add" style={{ opacity: Math.min(Math.abs(swipeOffset) / 100, 1) }}>
+            <FiPlus /> Додати
+          </div>
+        );
+      }
+    } else {
+      // Left swipe - show remove indicator if already added
+      if (isAdded) {
+        return (
+          <div className="swipe-indicator swipe-remove" style={{ opacity: Math.min(Math.abs(swipeOffset) / 100, 1) }}>
+            <FiCheck /> Видалити
+          </div>
+        );
+      }
+    }
+    return null;
+  };
 
   return (
-    <div className={`song-card ${isExpanded ? 'expanded' : ''}`}>
+    <div 
+      className={`song-card ${isExpanded ? 'expanded' : ''} ${isSwipeActive ? 'swiping' : ''}`}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+      style={cardStyle}
+    >
+      {getSwipeIndicator()}
+      
       <div className="song-card-header" onClick={() => onToggleExpand(song._id)}>
         <div className="song-card-info">
           <h3 className="song-title">{song.title}</h3>
