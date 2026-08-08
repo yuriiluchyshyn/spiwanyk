@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { FiMove, FiTrash2, FiFolder, FiCheck, FiChevronDown, FiYoutube } from 'react-icons/fi';
+import { FaGuitar } from 'react-icons/fa';
 // FormattedSong is plain JS
 // @ts-ignore
 import FormattedSong from '../../Songs/FormattedSong';
@@ -334,6 +335,7 @@ const SongItem: React.FC<SongItemProps> = ({
                   checked={showChords}
                   onChange={(e) => setShowChords(e.target.checked)}
                 />
+                <FaGuitar className="song-chords-icon" />
                 <span>Показати акорди</span>
               </label>
             )}

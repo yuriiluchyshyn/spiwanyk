@@ -110,6 +110,12 @@
   cursor: pointer;
 }
 
+.song-chords-toggle .song-chords-icon {
+  font-size: 0.95rem;
+  color: var(--fire-orange, #d4a574);
+  flex-shrink: 0;
+}
+
 .song-number {
   width: 2rem;
   height: 2rem;
