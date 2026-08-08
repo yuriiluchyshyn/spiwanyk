@@ -39,7 +39,6 @@ const Login = () => {
           <div className="form-group">
             <label htmlFor="email">Електронна пошта</label>
             <div className="input-wrapper">
-              <FiMail className="input-icon" />
               <input
                 type="email"
                 id="email"
@@ -49,6 +48,7 @@ const Login = () => {
                 required
                 disabled={loading}
               />
+              <FiMail className="input-icon" />
             </div>
           </div>
 

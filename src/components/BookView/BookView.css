@@ -533,6 +533,7 @@
     width: 100vw;
     height: 100vh; /* Fallback для старих браузерів */
     height: 100dvh; /* Dynamic viewport height для iOS */
+    height: 100svh; /* Small viewport height для Android */
     max-height: none;
     border-radius: 0;
     border: 0;

@@ -1,10 +1,13 @@
 .login-container {
   min-height: calc(100vh - 3.5rem); /* Fallback для старих браузерів */
   min-height: calc(100dvh - 3.5rem); /* Dynamic viewport height для iOS */
+  min-height: calc(100svh - 3.5rem); /* Small viewport height для Android */
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1rem;
+  padding-top: max(1rem, env(safe-area-inset-top)); /* Safe Area для iOS/Android */
+  padding-bottom: max(1rem, env(safe-area-inset-bottom)); /* Safe Area для iOS/Android */
   position: relative;
 }
 
@@ -108,6 +111,7 @@
   background: var(--cream-white);
   color: var(--dark-brown);
   transition: all 0.3s ease;
+  box-sizing: border-box; /* Додано для правильного розрахунку розмірів */
 }
 
 .input-wrapper input:focus {
@@ -116,7 +120,6 @@
   box-shadow: 0 0 0 3px var(--fire-glow);
 }
 
-.input-wrapper input:focus + .input-icon,
 .input-wrapper input:focus ~ .input-icon {
   color: var(--fire-orange);
 }
@@ -189,7 +192,10 @@
   .login-container {
     min-height: calc(100vh - 3rem); /* Fallback для старих браузерів */
     min-height: calc(100dvh - 3rem); /* Dynamic viewport height для iOS */
+    min-height: calc(100svh - 3rem); /* Small viewport height для Android */
     padding: 0.5rem;
+    padding-top: max(0.5rem, env(safe-area-inset-top)); /* Safe Area для iOS/Android */
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom)); /* Safe Area для iOS/Android */
   }
   
   .login-card {

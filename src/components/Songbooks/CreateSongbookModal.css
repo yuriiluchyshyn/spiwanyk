@@ -21,6 +21,7 @@
   max-width: 500px;
   max-height: 90vh; /* Fallback для старих браузерів */
   max-height: 90dvh; /* Dynamic viewport height для iOS */
+  max-height: 90svh; /* Small viewport height для Android */
   overflow-y: auto;
   box-shadow: 0 16px 48px rgba(74, 63, 53, 0.25);
   border: 1px solid rgba(196, 168, 130, 0.3);

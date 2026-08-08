@@ -20,6 +20,7 @@
   max-width: 700px;
   max-height: 85vh; /* Fallback для старих браузерів */
   max-height: 85dvh; /* Dynamic viewport height для iOS */
+  max-height: 85svh; /* Small viewport height для Android */
   display: flex;
   flex-direction: column;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
@@ -172,8 +173,10 @@
   .add-songs-modal {
     max-height: 100vh; /* Fallback для старих браузерів */
     max-height: 100dvh; /* Dynamic viewport height для iOS */
+    max-height: 100svh; /* Small viewport height для Android */
     height: 100vh; /* Fallback для старих браузерів */
     height: 100dvh; /* Dynamic viewport height для iOS */
+    height: 100svh; /* Small viewport height для Android */
     border-radius: 0;
     max-width: 100%;
   }

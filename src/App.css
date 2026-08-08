@@ -1,6 +1,7 @@
 .App {
   min-height: 100vh; /* Fallback для старих браузерів */
   min-height: 100dvh; /* Dynamic viewport height для iOS */
+  min-height: 100svh; /* Small viewport height для Android */
   display: flex;
   flex-direction: column;
   animation: fadeIn 0.4s ease-out;

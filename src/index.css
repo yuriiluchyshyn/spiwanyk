@@ -41,6 +41,7 @@ body {
   color: var(--dark-brown);
   min-height: 100vh; /* Fallback для старих браузерів */
   min-height: 100dvh; /* Dynamic viewport height для iOS */
+  min-height: 100svh; /* Small viewport height для Android */
 }
 
 /* Оптимізація для мобільних */

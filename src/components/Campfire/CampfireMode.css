@@ -6,6 +6,7 @@
   background: #1a1a1a; /* Dark background for better outdoor visibility */
   min-height: 100vh; /* Fallback для старих браузерів */
   min-height: 100dvh; /* Dynamic viewport height для iOS */
+  min-height: 100svh; /* Small viewport height для Android */
   color: #f5f5f5;
 }
 

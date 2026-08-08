@@ -394,6 +394,7 @@
   width: min(340px, calc(100vw - 2rem));
   max-height: 70vh; /* Fallback для старих браузерів */
   max-height: 70dvh; /* Dynamic viewport height для iOS */
+  max-height: 70svh; /* Small viewport height для Android */
   overflow-y: auto;
   background: #ffffff;
   border-radius: 16px;

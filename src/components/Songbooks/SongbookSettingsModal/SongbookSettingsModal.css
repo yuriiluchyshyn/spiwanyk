@@ -30,6 +30,7 @@
   max-width: 600px;
   max-height: 90vh; /* Fallback для старих браузерів */
   max-height: 90dvh; /* Dynamic viewport height для iOS */
+  max-height: 90svh; /* Small viewport height для Android */
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
@@ -481,6 +482,7 @@
   .settings-modal {
     max-height: 95vh; /* Fallback для старих браузерів */
     max-height: 95dvh; /* Dynamic viewport height для iOS */
+    max-height: 95svh; /* Small viewport height для Android */
   }
 
   .settings-modal .shared-user {
