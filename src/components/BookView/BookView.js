@@ -62,7 +62,7 @@ const SongItem = forwardRef(({
     
     // Якщо свайп вліво достатньо довгий - видаляємо пісню
     if (distance < -minSwipeDistance) {
-      onRemoveSong(song);
+      onRemoveSong(song); // Не передаємо event, щоб не було stopPropagation
     }
   };
 
@@ -166,6 +166,7 @@ const BookView = ({ onClose, songbookData }) => {
   const [isClosing, setIsClosing] = useState(false);
   const [addMode, setAddMode] = useState(null);
   const [expandedSongId, setExpandedSongId] = useState(null);
+  const [undoState, setUndoState] = useState(null); // { songId, title, timeoutId }
 
   // Drag and drop state
   const [draggedSong, setDraggedSong] = useState(null);
@@ -193,6 +194,15 @@ const BookView = ({ onClose, songbookData }) => {
   useEffect(() => {
     loadSongbook();
   }, [loadSongbook]);
+
+  // Очищуємо таймер при закритті
+  useEffect(() => {
+    return () => {
+      if (undoState?.timeoutId) {
+        clearTimeout(undoState.timeoutId);
+      }
+    };
+  }, [undoState]);
 
   // ---- Впорядкований список пісень за секціями ----
   const groupedSongs = useMemo(() => {
@@ -340,27 +350,69 @@ const BookView = ({ onClose, songbookData }) => {
     }
   }, [expandedSongId]);
 
-  // ---- Видалення пісні зі співаника ----
+  // ---- Видалення пісні зі співаника з undo функціональністю ----
   const handleRemoveSong = async (song, e) => {
     if (e) e.stopPropagation();
     if (!song?._id) return;
-    if (!window.confirm(`Видалити пісню "${song.title}" зі співаника?`)) return;
 
-    try {
-      await songbooksAPI.removeSong(songbook._id, song._id);
-      const fresh = await songbooksAPI.getById(songbook._id);
-      setSongbook(fresh);
-
-      if (expandedSongId === song._id) {
-        setExpandedSongId(null);
-      }
-    } catch (err) {
-      console.error('Error removing song:', err);
-      alert(
-        'Помилка видалення пісні: ' +
-          (err.response?.data?.message || err.message || 'невідома помилка')
-      );
+    // Якщо вже є активний undo, скасовуємо його
+    if (undoState) {
+      clearTimeout(undoState.timeoutId);
+      setUndoState(null);
     }
+
+    // Відразу приховуємо пісню з UI
+    const updatedSongs = songbook.songs.filter(s => {
+      const songId = s.song?._id || s.song;
+      return songId?.toString() !== song._id.toString();
+    });
+    
+    setSongbook(prev => ({ ...prev, songs: updatedSongs }));
+
+    // Згортаємо пісню, якщо вона була розкрита
+    if (expandedSongId === song._id) {
+      setExpandedSongId(null);
+    }
+
+    // Запускаємо таймер на 10 секунд
+    const timeoutId = setTimeout(async () => {
+      try {
+        await songbooksAPI.removeSong(songbook._id, song._id);
+        setUndoState(null);
+      } catch (err) {
+        console.error('Error removing song:', err);
+        // Повертаємо пісню назад у разі помилки
+        const fresh = await songbooksAPI.getById(songbook._id);
+        setSongbook(fresh);
+        alert(
+          'Помилка видалення пісні: ' +
+            (err.response?.data?.message || err.message || 'невідома помилка')
+        );
+        setUndoState(null);
+      }
+    }, 10000);
+
+    // Зберігаємо стан для можливості відміни
+    setUndoState({
+      songId: song._id,
+      title: song.title,
+      timeoutId,
+      originalSongs: songbook.songs // зберігаємо оригінальний список
+    });
+  };
+
+  // Функція для відміни видалення
+  const handleUndoRemove = () => {
+    if (!undoState) return;
+
+    // Скасовуємо таймер
+    clearTimeout(undoState.timeoutId);
+    
+    // Повертаємо оригінальний список пісень
+    setSongbook(prev => ({ ...prev, songs: undoState.originalSongs }));
+    
+    // Очищуємо стан undo
+    setUndoState(null);
   };
 
   // ---- Drag & Drop ----
@@ -628,6 +680,21 @@ const BookView = ({ onClose, songbookData }) => {
               onClose={() => setAddMode(null)}
               onSongAdded={handleSongAdded}
             />
+          </div>
+        )}
+
+        {/* Undo повідомлення */}
+        {undoState && (
+          <div className="bv-undo-toast">
+            <span className="bv-undo-text">
+              Пісню "{undoState.title}" видалено
+            </span>
+            <button 
+              className="bv-undo-btn" 
+              onClick={handleUndoRemove}
+            >
+              Відмінити
+            </button>
           </div>
         )}
       </div>

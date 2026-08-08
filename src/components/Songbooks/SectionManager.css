@@ -1,3 +1,13 @@
+/* ==========================================================================
+   Section Manager
+   Єдина шкала: control-height 36px, radius 8px, gap 0.5rem / 0.75rem
+   ========================================================================== */
+
+.section-manager,
+.section-manager * {
+  box-sizing: border-box;
+}
+
 /* Модальне вікно для розділів */
 .section-manager-overlay {
   position: fixed;
@@ -22,10 +32,11 @@
 
 .section-manager-close {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 1rem;
+  right: 1rem;
   width: 32px;
   height: 32px;
+  padding: 0;
   border: none;
   border-radius: 8px;
   background: rgba(196, 168, 130, 0.12);
@@ -44,7 +55,7 @@
   color: var(--fire-orange);
 }
 
-/* Простий дизайн в стилі головної сторінки */
+/* Контейнер */
 .section-manager {
   background: #ffffff;
   border-radius: 14px;
@@ -53,240 +64,87 @@
   border: 1px solid rgba(196, 168, 130, 0.2);
 }
 
-.section-manager-modal .sections-header {
-  padding-right: 2.5rem;
-}
-
+/* ---------- Header ---------- */
 .sections-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.75rem;
   margin-bottom: 1rem;
+  min-height: 32px;
+}
+
+.section-manager-modal .sections-header {
+  padding-right: 2.75rem;
 }
 
 .sections-header h3 {
   margin: 0;
   color: var(--dark-brown);
-  font-size: 0.9rem;
+  font-size: 1rem;
+  line-height: 1.3;
   font-weight: 600;
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.add-section-btn {
-  background: linear-gradient(135deg, var(--fire-orange), var(--warm-amber));
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.sections-header h3 .sec-icon {
+  flex-shrink: 0;
+  font-size: 1.05rem;
+  color: var(--fire-orange);
 }
 
-.add-section-btn:hover {
+/* ---------- Базовий стиль кнопок ---------- */
+.add-section-btn,
+.save-btn,
+.cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.add-section-btn svg,
+.save-btn svg,
+.cancel-btn svg {
+  flex-shrink: 0;
+  font-size: 0.95rem;
+}
+
+.add-section-btn {
+  background: linear-gradient(135deg, var(--fire-orange), var(--warm-amber));
+  color: #ffffff;
+}
+
+.add-section-btn:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(232, 168, 124, 0.3);
 }
 
-.sections-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.section-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem;
-  background: rgba(196, 168, 130, 0.05);
-  border-radius: 8px;
-  transition: all 0.3s ease;
-}
-
-.section-item:hover {
-  background: rgba(196, 168, 130, 0.1);
-}
-
-.section-info {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.section-name {
-  color: var(--dark-brown);
-  font-weight: 500;
-  font-size: 0.85rem;
-}
-
-.section-count {
-  color: var(--stone-gray);
-  font-size: 0.75rem;
-  background: rgba(196, 168, 130, 0.1);
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-.section-actions {
-  display: flex;
-  gap: 0.25rem;
-}
-
-.section-action-btn {
-  width: 24px;
-  height: 24px;
-  border: none;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 0.7rem;
-}
-
-.edit-section-btn {
-  background: rgba(196, 168, 130, 0.1);
-  color: var(--stone-gray);
-}
-
-.edit-section-btn:hover {
-  background: rgba(196, 168, 130, 0.2);
-  transform: scale(1.1);
-}
-
-.delete-section-btn {
-  background: rgba(201, 123, 99, 0.1);
-  color: var(--sunset-red);
-}
-
-.delete-section-btn:hover {
-  background: rgba(201, 123, 99, 0.2);
-  transform: scale(1.1);
-}
-
-.remove-section-btn {
-  width: 28px;
-  height: 28px;
-  border: none;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 0.8rem;
-  background: rgba(220, 38, 38, 0.08);
-  color: #dc2626;
-}
-
-.remove-section-btn:hover {
-  background: rgba(220, 38, 38, 0.18);
-  transform: scale(1.1);
-}
-
-.remove-section-btn:disabled {
-  opacity: 0.4;
+.add-section-btn:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
   transform: none;
 }
 
-.add-section-form {
-  display: grid;
-  grid-template-columns: 1fr 1fr auto;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
-  margin-bottom: 0.75rem;
-  padding: 0.75rem;
-  background: rgba(196, 168, 130, 0.05);
-  border-radius: 8px;
-  align-items: start;
-}
-
-.add-section-form .section-name-input {
-  grid-column: 1;
-}
-
-.add-section-form .section-description-input {
-  grid-column: 2;
-}
-
-.add-section-form .form-actions {
-  grid-column: 3;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  flex-shrink: 0;
-}
-
-.section-name-input,
-.section-description-input {
-  width: 100%;
-  padding: 8px 10px;
-  border: 1px solid rgba(196, 168, 130, 0.3);
-  border-radius: 6px;
-  font-size: 0.85rem;
-  background: #ffffff;
-  font-family: inherit;
-}
-
-.section-name-input:focus,
-.section-description-input:focus {
-  outline: none;
-  border-color: var(--fire-orange);
-  box-shadow: 0 0 0 2px rgba(232, 168, 124, 0.2);
-}
-
-.add-section-input {
-  flex: 1;
-  padding: 6px 10px;
-  border: 1px solid rgba(196, 168, 130, 0.3);
-  border-radius: 6px;
-  font-size: 0.8rem;
-  background: #ffffff;
-}
-
-.add-section-input:focus {
-  outline: none;
-  border-color: var(--fire-orange);
-  box-shadow: 0 0 0 2px rgba(232, 168, 124, 0.2);
-}
-
-.form-btn {
-  padding: 6px 12px;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
 .save-btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 8px 14px;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
   background: linear-gradient(135deg, var(--fire-orange), var(--warm-amber));
-  color: white;
-  white-space: nowrap;
+  color: #ffffff;
 }
 
-.save-btn:hover {
+.save-btn:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(232, 168, 124, 0.3);
 }
@@ -298,82 +156,222 @@
 }
 
 .cancel-btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 8px 14px;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
   background: rgba(196, 168, 130, 0.12);
   color: var(--stone-gray);
-  white-space: nowrap;
 }
 
-.cancel-btn:hover {
+.cancel-btn:hover:not(:disabled) {
   background: rgba(196, 168, 130, 0.25);
 }
 
-.edit-section-form {
+.cancel-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---------- Форма додавання розділу ---------- */
+.add-section-form {
   display: flex;
+  flex-direction: column;
   gap: 0.5rem;
-  align-items: center;
-  flex: 1;
+  margin: 0 0 0.75rem;
+  padding: 0.75rem;
+  background: rgba(196, 168, 130, 0.05);
+  border: 1px solid rgba(196, 168, 130, 0.18);
+  border-radius: 10px;
 }
 
-.edit-section-input {
-  flex: 1;
-  padding: 4px 8px;
+.section-name-input,
+.section-description-input {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
   border: 1px solid rgba(196, 168, 130, 0.3);
-  border-radius: 4px;
-  font-size: 0.8rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: var(--dark-brown);
   background: #ffffff;
+  font-family: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.edit-section-input:focus {
+.section-name-input {
+  height: 36px;
+}
+
+.section-description-input {
+  min-height: 64px;
+  resize: vertical;
+}
+
+.section-name-input:focus,
+.section-description-input:focus {
   outline: none;
   border-color: var(--fire-orange);
   box-shadow: 0 0 0 2px rgba(232, 168, 124, 0.2);
 }
 
+/* Кнопки форми: однакова ширина, вирівняні по правому краю */
+.add-section-form .form-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.add-section-form .form-actions .save-btn,
+.add-section-form .form-actions .cancel-btn {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* ---------- Список розділів ---------- */
+.sections-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.section-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(196, 168, 130, 0.05);
+  border: 1px solid rgba(196, 168, 130, 0.15);
+  border-radius: 10px;
+  transition: all 0.25s ease;
+}
+
+.section-item:hover {
+  background: rgba(196, 168, 130, 0.1);
+}
+
+.section-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.section-name {
+  margin: 0;
+  color: var(--dark-brown);
+  font-weight: 600;
+  font-size: 0.9rem;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.section-description {
+  margin: 0;
+  color: var(--stone-gray);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.section-count {
+  align-self: flex-start;
+  color: var(--stone-gray);
+  font-size: 0.75rem;
+  line-height: 1;
+  background: rgba(196, 168, 130, 0.15);
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+
+.section-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.remove-section-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-size: 0.85rem;
+  background: rgba(220, 38, 38, 0.08);
+  color: #dc2626;
+}
+
+.remove-section-btn:hover:not(:disabled) {
+  background: rgba(220, 38, 38, 0.18);
+}
+
+.remove-section-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ---------- Порожній стан ---------- */
+.no-sections {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  border: 1px dashed rgba(196, 168, 130, 0.35);
+  border-radius: 10px;
+  background: rgba(196, 168, 130, 0.03);
+}
+
+.no-sections p {
+  margin: 0;
+  color: var(--dark-brown);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.no-sections p.hint {
+  color: var(--stone-gray);
+  font-size: 0.8rem;
+}
+
+/* ---------- Мобільна адаптація ---------- */
 @media (max-width: 768px) {
-  .section-manager {
-    padding: 0.75rem;
+  .section-manager-overlay {
+    padding: 12px;
   }
-  
+
+  .section-manager {
+    padding: 1rem;
+  }
+
   .sections-header {
     flex-direction: column;
-    gap: 0.5rem;
     align-items: stretch;
+    gap: 0.75rem;
   }
-  
-  .add-section-form {
-    grid-template-columns: 1fr;
+
+  /* На мобільному кнопка йде в окремий рядок, тому місце під хрестик
+     резервуємо лише для заголовка */
+  .section-manager-modal .sections-header {
+    padding-right: 0;
   }
-  
-  .add-section-form .section-name-input {
-    grid-column: 1;
+
+  .section-manager-modal .sections-header h3 {
+    padding-right: 2.75rem;
   }
-  
-  .add-section-form .section-description-input {
-    grid-column: 1;
+
+  .add-section-btn {
+    width: 100%;
   }
-  
-  .add-section-form .form-actions {
-    grid-column: 1;
-    flex-direction: row;
-  }
-  
+
   .section-item {
-    flex-direction: column;
-    gap: 0.5rem;
-    align-items: stretch;
-  }
-  
-  .section-actions {
-    justify-content: flex-end;
+    flex-direction: row;
+    align-items: flex-start;
   }
 }

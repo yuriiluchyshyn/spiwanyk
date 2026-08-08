@@ -1,3 +1,8 @@
+/* ==========================================================================
+   Songbook Actions
+   Усі кнопки — однакові icon-button 32x32, radius 8px, іконка 0.9rem
+   ========================================================================== */
+
 .songbook-actions {
   display: flex;
   gap: 0.4rem;
@@ -5,8 +10,9 @@
   align-items: center;
 }
 
-.add-songs-btn {
-  display: flex;
+.songbook-actions button {
+  box-sizing: border-box;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 32px;
@@ -15,8 +21,18 @@
   border: none;
   border-radius: 8px;
   font-size: 0.9rem;
+  line-height: 1;
   cursor: pointer;
   transition: all 0.3s ease;
+}
+
+.songbook-actions button svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+/* Додати пісні — основна дія */
+.add-songs-btn {
   background: linear-gradient(135deg, var(--fire-orange), var(--warm-amber));
   color: var(--cream-white);
 }
@@ -26,39 +42,20 @@
   transform: translateY(-1px);
 }
 
+/* Розділи */
 .manage-sections-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
   background: rgba(196, 168, 130, 0.12);
   color: var(--stone-gray);
 }
 
 .manage-sections-btn:hover {
   background: rgba(196, 168, 130, 0.25);
+  color: var(--fire-orange);
   transform: translateY(-1px);
 }
 
+/* Видимість */
 .visibility-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
   background: rgba(196, 168, 130, 0.12);
   color: var(--stone-gray);
 }
@@ -69,18 +66,8 @@
   transform: translateY(-1px);
 }
 
+/* Видалити співаник */
 .delete-songbook-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
   background: rgba(220, 38, 38, 0.08);
   color: #dc2626;
 }
