@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiPlus, FiSettings, FiTrash2, FiEye } from 'react-icons/fi';
+import { FiPlus, FiFolder, FiTrash2, FiEye } from 'react-icons/fi';
 import './SongbookActions.css';
 
 interface SongbookActionsProps {
@@ -34,9 +34,9 @@ const SongbookActions: React.FC<SongbookActionsProps> = ({
         <button 
           onClick={onToggleSectionManager} 
           className="manage-sections-btn"
-          title="Розділи"
+          title="Управління розділами"
         >
-          <FiSettings />
+          <FiFolder />
         </button>
       )}
       {isOwner && onShowSettings && (

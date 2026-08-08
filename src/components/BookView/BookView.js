@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, forwardRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { songbooksAPI } from '../../services/api';
@@ -7,6 +7,155 @@ import FormattedSong from '../Songs/FormattedSong';
 import AddSongsModal from '../Songbooks/AddSongsModal';
 import MusicalNoteLoader from '../Common/MusicalNoteLoader';
 import './BookView.css';
+
+// Компонент для пісні з свайп-функціональністю
+const SongItem = forwardRef(({
+  song,
+  isExpanded,
+  isDragging,
+  dropClass,
+  canEdit,
+  showChords,
+  onToggleExpand,
+  onRemoveSong,
+  onDragStart,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  onDragEnd
+}, ref) => {
+  const [touchStart, setTouchStart] = useState(null);
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [isSwipeActive, setIsSwipeActive] = useState(false);
+
+  const minSwipeDistance = 80; // Мінімальна відстань для свайпу
+
+  const onTouchStart = (e) => {
+    if (!canEdit) return;
+    
+    setTouchStart(e.targetTouches[0].clientX);
+    setIsSwipeActive(true);
+  };
+
+  const onTouchMove = (e) => {
+    if (!canEdit || !touchStart || !isSwipeActive) return;
+    
+    const currentTouch = e.targetTouches[0].clientX;
+    const distance = currentTouch - touchStart;
+    
+    // Дозволяємо тільки свайп вліво (для видалення)
+    if (distance <= 0 && Math.abs(distance) <= 150) {
+      setSwipeOffset(distance);
+    }
+  };
+
+  const onTouchEnd = (e) => {
+    if (!canEdit || !touchStart || !isSwipeActive) return;
+    
+    const touch = e.changedTouches[0];
+    const distance = touch.clientX - touchStart;
+    
+    // Повертаємо в нормальну позицію
+    setSwipeOffset(0);
+    setIsSwipeActive(false);
+    setTouchStart(null);
+    
+    // Якщо свайп вліво достатньо довгий - видаляємо пісню
+    if (distance < -minSwipeDistance) {
+      onRemoveSong(song);
+    }
+  };
+
+  const itemStyle = {
+    transform: isSwipeActive ? `translateX(${swipeOffset}px)` : 'translateX(0)',
+    transition: isSwipeActive ? 'none' : 'transform 0.2s ease-out'
+  };
+
+  // Показуємо індикатор видалення при свайпі вліво
+  const getSwipeIndicator = () => {
+    if (!isSwipeActive || swipeOffset >= -30) return null;
+    
+    return (
+      <div 
+        className="bv-swipe-indicator bv-swipe-remove" 
+        style={{ opacity: Math.min(Math.abs(swipeOffset) / 100, 1) }}
+      >
+        <FiTrash2 /> Видалити
+      </div>
+    );
+  };
+
+  return (
+    <article
+      ref={ref}
+      className={`bv-song ${isExpanded ? 'is-expanded' : ''} ${isDragging ? 'is-dragging' : ''} ${dropClass} ${isSwipeActive ? 'swiping' : ''}`}
+      draggable={canEdit}
+      onDragStart={canEdit ? (e) => onDragStart(e, song) : undefined}
+      onDragOver={canEdit ? (e) => onDragOver(e, song) : undefined}
+      onDragLeave={canEdit ? onDragLeave : undefined}
+      onDrop={canEdit ? (e) => onDrop(e, song) : undefined}
+      onDragEnd={canEdit ? onDragEnd : undefined}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+      style={itemStyle}
+    >
+      {getSwipeIndicator()}
+      
+      <div className="bv-song-row" onClick={() => onToggleExpand(song._id)}>
+        {canEdit && (
+          <span className="bv-drag-handle" title="Перетягнути">
+            <FiMove />
+          </span>
+        )}
+        <div className="bv-song-info">
+          <h3 className="bv-song-title">{song.title}</h3>
+          {song.author && <span className="bv-song-author">{song.author}</span>}
+        </div>
+        <div className="bv-song-actions">
+          {canEdit && (
+            <button
+              className="bv-song-remove"
+              onClick={(e) => onRemoveSong(song, e)}
+              title="Видалити"
+            >
+              <FiTrash2 />
+            </button>
+          )}
+          <span className={`bv-expand-icon ${isExpanded ? 'rotated' : ''}`}>
+            <FiChevronDown />
+          </span>
+        </div>
+      </div>
+
+      {isExpanded && (
+        <div className="bv-song-expanded">
+          <div className="bv-song-expanded-inner">
+            {(song.metadata?.words || song.metadata?.music) && (
+              <div className="bv-song-meta">
+                {song.metadata.words && <span>Сл: {song.metadata.words}</span>}
+                {song.metadata.music && <span>Муз: {song.metadata.music}</span>}
+              </div>
+            )}
+            <div className="bv-song-body">
+              <FormattedSong song={song} showChords={showChords} />
+            </div>
+            {song.youtubeUrl && (
+              <a
+                className="bv-yt-link"
+                href={song.youtubeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                ▶ Послухати на YouTube
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+    </article>
+  );
+});
 
 const BookView = ({ onClose, songbookData }) => {
   const navigate = useNavigate();
@@ -415,69 +564,23 @@ const BookView = ({ onClose, songbookData }) => {
                     : '';
 
                   return (
-                    <article
+                    <SongItem
                       key={song._id}
+                      song={song}
+                      isExpanded={isExpanded}
+                      isDragging={isDragging}
+                      dropClass={dropClass}
+                      canEdit={canEditSongbook()}
+                      showChords={showChords}
+                      onToggleExpand={handleToggleExpand}
+                      onRemoveSong={handleRemoveSong}
+                      onDragStart={handleDragStart}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                      onDragEnd={handleDragEnd}
                       ref={(el) => { songRefs.current[song._id] = el; }}
-                      className={`bv-song ${isExpanded ? 'is-expanded' : ''} ${isDragging ? 'is-dragging' : ''} ${dropClass}`}
-                      draggable={canEditSongbook()}
-                      onDragStart={canEditSongbook() ? (e) => handleDragStart(e, song) : undefined}
-                      onDragOver={canEditSongbook() ? (e) => handleDragOver(e, song) : undefined}
-                      onDragLeave={canEditSongbook() ? handleDragLeave : undefined}
-                      onDrop={canEditSongbook() ? (e) => handleDrop(e, song) : undefined}
-                      onDragEnd={canEditSongbook() ? handleDragEnd : undefined}
-                    >
-                      <div className="bv-song-row" onClick={() => handleToggleExpand(song._id)}>
-                        {canEditSongbook() && (
-                          <span className="bv-drag-handle" title="Перетягнути">
-                            <FiMove />
-                          </span>
-                        )}
-                        <div className="bv-song-info">
-                          <h3 className="bv-song-title">{song.title}</h3>
-                          {song.author && <span className="bv-song-author">{song.author}</span>}
-                        </div>
-                        <div className="bv-song-actions">
-                          {canEditSongbook() && (
-                            <button
-                              className="bv-song-remove"
-                              onClick={(e) => handleRemoveSong(song, e)}
-                              title="Видалити"
-                            >
-                              <FiTrash2 />
-                            </button>
-                          )}
-                          <span className={`bv-expand-icon ${isExpanded ? 'rotated' : ''}`}>
-                            <FiChevronDown />
-                          </span>
-                        </div>
-                      </div>
-
-                      {isExpanded && (
-                        <div className="bv-song-expanded">
-                          <div className="bv-song-expanded-inner">
-                            {(song.metadata?.words || song.metadata?.music) && (
-                              <div className="bv-song-meta">
-                                {song.metadata.words && <span>Сл: {song.metadata.words}</span>}
-                                {song.metadata.music && <span>Муз: {song.metadata.music}</span>}
-                              </div>
-                            )}
-                            <div className="bv-song-body">
-                              <FormattedSong song={song} showChords={showChords} />
-                            </div>
-                            {song.youtubeUrl && (
-                              <a
-                                className="bv-yt-link"
-                                href={song.youtubeUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                ▶ Послухати на YouTube
-                              </a>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </article>
+                    />
                   );
                 })}
               </section>
