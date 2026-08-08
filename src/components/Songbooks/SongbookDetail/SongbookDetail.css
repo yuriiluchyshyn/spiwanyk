@@ -34,3 +34,144 @@
     transform: translateY(0);
   }
 }
+
+/* ===== Перетягування пісень ===== */
+
+/* Привид пісні, що летить за курсором/пальцем.
+   pointer-events: none — критично, інакше elementFromPoint бачив би сам привид. */
+.song-drag-ghost {
+  position: fixed;
+  z-index: 5000;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 70vw;
+  padding: 0.5rem 0.85rem;
+  transform: translate(-50%, calc(-100% - 12px));
+  background: linear-gradient(135deg, var(--fire-orange), var(--warm-amber));
+  color: #ffffff;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 8px 20px rgba(139, 111, 94, 0.35);
+  pointer-events: none;
+}
+
+.song-drag-ghost svg {
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+/* Поки тягнемо — не виділяємо текст і не показуємо курсор-текст */
+body.song-drag-active {
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grabbing;
+}
+
+/* Плаваюча панель зон скидання (з'являється лише під час перетягування) */
+.section-drop-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 4900;
+  padding: calc(0.5rem + env(safe-area-inset-top, 0px)) 0.75rem 0.6rem;
+  background: rgba(61, 53, 48, 0.92);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  animation: dropBarIn 0.18s ease-out;
+}
+
+@keyframes dropBarIn {
+  from { opacity: 0; transform: translateY(-100%); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.section-drop-bar-hint {
+  margin-bottom: 0.5rem;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.section-drop-bar-zones {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.section-drop-bar-zones::-webkit-scrollbar {
+  display: none;
+}
+
+.section-drop-zone {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 9px 14px;
+  border: 1px dashed rgba(255, 255, 255, 0.35);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.section-drop-zone svg {
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+/* Розділ, у якому пісня вже є */
+.section-drop-zone.is-current {
+  opacity: 0.45;
+}
+
+/* Зона під курсором/пальцем */
+.section-drop-zone.is-over {
+  background: linear-gradient(135deg, var(--fire-orange), var(--warm-amber));
+  border-color: var(--fire-orange);
+  border-style: solid;
+  color: #ffffff;
+  transform: scale(1.06);
+  box-shadow: 0 4px 14px rgba(232, 168, 124, 0.5);
+}
+
+/* Підтвердження переміщення пісні */
+.song-move-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  z-index: 4800;
+  transform: translateX(-50%);
+  max-width: min(90vw, 420px);
+  padding: 0.6rem 1rem;
+  background: rgba(61, 53, 48, 0.94);
+  color: #fff;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  text-align: center;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  animation: moveToastIn 0.2s ease-out;
+  pointer-events: none;
+}
+
+@keyframes moveToastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}

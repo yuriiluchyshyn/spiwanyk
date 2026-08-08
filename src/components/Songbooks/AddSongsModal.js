@@ -145,7 +145,7 @@ const AddSongsModal = ({ songbook, isOpen, onClose, onSongAdded, embedded = fals
             className="section-select"
           >
             <option value="">Без розділу</option>
-            {songbook.sections
+            {[...songbook.sections]
               .sort((a, b) => a.name.localeCompare(b.name, 'uk'))
               .map(section => (
               <option key={section._id} value={section._id}>

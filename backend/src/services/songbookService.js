@@ -48,6 +48,19 @@ const getMySongbooks = (userId) =>
     .populate('songs.song', 'title author')
     .sort({ lastAccessed: -1, createdAt: -1 });
 
+// Songbooks other people shared directly with this user's email. Sharing is
+// recorded by email (the invitee may not have existed yet), so we match on
+// email and not on sharedWith.user.
+const getSharedWithMe = (user) =>
+  Songbook.find({
+    isActive: { $ne: false },
+    owner: { $ne: user._id },
+    'sharedWith.email': user.email.toLowerCase()
+  })
+    .populate('owner', 'email')
+    .populate('songs.song', 'title author')
+    .sort({ lastAccessed: -1, createdAt: -1 });
+
 const getPublicSongbooks = ({ limit = 20, skip = 0, tags }) =>
   Songbook.findPublic({
     limit: parseInt(limit),
@@ -55,30 +68,17 @@ const getPublicSongbooks = ({ limit = 20, skip = 0, tags }) =>
     tags: tags ? tags.split(',').map((tag) => tag.trim()) : undefined
   });
 
-const getNearbySongbooks = ({ lat, lng, maxDistance = 500, maxAge, debugIncludeSelf }, userId) => {
+const getNearbySongbooks = ({ lat, lng, maxDistance = 500, maxAge }, userId) => {
   const latitude = parseFloat(lat);
   const longitude = parseFloat(lng);
   const freshnessMinutes =
     maxAge !== undefined ? parseInt(maxAge) : Songbook.PRESENCE_WINDOW_MINUTES;
 
-  // Для debugging та тестування - дозволити бачити власні nearby співаники
-  const excludeUserId = debugIncludeSelf === 'true' ? null : userId;
-  
-  console.log('🔍 getNearbySongbooks called:', {
-    lat: latitude,
-    lng: longitude,
-    maxDistance,
-    freshnessMinutes,
-    userId,
-    excludeUserId,
-    debugIncludeSelf
-  });
-
   return Songbook.findNearby(
     longitude,
     latitude,
     parseInt(maxDistance),
-    excludeUserId, // null = включити себе, userId = виключити себе
+    userId,
     freshnessMinutes
   ).then((songbooks) => ({
     songbooks,
@@ -371,6 +371,7 @@ const getAvailableSongs = async (id, params, user) => {
 
 module.exports = {
   getMySongbooks,
+  getSharedWithMe,
   getPublicSongbooks,
   getNearbySongbooks,
   getById,

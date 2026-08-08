@@ -91,11 +91,18 @@ const SongbookHeader: React.FC<SongbookHeaderProps> = ({
       console.log('Songbook ID:', songbook._id);
       
       const requestBody: any = {
-        privacy: settings.privacy
+        privacy: settings.privacy,
+        // Nearby visibility is its own flag so it can combine with email sharing.
+        shareNearby: settings.shareNearby ?? settings.privacy === 'nearby'
       };
 
-      // Add defaultPermissions for public and nearby songbooks
-      if (settings.privacy === 'public' || settings.privacy === 'nearby') {
+      // defaultPermissions drives what non-invited viewers get, which applies to
+      // public, nearby, and any songbook opted into nearby discovery.
+      if (
+        settings.privacy === 'public' ||
+        settings.privacy === 'nearby' ||
+        requestBody.shareNearby
+      ) {
         requestBody.defaultPermissions = settings.defaultPermissions || 'view';
       }
 

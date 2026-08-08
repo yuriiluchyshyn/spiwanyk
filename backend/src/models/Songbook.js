@@ -71,6 +71,13 @@ const songbookSchema = new mongoose.Schema({
     enum: ['view', 'edit'],
     default: 'view'
   },
+  // Visibility to people physically nearby. Independent of `privacy` so a
+  // songbook can be shared by email AND discoverable at the campfire at the
+  // same time. `privacy: 'nearby'` is treated as implying this for legacy data.
+  shareNearby: {
+    type: Boolean,
+    default: false
+  },
   sections: [sectionSchema],
   songs: [songbookSongSchema],
   sharedWith: [{
@@ -320,6 +327,13 @@ songbookSchema.methods.canAccess = function(user) {
     return { canAccess: false, permissions: null };
   }
 
+  // Opted into nearby discovery: same reach as privacy 'nearby'. Proximity is
+  // enforced by findNearby when listing; this only gates opening a known id.
+  if (this.shareNearby) {
+    console.log('Access granted: shareNearby');
+    return { canAccess: true, permissions: this.defaultPermissions || 'view' };
+  }
+
   // Public songbooks - available to all authenticated users
   if (this.privacy === 'public') {
     console.log('Access granted: public');
@@ -377,10 +391,6 @@ songbookSchema.statics.findNearby = async function(
   excludeUserId = null,
   freshnessMinutes = songbookSchema.statics.PRESENCE_WINDOW_MINUTES
 ) {
-  console.log('🔍 findNearby called:', {
-    longitude, latitude, maxDistance, excludeUserId, freshnessMinutes
-  });
-  
   const User = mongoose.model('User');
 
   const freshnessThreshold = new Date(Date.now() - freshnessMinutes * 60 * 1000);
@@ -409,40 +419,26 @@ songbookSchema.statics.findNearby = async function(
     userQuery._id = { $ne: excludeUserId };
   }
 
-  console.log('👥 Searching for nearby users with query:', userQuery);
-
-  const nearbyUsers = await User.find(userQuery).select('_id email location');
-  
-  console.log('👥 Found nearby users:', nearbyUsers.map(u => ({
-    id: u._id,
-    email: u.email,
-    coordinates: u.location.coordinates,
-    updatedAt: u.location.updatedAt
-  })));
+  const nearbyUsers = await User.find(userQuery).select('_id');
 
   if (nearbyUsers.length === 0) {
-    console.log('❌ No nearby users found');
     return [];
   }
 
   const userIds = nearbyUsers.map(u => u._id);
 
-  // Step 2: Find songbooks with privacy 'nearby' owned by those present users.
+  // Step 2: Find nearby-visible songbooks owned by those present users.
+  // A songbook opts in either via the explicit `shareNearby` flag or by having
+  // `privacy: 'nearby'` (legacy). Private books never leak.
   const songbooks = await this.find({
     owner: { $in: userIds },
-    privacy: 'nearby',
-    isActive: true
+    isActive: true,
+    privacy: { $ne: 'private' },
+    $or: [{ shareNearby: true }, { privacy: 'nearby' }]
   })
     .populate('owner', 'email')
     .populate('songs.song', 'title author')
     .sort({ createdAt: -1 });
-
-  console.log('📚 Found nearby songbooks:', songbooks.map(sb => ({
-    id: sb._id,
-    title: sb.title,
-    owner: sb.owner.email,
-    privacy: sb.privacy
-  })));
 
   return songbooks;
 };

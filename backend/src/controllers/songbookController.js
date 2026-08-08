@@ -6,6 +6,11 @@ const getMy = asyncHandler(async (req, res) => {
   res.json({ songbooks, total: songbooks.length });
 });
 
+const getSharedWithMe = asyncHandler(async (req, res) => {
+  const songbooks = await songbookService.getSharedWithMe(req.user);
+  res.json({ songbooks, total: songbooks.length });
+});
+
 const getPublic = asyncHandler(async (req, res) => {
   const songbooks = await songbookService.getPublicSongbooks(req.query);
   res.json({
@@ -16,25 +21,8 @@ const getPublic = asyncHandler(async (req, res) => {
 });
 
 const getNearby = asyncHandler(async (req, res) => {
-  console.log('🔍 getNearby called:', {
-    userId: req.user._id,
-    userEmail: req.user.email,
-    query: req.query
-  });
-  
   const { songbooks, searchCenter, maxDistance, maxAge } =
     await songbookService.getNearbySongbooks(req.query, req.user._id);
-    
-  console.log('📍 getNearby result:', {
-    userId: req.user._id,
-    userEmail: req.user.email,
-    songbooksFound: songbooks.length,
-    songbookTitles: songbooks.map(sb => sb.title),
-    searchCenter,
-    maxDistance,
-    maxAge
-  });
-  
   res.json({ songbooks, total: songbooks.length, searchCenter, maxDistance, maxAge });
 });
 
@@ -115,6 +103,7 @@ const getAvailableSongs = asyncHandler(async (req, res) => {
 
 module.exports = {
   getMy,
+  getSharedWithMe,
   getPublic,
   getNearby,
   getById,

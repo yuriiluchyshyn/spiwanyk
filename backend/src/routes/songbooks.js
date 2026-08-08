@@ -19,6 +19,7 @@ const router = express.Router();
 
 // --- Collections (must precede /:id) ---
 router.get('/my', auth, songbookController.getMy);
+router.get('/shared-with-me', auth, songbookController.getSharedWithMe);
 router.get('/public', publicSongbooksRules, handleValidation, songbookController.getPublic);
 router.get('/nearby', auth, nearbySongbooksRules, handleValidation, songbookController.getNearby);
 

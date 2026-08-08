@@ -44,11 +44,7 @@ interface SongItemProps {
   canEdit: boolean;
   sections?: Section[];
   isExpanded: boolean;
-  onDragStart: (e: React.DragEvent, song: Song) => void;
-  onDragEnd: () => void;
-  onDragOverItem?: (e: React.DragEvent, song: Song, index: number) => void;
-  onDragLeaveItem?: () => void;
-  onDropOnItem?: (e: React.DragEvent, song: Song, index: number) => void;
+  onDragHandleDown?: (e: React.PointerEvent, song: Song) => void;
   onToggleExpand: (song: Song) => void;
   onRegisterRef?: (songId: string, el: HTMLElement | null) => void;
   onRemoveSong: (songId: string) => void;
@@ -82,11 +78,7 @@ const SongItem: React.FC<SongItemProps> = ({
   canEdit,
   sections = [],
   isExpanded,
-  onDragStart,
-  onDragEnd,
-  onDragOverItem,
-  onDragLeaveItem,
-  onDropOnItem,
+  onDragHandleDown,
   onToggleExpand,
   onRegisterRef,
   onRemoveSong,
@@ -113,6 +105,12 @@ const SongItem: React.FC<SongItemProps> = ({
   const hasSections = sections.length > 0;
   const hasChords = songHasChords(song);
 
+  // Розділи в меню переміщення — завжди за алфавітом
+  const sortedSections = React.useMemo(
+    () => [...sections].sort((a, b) => a.name.localeCompare(b.name, 'uk')),
+    [sections]
+  );
+
   const dropClass = dropPosition === 'before'
     ? 'drop-before'
     : dropPosition === 'after'
@@ -127,6 +125,8 @@ const SongItem: React.FC<SongItemProps> = ({
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (!canEdit) return;
+    // Дотик по кнопках дій (у т.ч. по ручці перетягування) не починає свайп
+    if ((e.target as HTMLElement).closest('.song-actions')) return;
     const t = e.touches[0];
     touchStartRef.current = { x: t.clientX, y: t.clientY };
     swipeBaseRef.current = swipeXRef.current;
@@ -193,12 +193,9 @@ const SongItem: React.FC<SongItemProps> = ({
     <div
       ref={(el) => onRegisterRef?.(song._id, el)}
       className={`song-item ${isExpanded ? 'is-expanded' : ''} ${isDragging ? 'dragging' : ''} ${swipeX < 0 ? 'is-swiped' : ''} ${dropClass}`}
-      draggable={canEdit}
-      onDragStart={canEdit ? (e) => onDragStart(e, song) : undefined}
-      onDragEnd={canEdit ? onDragEnd : undefined}
-      onDragOver={canEdit && onDragOverItem ? (e) => onDragOverItem(e, song, index) : undefined}
-      onDragLeave={canEdit && onDragLeaveItem ? () => onDragLeaveItem() : undefined}
-      onDrop={canEdit && onDropOnItem ? (e) => onDropOnItem(e, song, index) : undefined}
+      data-song-row=""
+      data-song-id={song._id}
+      data-section-id={currentSectionId || 'none'}
     >
       <div className="song-item-swipe">
         {canEdit && (
@@ -255,10 +252,14 @@ const SongItem: React.FC<SongItemProps> = ({
           </div>
 
           <div className="song-actions" onClick={(e) => e.stopPropagation()}>
-            {canEdit && (
+            {canEdit && onDragHandleDown && (
               <button
+                type="button"
                 className="action-btn drag"
-                title="Перетягнути для зміни порядку"
+                title="Перетягнути в інший розділ або змінити порядок"
+                aria-label="Перетягнути пісню"
+                onPointerDown={(e) => onDragHandleDown(e, song)}
+                onClick={(e) => e.preventDefault()}
               >
                 <FiMove />
               </button>
@@ -287,7 +288,7 @@ const SongItem: React.FC<SongItemProps> = ({
                         <span>Без розділу</span>
                         {!currentSectionId && <FiCheck className="move-menu-check" />}
                       </button>
-                      {sections.map(section => (
+                      {sortedSections.map(section => (
                         <button
                           key={section._id}
                           className={`move-menu-item ${currentSectionId === section._id ? 'current' : ''}`}

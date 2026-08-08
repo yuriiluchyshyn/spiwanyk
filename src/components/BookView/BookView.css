@@ -88,9 +88,88 @@
   transform: scale(1.05);
 }
 
+/* ===== Body: ліва навігація + вміст ===== */
+.bv-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+/* Вертикальний список розділів для швидкої навігації */
+.bv-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex-shrink: 0;
+  width: 172px;
+  padding: 1rem 0.5rem;
+  overflow-y: auto;
+  background: rgba(255, 255, 255, 0.28);
+  border-right: 1px solid rgba(139, 69, 19, 0.15);
+  scrollbar-width: thin;
+  scrollbar-color: #c4a882 transparent;
+}
+
+.bv-sections::-webkit-scrollbar { width: 6px; }
+.bv-sections::-webkit-scrollbar-thumb {
+  background: #c4a882;
+  border-radius: 3px;
+}
+
+.bv-section-link {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: #6b4a33;
+  font-family: 'Georgia', serif;
+  font-size: 0.8rem;
+  line-height: 1.25;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.bv-section-link-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bv-section-link-count {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  opacity: 0.65;
+  font-variant-numeric: tabular-nums;
+}
+
+.bv-section-link:hover {
+  background: rgba(139, 69, 19, 0.08);
+  border-color: rgba(139, 69, 19, 0.18);
+  color: #4a3020;
+}
+
+.bv-section-link.active {
+  background: linear-gradient(135deg, #8b4513, #5a3018);
+  border-color: rgba(0, 0, 0, 0.15);
+  color: #f5edd8;
+  font-weight: 700;
+}
+
+.bv-section-link.active .bv-section-link-count {
+  opacity: 0.85;
+}
+
 /* ===== Scroll area ===== */
 .bv-scroll {
   flex: 1;
+  min-width: 0;
   overflow-y: auto;
   padding: 1.25rem 1.5rem 2rem;
   scroll-behavior: smooth;
@@ -413,6 +492,41 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* Вузькі екрани: вертикальна колонка розділів не влазить,
+   тому перетворюємо її на горизонтальну смугу над вмістом */
+@media (max-width: 860px) {
+  .bv-body {
+    flex-direction: column;
+  }
+
+  .bv-sections {
+    flex-direction: row;
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 0.4rem;
+    border-right: none;
+    border-bottom: 1px solid rgba(139, 69, 19, 0.15);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .bv-sections::-webkit-scrollbar { height: 4px; }
+
+  .bv-section-link {
+    width: auto;
+    flex-shrink: 0;
+    border-radius: 14px;
+    padding: 7px 12px;
+    background: rgba(139, 69, 19, 0.06);
+    border-color: rgba(139, 69, 19, 0.14);
+  }
+
+  .bv-section-link-name {
+    max-width: 44vw;
+  }
+}
+
 /* ===== Mobile ===== */
 @media (max-width: 640px) {
   .bv-modal {
@@ -644,6 +758,29 @@
   font-size: 0.75rem;
   color: #22c55e;
   font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bv-singing-indicator:hover {
+  background: rgba(34, 197, 94, 0.3);
+  transform: translateY(-1px);
+}
+
+.bv-singing-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.bv-singing-label {
+  font-size: 0.65rem;
+  opacity: 0.8;
+}
+
+.bv-singing-song-title {
+  font-size: 0.75rem;
+  font-weight: 700;
 }
 
 .bv-singing-icon {

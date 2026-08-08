@@ -8,8 +8,9 @@ import {
   FiGlobe, 
   FiMapPin,
   FiMail,
-  FiEdit,
-  FiMusic
+  FiTrash2,
+  FiLoader,
+  FiEdit
 } from 'react-icons/fi';
 import './SongbookSettingsModal.css';
 
@@ -27,6 +28,7 @@ interface SongbookSettingsModalProps {
     privacy: string;
     sharedWith: SharedUser[];
     defaultPermissions?: string;
+    shareNearby?: boolean;
   }) => Promise<void>;
 }
 
@@ -38,6 +40,11 @@ const SongbookSettingsModal: React.FC<SongbookSettingsModalProps> = ({
 }) => {
   const [privacy, setPrivacy] = useState(songbook.privacy || 'private');
   const [defaultPermissions, setDefaultPermissions] = useState(songbook.defaultPermissions || 'view');
+  // Nearby visibility is independent of the privacy mode, so a songbook can be
+  // shared by email and still be discoverable at the campfire.
+  const [shareNearby, setShareNearby] = useState(
+    songbook.shareNearby ?? songbook.privacy === 'nearby'
+  );
   const [sharedWith, setSharedWith] = useState<SharedUser[]>(
     songbook.sharedWith || []
   );
@@ -122,7 +129,8 @@ const SongbookSettingsModal: React.FC<SongbookSettingsModalProps> = ({
       await onSave({
         privacy,
         sharedWith: privacy !== 'private' ? sharedWith : [],
-        defaultPermissions
+        defaultPermissions,
+        shareNearby: privacy === 'private' ? false : shareNearby
       });
       
       // Показуємо спінер 2 секунди, потім закриваємо модал
@@ -193,6 +201,25 @@ const SongbookSettingsModal: React.FC<SongbookSettingsModalProps> = ({
                 </label>
               ))}
             </div>
+
+            {privacy !== 'private' && privacy !== 'nearby' && (
+              <label className="nearby-toggle">
+                <input
+                  type="checkbox"
+                  checked={shareNearby}
+                  onChange={(e) => setShareNearby(e.target.checked)}
+                />
+                <span className="nearby-toggle-content">
+                  <span className="nearby-toggle-title">
+                    <FiMapPin />
+                    Показувати також людям поблизу
+                  </span>
+                  <span className="nearby-toggle-description">
+                    Співаник побачать ті, хто зараз біля вас, додатково до вибраного режиму
+                  </span>
+                </span>
+              </label>
+            )}
           </div>
 
           {(privacy === 'shared' || privacy === 'nearby' || privacy === 'public') && (
@@ -318,7 +345,7 @@ const SongbookSettingsModal: React.FC<SongbookSettingsModalProps> = ({
             disabled={isLoading}
           >
             {isLoading ? (
-              <FiMusic className="pulsing-note" />
+              <FiLoader className="spinning-loader" />
             ) : (
               'Зберегти'
             )}

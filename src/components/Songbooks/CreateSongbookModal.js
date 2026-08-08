@@ -55,7 +55,11 @@ const CreateSongbookModal = ({ onClose, onSubmit }) => {
         }
       }
 
-      await onSubmit(formData);
+      await onSubmit({
+        ...formData,
+        // Keep the legacy 'nearby' radio working with the new independent flag.
+        shareNearby: formData.privacy === 'nearby'
+      });
     } catch (err) {
       if (err.message !== 'Geolocation denied') {
         setError(err.response?.data?.message || 'Помилка створення співаника');

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { songbooksAPI } from '../../services/api';
-import { FiPlus, FiMapPin, FiGlobe, FiEdit } from 'react-icons/fi';
+import { FiPlus, FiMapPin, FiGlobe, FiEdit, FiUsers } from 'react-icons/fi';
 import CreateSongbookModal from '../Songbooks/CreateSongbookModal';
 import BookView from '../BookView/BookView';
 import MusicalNoteLoader from '../Common/MusicalNoteLoader';
@@ -11,7 +11,8 @@ import './Home.css';
 const Home = () => {
   const { user } = useAuth();
   const [songbooks, setSongbooks] = useState([]);
-  const [sharedSongbooks, setSharedSongbooks] = useState([]);
+  const [sharedWithMe, setSharedWithMe] = useState([]); // розшарені по email
+  const [sharedSongbooks, setSharedSongbooks] = useState([]); // поблизу (nearby)
   const [publicSongbooks, setPublicSongbooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -45,7 +46,7 @@ const Home = () => {
             const { locationAPI } = await import('../../services/api');
             await locationAPI.updateLocation(latitude, longitude).catch(() => {});
 
-            const nearbyData = await songbooksAPI.getNearby(latitude, longitude, window.location.search.includes('debugNearby=true'));
+            const nearbyData = await songbooksAPI.getNearby(latitude, longitude);
             if (!cancelled) {
               setSharedSongbooks(Array.isArray(nearbyData) ? nearbyData : []);
             }
@@ -63,6 +64,13 @@ const Home = () => {
         // Load my songbooks
         const myData = await songbooksAPI.getMy();
         if (!cancelled) setSongbooks(Array.isArray(myData) ? myData : []);
+
+        // Songbooks other people shared directly with my email. Independent of
+        // geolocation, so this must not sit inside refreshNearby.
+        try {
+          const sharedData = await songbooksAPI.getSharedWithMe();
+          if (!cancelled) setSharedWithMe(Array.isArray(sharedData) ? sharedData : []);
+        } catch (e) { console.error('Shared-with-me error:', e); }
 
         // Load public songbooks separately
         try {
@@ -142,11 +150,36 @@ const Home = () => {
         </div>
       </section>
 
+      {sharedWithMe.length > 0 && (
+        <section className="section" id="shared-with-me">
+          <div className="sec-head">
+            <h2><FiUsers className="sec-icon" /> Поділилися з вами</h2>
+            <span className="sec-subtitle">Запрошення по email</span>
+          </div>
+          <div className="sb-grid">
+            {sharedWithMe
+              .filter(sb => sb.isActive !== false)
+              .map(sb => (
+              <div key={sb._id} className="sb-card shared" onClick={() => setBookSongbook(sb)}>
+                <div className="sb-header">
+                  <span className="sb-name">{sb.title}</span>
+                  <FiUsers className="shared-icon" />
+                </div>
+                <span className="sb-cnt">
+                  {sb.songs?.length || 0} пісень
+                  {sb.owner?.email ? ` · ${sb.owner.email}` : ''}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {sharedSongbooks.length > 0 && (
         <section className="section" id="shared-songbooks">
           <div className="sec-head">
-            <h2><FiMapPin className="sec-icon" /> Розшарені співаники</h2>
-            <span className="sec-subtitle">Поблизу вас</span>
+            <h2><FiMapPin className="sec-icon" /> Співаники поблизу</h2>
+            <span className="sec-subtitle">Люди біля вас прямо зараз</span>
           </div>
           <div className="sb-grid">
             {sharedSongbooks

@@ -27,12 +27,9 @@ interface SongsListProps {
   canEdit: boolean;
   sections?: Section[];
   expandedSongId?: string | null;
+  totalSongs?: number;
   onShowAddSongs: () => void;
-  onDragStart: (e: React.DragEvent, song: Song) => void;
-  onDragEnd: () => void;
-  onDragOverItem?: (e: React.DragEvent, song: Song, index: number) => void;
-  onDragLeaveItem?: () => void;
-  onDropOnItem?: (e: React.DragEvent, song: Song, index: number) => void;
+  onDragHandleDown?: (e: React.PointerEvent, song: Song) => void;
   onToggleExpand: (song: Song) => void;
   onRegisterRef?: (songId: string, el: HTMLElement | null) => void;
   onRemoveSong: (songId: string) => void;
@@ -47,12 +44,9 @@ const SongsList: React.FC<SongsListProps> = ({
   canEdit,
   sections = [],
   expandedSongId,
+  totalSongs,
   onShowAddSongs,
-  onDragStart,
-  onDragEnd,
-  onDragOverItem,
-  onDragLeaveItem,
-  onDropOnItem,
+  onDragHandleDown,
   onToggleExpand,
   onRegisterRef,
   onRemoveSong,
@@ -62,6 +56,7 @@ const SongsList: React.FC<SongsListProps> = ({
     return (
       <EmptyState 
         activeSection={activeSection}
+        isSongbookEmpty={(totalSongs ?? songs.length) === 0}
         canEdit={canEdit}
         onShowAddSongs={onShowAddSongs}
       />
@@ -83,11 +78,7 @@ const SongsList: React.FC<SongsListProps> = ({
             canEdit={canEdit}
             sections={sections}
             isExpanded={expandedSongId === song._id}
-            onDragStart={onDragStart}
-            onDragEnd={onDragEnd}
-            onDragOverItem={onDragOverItem}
-            onDragLeaveItem={onDragLeaveItem}
-            onDropOnItem={onDropOnItem}
+            onDragHandleDown={onDragHandleDown}
             onToggleExpand={onToggleExpand}
             onRegisterRef={onRegisterRef}
             onRemoveSong={onRemoveSong}

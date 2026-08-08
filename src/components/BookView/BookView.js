@@ -196,8 +196,12 @@ const BookView = ({ onClose, songbookData }) => {
   const [dragOverSongId, setDragOverSongId] = useState(null);
   const [dragPosition, setDragPosition] = useState(null); // 'before' | 'after'
 
+  // Навігація по розділах (ліва колонка)
+  const [activeGroup, setActiveGroup] = useState(null);
+
   const scrollRef = useRef(null);
   const songRefs = useRef({});
+  const sectionRefs = useRef({});
   // Зберігає позицію клікнутого рядка, щоб компенсувати зсув при згортанні/розгортанні
   const pendingAnchor = useRef(null);
 
@@ -265,7 +269,8 @@ const BookView = ({ onClose, songbookData }) => {
     }
     sections
       .slice()
-      .sort((a, b) => (a.order || 0) - (b.order || 0))
+      // Розділи завжди за алфавітом
+      .sort((a, b) => a.name.localeCompare(b.name, 'uk'))
       .forEach((sec) => {
         const songs = getEntries(sec._id);
         if (songs.length) {
@@ -276,6 +281,46 @@ const BookView = ({ onClose, songbookData }) => {
   }, [songbook]);
 
   const flatSongs = useMemo(() => groupedSongs.flatMap((g) => g.songs), [groupedSongs]);
+
+  // ---- Навігація по розділах ----
+  const groupKey = (id) => (id ? id.toString() : 'no-section');
+
+  const scrollToGroup = (groupId) => {
+    const scroller = scrollRef.current;
+    const el = sectionRefs.current[groupKey(groupId)];
+    if (!scroller || !el) return;
+
+    const offset =
+      el.getBoundingClientRect().top -
+      scroller.getBoundingClientRect().top +
+      scroller.scrollTop;
+
+    scroller.scrollTo({ top: Math.max(offset - 8, 0), behavior: 'smooth' });
+    setActiveGroup(groupKey(groupId));
+  };
+
+  // Підсвічуємо розділ, заголовок якого зараз найвище у видимій області
+  const updateActiveGroup = useCallback(() => {
+    const scroller = scrollRef.current;
+    if (!scroller || groupedSongs.length === 0) return;
+
+    const base = scroller.getBoundingClientRect().top;
+    let current = groupKey(groupedSongs[0].id);
+
+    groupedSongs.forEach((group) => {
+      const el = sectionRefs.current[groupKey(group.id)];
+      if (!el) return;
+      if (el.getBoundingClientRect().top - base <= 24) {
+        current = groupKey(group.id);
+      }
+    });
+
+    setActiveGroup((prev) => (prev === current ? prev : current));
+  }, [groupedSongs]);
+
+  useEffect(() => {
+    updateActiveGroup();
+  }, [updateActiveGroup]);
 
   // ---- Права доступу ----
   const isOwner = () => {
@@ -650,9 +695,30 @@ const BookView = ({ onClose, songbookData }) => {
             <FiMusic className="bv-title-icon" />
             <span>{songbook.title}</span>
             {currentSingSong && (
-              <div className="bv-singing-indicator">
+              <div 
+                className="bv-singing-indicator"
+                onClick={() => {
+                  // Скролимо до пісні при кліку на індикатор
+                  const songElement = songRefs.current[currentSingSong];
+                  if (songElement && scrollRef.current) {
+                    songElement.scrollIntoView({ 
+                      behavior: 'smooth', 
+                      block: 'center',
+                      inline: 'nearest'
+                    });
+                  }
+                }}
+              >
                 <FiUsers className="bv-singing-icon" />
-                <span>Співають разом</span>
+                <span className="bv-singing-text">
+                  <span className="bv-singing-label">Співають:</span>
+                  <span className="bv-singing-song-title">
+                    {(() => {
+                      const currentSong = songbook.songs?.find(s => s._id === currentSingSong);
+                      return currentSong?.title || 'пісню';
+                    })()}
+                  </span>
+                </span>
               </div>
             )}
           </div>
@@ -661,8 +727,29 @@ const BookView = ({ onClose, songbookData }) => {
           </button>
         </header>
 
-        {/* Scrollable content */}
-        <div className="bv-scroll" ref={scrollRef}>
+        {/* Body: ліва навігація по розділах + прокручуваний вміст */}
+        <div className="bv-body">
+          {groupedSongs.length > 1 && (
+            <nav className="bv-sections" aria-label="Розділи співаника">
+              {groupedSongs.map((group) => {
+                const key = groupKey(group.id);
+                return (
+                  <button
+                    type="button"
+                    key={key}
+                    className={`bv-section-link ${activeGroup === key ? 'active' : ''}`}
+                    onClick={() => scrollToGroup(group.id)}
+                    title={group.name}
+                  >
+                    <span className="bv-section-link-name">{group.name}</span>
+                    <span className="bv-section-link-count">{group.songs.length}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          )}
+
+          <div className="bv-scroll" ref={scrollRef} onScroll={updateActiveGroup}>
           {flatSongs.length === 0 ? (
             <div className="bv-empty">
               <div className="bv-empty-icon">🎶</div>
@@ -675,7 +762,11 @@ const BookView = ({ onClose, songbookData }) => {
             </div>
           ) : (
             groupedSongs.map((group) => (
-              <section key={group.id || 'no-section'} className="bv-section">
+              <section
+                key={groupKey(group.id)}
+                className="bv-section"
+                ref={(el) => { sectionRefs.current[groupKey(group.id)] = el; }}
+              >
                 <h2 className="bv-section-title">
                   <span className="bv-section-icon">{group.icon}</span>
                   {group.name}
@@ -715,6 +806,7 @@ const BookView = ({ onClose, songbookData }) => {
               </section>
             ))
           )}
+          </div>
         </div>
 
         {/* Footer */}

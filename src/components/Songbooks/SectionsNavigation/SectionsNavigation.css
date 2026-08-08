@@ -1,25 +1,34 @@
 .sections-nav {
   display: flex;
   flex-wrap: wrap;
+  gap: 0.5rem;
   padding: 1rem;
   background: rgba(196, 168, 130, 0.02);
   border-bottom: 1px solid rgba(196, 168, 130, 0.1);
 }
 
 .section-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 8px 16px;
-  border: none;
+  border: 1px solid transparent;
   background: rgba(196, 168, 130, 0.05);
   cursor: pointer;
+  font-family: inherit;
   font-size: 0.8rem;
   font-weight: 500;
   color: var(--stone-gray);
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
   white-space: nowrap;
   border-radius: 16px;
-  margin-right: 0.5rem;
-  margin-bottom: 0.5rem;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.section-btn-icon {
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  opacity: 0.8;
 }
 
 .section-btn:hover {
@@ -37,22 +46,30 @@
   box-shadow: 0 4px 12px rgba(232, 168, 124, 0.3);
 }
 
+/* Під час перетягування підсвічуємо, що таби — зони скидання */
+.sections-nav.is-drop-mode .section-btn {
+  border-style: dashed;
+  border-color: rgba(232, 168, 124, 0.55);
+}
+
 .section-btn.drag-over {
-  background: rgba(59, 130, 246, 0.2);
-  border: 2px dashed #3b82f6;
-  transform: scale(1.05);
+  background: linear-gradient(135deg, var(--fire-orange), var(--warm-amber));
+  border-color: var(--fire-orange);
+  border-style: solid;
+  color: #ffffff;
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 6px 18px rgba(232, 168, 124, 0.45);
 }
 
 /* Мобільна адаптація */
 @media (max-width: 768px) {
   .sections-nav {
     padding: 0.75rem;
+    gap: 0.4rem;
     justify-content: flex-start;
   }
-  
+
   .section-btn {
-    margin-right: 0.4rem;
-    margin-bottom: 0.4rem;
     padding: 9px 14px;
     font-size: 0.8rem;
   }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { songbooksAPI } from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -6,13 +7,15 @@ import { useAuth } from '../../../contexts/AuthContext';
 
 // Компоненти
 import SongbookHeader from '../SongbookHeader/SongbookHeader';
-import SectionsNavigation from '../SectionsNavigation/SectionsNavigation';
+import SectionsNavigation, { NO_SECTION } from '../SectionsNavigation/SectionsNavigation';
 import SongsList from '../SongsList/SongsList';
 import LoadingState from '../LoadingState/LoadingState';
 import ErrorState from '../ErrorState/ErrorState';
 import AddSongsModal from '../AddSongsModal';
 import SectionManager from '../SectionManager';
-import { FiX } from 'react-icons/fi';
+import { FiX, FiMove } from 'react-icons/fi';
+import useSongDragDrop, { DraggedSong, SongDropTarget } from './useSongDragDrop';
+import SectionDropBar from './SectionDropBar';
 
 import './SongbookDetail.css';
 
@@ -35,17 +38,37 @@ const SongbookDetail: React.FC = () => {
 
   const [songbook, setSongbook] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState('all');
+  const [activeSection, setActiveSection] = useState<string>(NO_SECTION);
   const [showAddSongs, setShowAddSongs] = useState(false);
   const [showSectionManager, setShowSectionManager] = useState(false);
   const [expandedSongId, setExpandedSongId] = useState<string | null>(null);
-  const [draggedSong, setDraggedSong] = useState<Song | null>(null);
-  const [dragOverSection, setDragOverSection] = useState<string | null>(null);
-  const [dropTarget, setDropTarget] = useState<{ songId: string; position: 'before' | 'after' } | null>(null);
+
+  // Коротке підтвердження переміщення (пісня зникає з поточного списку —
+  // без нього незрозуміло, куди вона поділась)
+  const [moveNotice, setMoveNotice] = useState<string | null>(null);
+  const moveNoticeTimer = useRef<number | null>(null);
 
   // Реєстр DOM-елементів пісень + якір для збереження позиції сторінки при розгортанні
   const songRefs = useRef<Record<string, HTMLElement | null>>({});
   const pendingAnchor = useRef<{ id: string; top: number } | null>(null);
+
+  const showMoveNotice = (text: string) => {
+    setMoveNotice(text);
+    if (moveNoticeTimer.current) window.clearTimeout(moveNoticeTimer.current);
+    moveNoticeTimer.current = window.setTimeout(() => setMoveNotice(null), 2600);
+  };
+
+  useEffect(() => () => {
+    if (moveNoticeTimer.current) window.clearTimeout(moveNoticeTimer.current);
+  }, []);
+
+  const sectionNameById = (sectionId: string | null): string => {
+    if (!sectionId) return 'Без розділу';
+    const found = (songbook?.sections || []).find(
+      (s: any) => s._id?.toString() === sectionId
+    );
+    return found?.name || 'розділ';
+  };
 
   useEffect(() => {
     const loadSongbook = async () => {
@@ -65,6 +88,15 @@ const SongbookDetail: React.FC = () => {
 
     loadSongbook();
   }, [id, user]);
+
+  // Якщо активний розділ зник (видалили) — повертаємось на «Без розділу»
+  useEffect(() => {
+    if (!songbook || activeSection === NO_SECTION) return;
+    const exists = (songbook.sections || []).some(
+      (s: any) => s._id?.toString() === activeSection
+    );
+    if (!exists) setActiveSection(NO_SECTION);
+  }, [songbook, activeSection]);
 
   const loadSongbook = async () => {
     if (!id) return;
@@ -178,137 +210,57 @@ const SongbookDetail: React.FC = () => {
     }
   };
 
-  // Drag & Drop functions
-  const handleDragStart = (e: React.DragEvent, song: Song) => {
-    setDraggedSong(song);
-    e.dataTransfer.effectAllowed = 'move';
-    try {
-      e.dataTransfer.setData('text/plain', song._id);
-    } catch {
-      // ignore
-    }
-  };
-
-  const handleDragOver = (e: React.DragEvent, sectionId: string) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    setDragOverSection(sectionId);
-  };
-
-  const handleDragLeave = () => {
-    setDragOverSection(null);
-  };
-
-  const handleDrop = async (e: React.DragEvent, targetSectionId: string) => {
-    e.preventDefault();
-    setDragOverSection(null);
-
-    if (!draggedSong) return;
-
-    const sectionIdToSend =
-      targetSectionId === 'no-section' || !targetSectionId ? null : targetSectionId;
-
-    const currentSectionId = draggedSong.sectionId || null;
-    const normalizedTarget = sectionIdToSend || null;
-
-    if (currentSectionId === normalizedTarget) {
-      setDraggedSong(null);
-      return;
-    }
-
-    try {
-      const sectionSongs = (songbook?.songs || []).filter((s: any) => {
+  // Записи songbook.songs, що належать заданому розділу, у порядку відображення
+  const getSectionEntryIds = (sectionId: string | null): string[] =>
+    (songbook?.songs || [])
+      .filter((s: any) => {
         const sec = s.section ? s.section.toString() : null;
-        return sec === normalizedTarget;
-      });
+        return sec === sectionId;
+      })
+      .map((s: any) => (s.song?._id || s.song)?.toString())
+      .filter(Boolean);
 
-      await songbooksAPI.moveSong(
-        songbook._id,
-        draggedSong._id,
-        normalizedTarget,
-        sectionSongs.length
-      );
+  // Єдина точка обробки drop: і переміщення в розділ, і зміна порядку
+  const handleSongDrop = async (dragged: DraggedSong, target: SongDropTarget) => {
+    if (!songbook) return;
 
-      loadSongbook();
-    } catch (error) {
-      console.error('Error moving song:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Невідома помилка';
-      const responseMessage = (error as any).response?.data?.message;
-      alert('Помилка переміщення пісні: ' + (responseMessage || errorMessage));
-    }
+    const fromSection = dragged.sectionId ? dragged.sectionId.toString() : null;
+    let toSection: string | null;
+    let insertAt: number;
 
-    setDraggedSong(null);
-  };
+    if (target.kind === 'section') {
+      toSection = target.sectionId;
+      if (fromSection === toSection) return;
+      insertAt = getSectionEntryIds(toSection).length;
+    } else {
+      toSection = target.sectionId;
+      const ids = getSectionEntryIds(toSection);
+      const targetIdx = ids.indexOf(target.songId);
+      if (targetIdx === -1) return;
 
-  const handleDragOverItem = (e: React.DragEvent, song: Song, index: number) => {
-    if (!draggedSong || draggedSong._id === song._id) return;
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
+      insertAt = target.position === 'before' ? targetIdx : targetIdx + 1;
 
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const midpoint = rect.top + rect.height / 2;
-    const position: 'before' | 'after' = e.clientY < midpoint ? 'before' : 'after';
-
-    setDropTarget(prev => {
-      if (prev && prev.songId === song._id && prev.position === position) return prev;
-      return { songId: song._id, position };
-    });
-  };
-
-  const handleDragLeaveItem = () => {
-    // Keep the target — onDragOver on next item will overwrite it.
-  };
-
-  const handleDropOnItem = async (e: React.DragEvent, targetSong: Song, targetIndex: number) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (!draggedSong || draggedSong._id === targetSong._id) {
-      setDraggedSong(null);
-      setDropTarget(null);
-      return;
-    }
-
-    const position = dropTarget?.position || 'after';
-    const targetSectionId = targetSong.sectionId || null;
-    const draggedSectionId = draggedSong.sectionId || null;
-
-    const sectionSongs = getFilteredSongs().filter(s => (s.sectionId || null) === targetSectionId);
-    const targetIdxInSection = sectionSongs.findIndex(s => s._id === targetSong._id);
-    let insertAt = position === 'before' ? targetIdxInSection : targetIdxInSection + 1;
-
-    if (draggedSectionId === targetSectionId) {
-      const draggedIdxInSection = sectionSongs.findIndex(s => s._id === draggedSong._id);
-      if (draggedIdxInSection !== -1 && draggedIdxInSection < insertAt) {
-        insertAt -= 1;
+      if (fromSection === toSection) {
+        const draggedIdx = ids.indexOf(dragged._id);
+        if (draggedIdx !== -1 && draggedIdx < insertAt) insertAt -= 1;
+        if (draggedIdx === insertAt) return;
       }
     }
 
     if (insertAt < 0) insertAt = 0;
 
     try {
-      await songbooksAPI.moveSong(
-        songbook._id,
-        draggedSong._id,
-        targetSectionId,
-        insertAt
-      );
+      await songbooksAPI.moveSong(songbook._id, dragged._id, toSection, insertAt);
       await loadSongbook();
+      if (fromSection !== toSection) {
+        showMoveNotice(`«${dragged.title}» → ${sectionNameById(toSection)}`);
+      }
     } catch (error) {
-      console.error('Error reordering song:', error);
+      console.error('Error moving song:', error);
       const errorMessage = error instanceof Error ? error.message : 'Невідома помилка';
       const responseMessage = (error as any).response?.data?.message;
-      alert('Помилка зміни порядку: ' + (responseMessage || errorMessage));
+      alert('Помилка переміщення пісні: ' + (responseMessage || errorMessage));
     }
-
-    setDraggedSong(null);
-    setDropTarget(null);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedSong(null);
-    setDragOverSection(null);
-    setDropTarget(null);
   };
 
   // Переміщення пісні в розділ через меню (працює на мобільних та десктопі)
@@ -332,6 +284,7 @@ const SongbookDetail: React.FC = () => {
       );
 
       await loadSongbook();
+      showMoveNotice(`«${song.title}» → ${sectionNameById(normalizedTarget)}`);
     } catch (error) {
       console.error('Error moving song to section:', error);
       const errorMessage = error instanceof Error ? error.message : 'Невідома помилка';
@@ -340,18 +293,19 @@ const SongbookDetail: React.FC = () => {
     }
   };
 
+  // Перший таб — пісні без розділу, далі конкретний розділ
   const getFilteredSongs = (): Song[] => {
     if (!songbook?.songs) return [];
-    
+
     const songs = songbook.songs
       .map((s: any) => s.song ? { ...s.song, sectionId: s.section, _songbookEntry: s } : null)
       .filter(Boolean);
-    
-    if (activeSection === 'all') {
-      return songs;
+
+    if (activeSection === NO_SECTION) {
+      return songs.filter((song: Song) => !song.sectionId);
     }
-    
-    return songs.filter((song: Song) => 
+
+    return songs.filter((song: Song) =>
       song.sectionId && song.sectionId.toString() === activeSection
     );
   };
@@ -445,6 +399,12 @@ const SongbookDetail: React.FC = () => {
     return false;
   };
 
+  // Перетягування: працює і мишкою, і пальцем (Pointer Events)
+  const drag = useSongDragDrop({
+    enabled: canEdit(),
+    onDrop: handleSongDrop
+  });
+
   const handleUpdateSongbook = async (updatedSongbook: any) => {
     console.log('handleUpdateSongbook called with:', updatedSongbook);
     
@@ -513,34 +473,61 @@ const SongbookDetail: React.FC = () => {
             sections={songbook.sections}
             activeSection={activeSection}
             songbook={songbook}
-            dragOverSection={dragOverSection}
+            dragOverSection={drag.sectionDropTarget}
             onSectionClick={setActiveSection}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
+            isDragging={drag.isDragging}
           />
         )}
 
         <SongsList
           songs={filteredSongs}
           activeSection={activeSection}
-          draggedSong={draggedSong}
-          dropTarget={dropTarget}
+          draggedSong={drag.draggedSong as any}
+          dropTarget={drag.songDropTarget}
           canEdit={userCanEdit}
           sections={songbook.sections || []}
           expandedSongId={expandedSongId}
+          totalSongs={songbook.songs?.length || 0}
           onShowAddSongs={() => setShowAddSongs(true)}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-          onDragOverItem={handleDragOverItem}
-          onDragLeaveItem={handleDragLeaveItem}
-          onDropOnItem={handleDropOnItem}
+          onDragHandleDown={(e, song) =>
+            drag.beginDrag(
+              { _id: song._id, title: song.title, sectionId: song.sectionId ?? null },
+              e
+            )
+          }
           onToggleExpand={handleToggleSong}
           onRegisterRef={registerSongRef}
           onRemoveSong={handleRemoveSong}
           onMoveToSection={handleMoveSongToSection}
         />
       </div>
+
+      {moveNotice && createPortal(
+        <div className="song-move-toast" role="status">{moveNotice}</div>,
+        document.body
+      )}
+
+      {/* Привид пісні + панель зон скидання — тільки під час перетягування */}
+      {drag.isDragging && drag.draggedSong && createPortal(
+        <>
+          {(songbook.sections || []).length > 0 && (
+            <SectionDropBar
+              sections={songbook.sections}
+              currentSectionId={drag.draggedSong.sectionId ?? null}
+              activeDropSection={drag.sectionDropTarget}
+              songTitle={drag.draggedSong.title}
+            />
+          )}
+          <div
+            className="song-drag-ghost"
+            style={{ left: drag.pointer.x, top: drag.pointer.y }}
+          >
+            <FiMove />
+            <span>{drag.draggedSong.title}</span>
+          </div>
+        </>,
+        document.body
+      )}
 
       {showAddSongs && (
         <AddSongsModal

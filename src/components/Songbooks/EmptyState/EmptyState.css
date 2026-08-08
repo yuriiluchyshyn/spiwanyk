@@ -37,3 +37,10 @@
   transform: translateY(-2px);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
+
+.empty-hint {
+  margin-top: 0.5rem;
+  color: var(--stone-gray);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}

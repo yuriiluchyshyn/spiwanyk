@@ -3,6 +3,8 @@ import api from './http';
 // Songbook endpoints: CRUD, section management, song membership & sharing.
 export const songbooksAPI = {
   getMy: () => api.get('/songbooks/my').then((res) => res.data.songbooks || []),
+  getSharedWithMe: () =>
+    api.get('/songbooks/shared-with-me').then((res) => res.data.songbooks || []),
   getById: (id) => api.get(`/songbooks/${id}`).then((res) => res.data.songbook),
   create: (data) => api.post('/songbooks', data).then((res) => res.data),
   update: (id, data) => api.put(`/songbooks/${id}`, data).then((res) => res.data),
@@ -37,10 +39,7 @@ export const songbooksAPI = {
   getAvailableSongs: (songbookId, params = {}) =>
     api.get(`/songbooks/${songbookId}/available-songs`, { params }).then((res) => res.data),
   getPublic: () => api.get('/songbooks/public').then((res) => res.data.songbooks || []),
-  getNearby: (lat, lng, debugIncludeSelf = false) => {
-    const params = new URLSearchParams({ lat, lng });
-    if (debugIncludeSelf) params.append('debugIncludeSelf', 'true');
-    return api.get(`/songbooks/nearby?${params}`).then((res) => res.data.songbooks || []);
-  },
+  getNearby: (lat, lng) =>
+    api.get(`/songbooks/nearby?lat=${lat}&lng=${lng}`).then((res) => res.data.songbooks || []),
   share: (id, data) => api.post(`/songbooks/${id}/share`, data).then((res) => res.data)
 };

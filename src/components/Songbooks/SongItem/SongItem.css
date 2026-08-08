@@ -1,7 +1,6 @@
 .song-item {
   border-bottom: 1px solid rgba(196, 168, 130, 0.1);
   transition: box-shadow 0.3s ease;
-  cursor: grab;
 }
 
 /* Контейнер свайпу — ховає кнопку видалення за рядком */
@@ -32,9 +31,7 @@
 }
 
 .song-item.dragging {
-  opacity: 0.5;
-  transform: rotate(2deg);
-  cursor: grabbing;
+  opacity: 0.45;
 }
 
 /* Кнопка видалення, що відкривається свайпом справа наліво (мобільні) */
@@ -176,7 +173,8 @@
   gap: 0.25rem;
 }
 
-/* Нові стилі для кнопок дій пісень */
+/* Ручка перетягування.
+   touch-action: none — щоб дотик по ручці не скролив сторінку, а починав drag. */
 .action-btn.drag {
   width: 32px;
   height: 32px;
@@ -187,16 +185,24 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   justify-content: center;
   border: none;
-  cursor: pointer;
+  cursor: grab;
+  touch-action: none;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
 }
 
-.action-btn.drag:hover {
-  background: rgba(156, 163, 175, 0.2);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.action-btn.drag:active {
+  cursor: grabbing;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .action-btn.drag:hover {
+    background: rgba(232, 168, 124, 0.2);
+    color: var(--fire-orange);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
 }
 
 .action-btn.view {
@@ -467,8 +473,10 @@
     gap: 4px;
   }
   
+  /* Ручка потрібна і на мобільному — перетягування працює пальцем */
   .action-btn.drag {
-    display: none;
+    width: 36px;
+    height: 36px;
   }
 
   /* На мобільному: видалення — свайпом, розгортання — тапом по пісні */
