@@ -7,7 +7,6 @@ import Login from './components/Auth/Login';
 import Home from './components/Home/Home';
 import SongList from './components/Songs/SongList';
 import SongDetail from './components/Songs/SongDetail';
-import MySongbooks from './components/Songbooks/MySongbooks';
 import SongbookDetail from './components/Songbooks/SongbookDetail';
 import AdminPanel from './components/Admin/AdminPanel';
 import './App.css';
@@ -25,7 +24,6 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/songs" element={<SongList />} />
                 <Route path="/songs/:id" element={<SongDetail />} />
-                <Route path="/my-songbooks" element={<MySongbooks />} />
                 <Route path="/songbooks/:id" element={<SongbookDetail />} />
                 <Route path="/admin-songs-panel" element={<AdminPanel />} />
               </Routes>

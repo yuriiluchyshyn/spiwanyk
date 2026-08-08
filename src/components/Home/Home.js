@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { songbooksAPI } from '../../services/api';
@@ -18,6 +18,93 @@ const Home = () => {
   const [showModal, setShowModal] = useState(false);
   const [bookSongbook, setBookSongbook] = useState(null); // для відкриття книги
 
+  // Tracks whether the component is still mounted so async geolocation
+  // callbacks don't set state after unmount.
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
+  // Announce our current position and pull songbooks shared by people
+  // physically near us right now. Component-level so both the periodic
+  // refresh (useEffect) and the manual "allow geolocation" button can call it.
+  const refreshNearby = useCallback(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 Refreshing nearby songbooks...');
+    }
+    if (!navigator.geolocation) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('❌ Geolocation not available in this browser');
+      }
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        if (!mountedRef.current) return;
+        const { latitude, longitude } = position.coords;
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`📍 Got position: ${latitude}, ${longitude}`);
+        }
+        try {
+          // Update our own location so others nearby can find us, and so
+          // our presence stays "fresh" on the backend.
+          const { locationAPI } = await import('../../services/api');
+          await locationAPI.updateLocation(latitude, longitude).catch(() => {});
+          if (process.env.NODE_ENV === 'development') {
+            console.log('✅ Location updated on server');
+          }
+
+          const nearbyData = await songbooksAPI.getNearby(latitude, longitude);
+          if (process.env.NODE_ENV === 'development') {
+            console.log('📚 Nearby songbooks response:', nearbyData);
+          }
+          if (mountedRef.current) {
+            setSharedSongbooks(Array.isArray(nearbyData) ? nearbyData : []);
+            if (process.env.NODE_ENV === 'development') {
+              console.log(`📋 Set ${nearbyData?.length || 0} nearby songbooks`);
+            }
+          }
+        } catch (e) {
+          console.error('❌ Nearby error:', e);
+        }
+      },
+      (error) => {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('❌ Geolocation error details:', {
+            code: error.code,
+            message: error.message,
+            PERMISSION_DENIED: error.PERMISSION_DENIED,
+            POSITION_UNAVAILABLE: error.POSITION_UNAVAILABLE,
+            TIMEOUT: error.TIMEOUT
+          });
+        }
+
+        // Показати користувачу пояснення проблеми (тільки в розробці)
+        if (process.env.NODE_ENV === 'development') {
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              console.log('💡 Геолокація заблокована. Перевірте налаштування браузера або натисніть на іконку замка біля адресного рядка');
+              break;
+            case error.POSITION_UNAVAILABLE:
+              console.log('💡 Місцезнаходження недоступне. Спробуйте пізніше');
+              break;
+            case error.TIMEOUT:
+              console.log('💡 Тайм-аут запиту геолокації. Спробуйте перезавантажити сторінку');
+              break;
+            default:
+              break;
+          }
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 30000,
+        timeout: 15000
+      }
+    );
+  }, []);
+
   useEffect(() => {
     if (!user) {
       setLoading(false);
@@ -31,33 +118,6 @@ const Home = () => {
     // Must be well below the backend presence window (60 min) so our own
     // location never goes stale while we sit at the campfire.
     const REFRESH_INTERVAL_MS = 45 * 1000;
-
-    // Announce our current position and pull songbooks shared by people
-    // physically near us right now. Runs on mount and on every interval tick.
-    const refreshNearby = () => {
-      if (!navigator.geolocation) return;
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          if (cancelled) return;
-          const { latitude, longitude } = position.coords;
-          try {
-            // Update our own location so others nearby can find us, and so
-            // our presence stays "fresh" on the backend.
-            const { locationAPI } = await import('../../services/api');
-            await locationAPI.updateLocation(latitude, longitude).catch(() => {});
-
-            const nearbyData = await songbooksAPI.getNearby(latitude, longitude);
-            if (!cancelled) {
-              setSharedSongbooks(Array.isArray(nearbyData) ? nearbyData : []);
-            }
-          } catch (e) {
-            console.error('Nearby error:', e);
-          }
-        },
-        () => {}, // silently ignore geolocation denial
-        { enableHighAccuracy: true, maximumAge: 30000, timeout: 15000 }
-      );
-    };
 
     const load = async () => {
       try {
@@ -94,7 +154,7 @@ const Home = () => {
       cancelled = true;
       if (refreshTimer) clearInterval(refreshTimer);
     };
-  }, [user]);
+  }, [user, refreshNearby]);
 
   const handleCreate = async (data) => {
     await songbooksAPI.create(data);
@@ -175,11 +235,12 @@ const Home = () => {
         </section>
       )}
 
+      {/* Секція nearby співаників */}
       {sharedSongbooks.length > 0 && (
         <section className="section" id="shared-songbooks">
           <div className="sec-head">
             <h2><FiMapPin className="sec-icon" /> Співаники поблизу</h2>
-            <span className="sec-subtitle">Люди біля вас прямо зараз</span>
+            <span className="sec-subtitle">Співаники біля вас прямо зараз</span>
           </div>
           <div className="sb-grid">
             {sharedSongbooks

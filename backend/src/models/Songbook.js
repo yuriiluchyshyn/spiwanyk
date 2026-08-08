@@ -393,7 +393,14 @@ songbookSchema.statics.findNearby = async function(
 ) {
   const User = mongoose.model('User');
 
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`🔍 findNearby: lng=${longitude}, lat=${latitude}, maxDistance=${maxDistance}, excludeUserId=${excludeUserId}`);
+  }
+
   const freshnessThreshold = new Date(Date.now() - freshnessMinutes * 60 * 1000);
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`⏰ Freshness threshold: ${freshnessThreshold.toISOString()}`);
+  }
 
   // Step 1: Find users who are physically nearby AND recently present.
   //  - $near: within maxDistance metres of the search point (needs 2dsphere index)
@@ -419,9 +426,18 @@ songbookSchema.statics.findNearby = async function(
     userQuery._id = { $ne: excludeUserId };
   }
 
-  const nearbyUsers = await User.find(userQuery).select('_id');
+  if (process.env.NODE_ENV === 'development') {
+    console.log('👥 User query:', JSON.stringify(userQuery, null, 2));
+  }
+  const nearbyUsers = await User.find(userQuery).select('_id email');
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`👥 Found ${nearbyUsers.length} nearby users:`, nearbyUsers.map(u => u.email));
+  }
 
   if (nearbyUsers.length === 0) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('❌ No nearby users found');
+    }
     return [];
   }
 
@@ -430,15 +446,24 @@ songbookSchema.statics.findNearby = async function(
   // Step 2: Find nearby-visible songbooks owned by those present users.
   // A songbook opts in either via the explicit `shareNearby` flag or by having
   // `privacy: 'nearby'` (legacy). Private books never leak.
-  const songbooks = await this.find({
+  const songbookQuery = {
     owner: { $in: userIds },
     isActive: true,
     privacy: { $ne: 'private' },
     $or: [{ shareNearby: true }, { privacy: 'nearby' }]
-  })
+  };
+
+  if (process.env.NODE_ENV === 'development') {
+    console.log('📚 Songbook query:', JSON.stringify(songbookQuery, null, 2));
+  }
+  const songbooks = await this.find(songbookQuery)
     .populate('owner', 'email')
     .populate('songs.song', 'title author')
     .sort({ createdAt: -1 });
+
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`📚 Found ${songbooks.length} songbooks:`, songbooks.map(s => `"${s.title}" by ${s.owner.email}`));
+  }
 
   return songbooks;
 };

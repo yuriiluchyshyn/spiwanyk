@@ -24,8 +24,21 @@
 .section:nth-child(3) { animation-delay: 0.2s; }
 .section:nth-child(4) { animation-delay: 0.3s; }
 .sec-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; }
-.sec-head h2 { font-size: 1.05rem; color: var(--dark-brown); font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
-.sec-icon { font-size: 1rem; }
+.sec-head h2 { 
+  font-size: 1.05rem; 
+  color: var(--dark-brown); 
+  font-weight: 600; 
+  display: flex; 
+  align-items: center; 
+  gap: 0.4rem; 
+  margin: 0;
+}
+.sec-icon { 
+  font-size: 1.1rem; 
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
 .sec-subtitle { font-size: 0.75rem; color: var(--warm-gray); font-weight: 400; }
 .link-accent { font-size: 0.85rem; color: var(--fire-orange); text-decoration: none; font-weight: 500; }
 .link-accent:hover { opacity: 0.7; }

@@ -29,6 +29,7 @@ interface SongbookSettingsModalProps {
     sharedWith: SharedUser[];
     defaultPermissions?: string;
     shareNearby?: boolean;
+    radiusMeters?: number;
   }) => Promise<void>;
 }
 
@@ -45,6 +46,9 @@ const SongbookSettingsModal: React.FC<SongbookSettingsModalProps> = ({
   const [shareNearby, setShareNearby] = useState(
     songbook.shareNearby ?? songbook.privacy === 'nearby'
   );
+  const [radiusMeters, setRadiusMeters] = useState(
+    songbook.radiusMeters || 100 // Default 100 meters
+  );
   const [sharedWith, setSharedWith] = useState<SharedUser[]>(
     songbook.sharedWith || []
   );
@@ -55,6 +59,34 @@ const SongbookSettingsModal: React.FC<SongbookSettingsModalProps> = ({
   const [success, setSuccess] = useState('');
 
   if (!isOpen) return null;
+
+  // Helper function to format radius display text
+  const formatRadius = (meters: number): string => {
+    return `${meters} м`;
+  };
+
+  // Convert slider value (0-100) to radius in meters (10m to 1000m)
+  const sliderToRadius = (sliderValue: number): number => {
+    // Linear scale: 10m (0) to 1000m (100)
+    const minRadius = 10;
+    const maxRadius = 1000;
+    const rawValue = minRadius + (maxRadius - minRadius) * (sliderValue / 100);
+    // Round to nearest 10 for better user experience
+    return Math.round(rawValue / 10) * 10;
+  };
+
+  // Convert radius in meters to slider value (0-100)
+  const radiusToSlider = (meters: number): number => {
+    const minRadius = 10;
+    const maxRadius = 1000;
+    const clampedMeters = Math.max(minRadius, Math.min(maxRadius, meters));
+    return Math.round(((clampedMeters - minRadius) / (maxRadius - minRadius)) * 100);
+  };
+
+  const handleRadiusChange = (sliderValue: number) => {
+    const newRadius = sliderToRadius(sliderValue);
+    setRadiusMeters(newRadius);
+  };
 
   const privacyOptions = [
     {
@@ -130,7 +162,8 @@ const SongbookSettingsModal: React.FC<SongbookSettingsModalProps> = ({
         privacy,
         sharedWith: privacy !== 'private' ? sharedWith : [],
         defaultPermissions,
-        shareNearby: privacy === 'private' ? false : shareNearby
+        shareNearby: privacy === 'private' ? false : shareNearby,
+        radiusMeters: (privacy === 'nearby' || shareNearby) ? radiusMeters : undefined
       });
       
       // Показуємо спінер 2 секунди, потім закриваємо модал
@@ -219,6 +252,33 @@ const SongbookSettingsModal: React.FC<SongbookSettingsModalProps> = ({
                   </span>
                 </span>
               </label>
+            )}
+
+            {(privacy === 'nearby' || shareNearby) && (
+              <div className="radius-section">
+                <div className="radius-header">
+                  <FiMapPin />
+                  <span className="radius-title">Радіус видимості: {formatRadius(radiusMeters)}</span>
+                </div>
+                <div className="radius-slider-container">
+                  <input
+                    type="range"
+                    className="radius-slider"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value={radiusToSlider(radiusMeters)}
+                    onChange={(e) => handleRadiusChange(parseInt(e.target.value))}
+                  />
+                  <div className="radius-labels">
+                    <span className="radius-label-min">10 м</span>
+                    <span className="radius-label-max">1000 м</span>
+                  </div>
+                </div>
+                <div className="radius-description">
+                  Співаник будуть бачити люди в радіусі {formatRadius(radiusMeters)} від вашого місцезнаходження
+                </div>
+              </div>
             )}
           </div>
 

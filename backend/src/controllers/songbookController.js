@@ -21,8 +21,14 @@ const getPublic = asyncHandler(async (req, res) => {
 });
 
 const getNearby = asyncHandler(async (req, res) => {
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`🔍 getNearby request from user: ${req.user.email}, query:`, req.query);
+  }
   const { songbooks, searchCenter, maxDistance, maxAge } =
     await songbookService.getNearbySongbooks(req.query, req.user._id);
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`📚 Found ${songbooks.length} nearby songbooks for ${req.user.email}`);
+  }
   res.json({ songbooks, total: songbooks.length, searchCenter, maxDistance, maxAge });
 });
 

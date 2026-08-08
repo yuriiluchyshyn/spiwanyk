@@ -74,18 +74,27 @@ const getNearbySongbooks = ({ lat, lng, maxDistance = 500, maxAge }, userId) => 
   const freshnessMinutes =
     maxAge !== undefined ? parseInt(maxAge) : Songbook.PRESENCE_WINDOW_MINUTES;
 
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`🔍 getNearbySongbooks: lat=${latitude}, lng=${longitude}, maxDistance=${maxDistance}, userId=${userId}`);
+  }
+
   return Songbook.findNearby(
     longitude,
     latitude,
     parseInt(maxDistance),
     userId,
     freshnessMinutes
-  ).then((songbooks) => ({
-    songbooks,
-    searchCenter: { latitude, longitude },
-    maxDistance: parseInt(maxDistance),
-    maxAge: freshnessMinutes
-  }));
+  ).then((songbooks) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📚 findNearby returned ${songbooks.length} songbooks`);
+    }
+    return {
+      songbooks,
+      searchCenter: { latitude, longitude },
+      maxDistance: parseInt(maxDistance),
+      maxAge: freshnessMinutes
+    };
+  });
 };
 
 // Reorder a songbook's songs for presentation: sections alphabetically, songs
