@@ -2,7 +2,7 @@ import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMe
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { songbooksAPI } from '../../services/api';
-import { FiX, FiMusic, FiPlus, FiCornerDownRight, FiTrash2, FiChevronDown, FiMove } from 'react-icons/fi';
+import { FiX, FiMusic, FiPlus, FiCornerDownRight, FiTrash2, FiChevronDown, FiMove, FiUsers } from 'react-icons/fi';
 import { FaGuitar } from 'react-icons/fa';
 import FormattedSong from '../Songs/FormattedSong';
 import AddSongsModal from '../Songbooks/AddSongsModal';
@@ -17,13 +17,16 @@ const SongItem = forwardRef(({
   dropClass,
   canEdit,
   showChords,
+  currentSingSong,
   onToggleExpand,
   onRemoveSong,
   onDragStart,
   onDragOver,
   onDragLeave,
   onDrop,
-  onDragEnd
+  onDragEnd,
+  onSetSingSong,
+  onStopSinging
 }, ref) => {
   const [touchStart, setTouchStart] = useState(null);
   const [swipeOffset, setSwipeOffset] = useState(0);
@@ -123,6 +126,23 @@ const SongItem = forwardRef(({
               <FiTrash2 />
             </button>
           )}
+          {currentSingSong === song._id ? (
+            <button
+              className="bv-song-sing active"
+              onClick={(e) => { e.stopPropagation(); onStopSinging(); }}
+              title="Зупинити співання"
+            >
+              <FiUsers />
+            </button>
+          ) : (
+            <button
+              className="bv-song-sing"
+              onClick={(e) => { e.stopPropagation(); onSetSingSong(song); }}
+              title="Співати разом"
+            >
+              <FiUsers />
+            </button>
+          )}
           <span className={`bv-expand-icon ${isExpanded ? 'rotated' : ''}`}>
             <FiChevronDown />
           </span>
@@ -169,6 +189,7 @@ const BookView = ({ onClose, songbookData }) => {
   const [expandedSongId, setExpandedSongId] = useState(null);
   const [undoState, setUndoState] = useState(null); // { songId, title, timeoutId }
   const [undoVisible, setUndoVisible] = useState(false); // для анімації появи/зникнення
+  const [currentSingSong, setCurrentSingSong] = useState(null); // поточна пісня для співу
 
   // Drag and drop state
   const [draggedSong, setDraggedSong] = useState(null);
@@ -427,6 +448,41 @@ const BookView = ({ onClose, songbookData }) => {
     setTimeout(() => setUndoState(null), 300);
   };
 
+  // ---- Функція для встановлення пісні для співу ----
+  const handleSetSingSong = async (song) => {
+    try {
+      // Тут буде API виклик для оповіщення інших користувачів
+      // Поки що тільки локально
+      setCurrentSingSong(song._id);
+      
+      // Розгортаємо пісню та скролимо до неї
+      setExpandedSongId(song._id);
+      
+      // Скролимо до пісні
+      setTimeout(() => {
+        const songElement = songRefs.current[song._id];
+        if (songElement && scrollRef.current) {
+          songElement.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center',
+            inline: 'nearest'
+          });
+        }
+      }, 100);
+      
+      console.log(`Встановлено для співу: ${song.title}`);
+      
+    } catch (error) {
+      console.error('Error setting sing song:', error);
+    }
+  };
+
+  // ---- Функція для скасування співу ----
+  const handleStopSinging = () => {
+    setCurrentSingSong(null);
+    console.log('Співання зупинено');
+  };
+
   // ---- Drag & Drop ----
   const handleDragStart = (e, song) => {
     setDraggedSong(song);
@@ -593,6 +649,12 @@ const BookView = ({ onClose, songbookData }) => {
           <div className="bv-title">
             <FiMusic className="bv-title-icon" />
             <span>{songbook.title}</span>
+            {currentSingSong && (
+              <div className="bv-singing-indicator">
+                <FiUsers className="bv-singing-icon" />
+                <span>Співають разом</span>
+              </div>
+            )}
           </div>
           <button className="bv-close" onClick={handleClose} aria-label="Закрити">
             <FiX />
@@ -636,6 +698,7 @@ const BookView = ({ onClose, songbookData }) => {
                       dropClass={dropClass}
                       canEdit={canEditSongbook()}
                       showChords={showChords}
+                      currentSingSong={currentSingSong}
                       onToggleExpand={handleToggleExpand}
                       onRemoveSong={handleRemoveSong}
                       onDragStart={handleDragStart}
@@ -643,6 +706,8 @@ const BookView = ({ onClose, songbookData }) => {
                       onDragLeave={handleDragLeave}
                       onDrop={handleDrop}
                       onDragEnd={handleDragEnd}
+                      onSetSingSong={handleSetSingSong}
+                      onStopSinging={handleStopSinging}
                       ref={(el) => { songRefs.current[song._id] = el; }}
                     />
                   );
