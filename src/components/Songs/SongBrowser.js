@@ -22,7 +22,6 @@ const defaultCategories = [
 const SongCard = ({ song, isExpanded, onToggleExpand, onAddSong, isAdding, isAdded }) => {
   const [showChords, setShowChords] = useState(false);
   const [touchStart, setTouchStart] = useState(null);
-  const [touchEnd, setTouchEnd] = useState(null);
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isSwipeActive, setIsSwipeActive] = useState(false);
 
@@ -30,7 +29,6 @@ const SongCard = ({ song, isExpanded, onToggleExpand, onAddSong, isAdding, isAdd
   const minSwipeDistance = 50;
 
   const onTouchStart = (e) => {
-    setTouchEnd(null);
     setTouchStart(e.targetTouches[0].clientX);
     setIsSwipeActive(true);
   };
@@ -51,9 +49,9 @@ const SongCard = ({ song, isExpanded, onToggleExpand, onAddSong, isAdding, isAdd
     if (!touchStart || !isSwipeActive) return;
     
     const touch = e.changedTouches[0];
-    setTouchEnd(touch.clientX);
+    const touchEndX = touch.clientX;
     
-    const distance = touch.clientX - touchStart;
+    const distance = touchEndX - touchStart;
     
     // Reset swipe animation
     setSwipeOffset(0);

@@ -8,7 +8,6 @@ import {
   FiGlobe, 
   FiMapPin,
   FiMail,
-  FiTrash2,
   FiLoader,
   FiEdit
 } from 'react-icons/fi';
