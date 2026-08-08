@@ -3,7 +3,21 @@ const locationService = require('../services/locationService');
 
 const updateLocation = asyncHandler(async (req, res) => {
   const { lat, lng } = req.body;
+  console.log('📍 updateLocation called:', {
+    userId: req.user._id,
+    userEmail: req.user.email,
+    lat,
+    lng
+  });
+  
   const location = await locationService.updateLocation(req.user, lat, lng);
+  
+  console.log('✅ Location updated:', {
+    userId: req.user._id,
+    userEmail: req.user.email,
+    location
+  });
+  
   res.json({ message: 'Місцезнаходження оновлено', location });
 });
 

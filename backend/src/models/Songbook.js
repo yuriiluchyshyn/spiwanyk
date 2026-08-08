@@ -377,6 +377,10 @@ songbookSchema.statics.findNearby = async function(
   excludeUserId = null,
   freshnessMinutes = songbookSchema.statics.PRESENCE_WINDOW_MINUTES
 ) {
+  console.log('🔍 findNearby called:', {
+    longitude, latitude, maxDistance, excludeUserId, freshnessMinutes
+  });
+  
   const User = mongoose.model('User');
 
   const freshnessThreshold = new Date(Date.now() - freshnessMinutes * 60 * 1000);
@@ -405,9 +409,19 @@ songbookSchema.statics.findNearby = async function(
     userQuery._id = { $ne: excludeUserId };
   }
 
-  const nearbyUsers = await User.find(userQuery).select('_id');
+  console.log('👥 Searching for nearby users with query:', userQuery);
+
+  const nearbyUsers = await User.find(userQuery).select('_id email location');
+  
+  console.log('👥 Found nearby users:', nearbyUsers.map(u => ({
+    id: u._id,
+    email: u.email,
+    coordinates: u.location.coordinates,
+    updatedAt: u.location.updatedAt
+  })));
 
   if (nearbyUsers.length === 0) {
+    console.log('❌ No nearby users found');
     return [];
   }
 
@@ -422,6 +436,13 @@ songbookSchema.statics.findNearby = async function(
     .populate('owner', 'email')
     .populate('songs.song', 'title author')
     .sort({ createdAt: -1 });
+
+  console.log('📚 Found nearby songbooks:', songbooks.map(sb => ({
+    id: sb._id,
+    title: sb.title,
+    owner: sb.owner.email,
+    privacy: sb.privacy
+  })));
 
   return songbooks;
 };

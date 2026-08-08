@@ -45,7 +45,7 @@ const Home = () => {
             const { locationAPI } = await import('../../services/api');
             await locationAPI.updateLocation(latitude, longitude).catch(() => {});
 
-            const nearbyData = await songbooksAPI.getNearby(latitude, longitude);
+            const nearbyData = await songbooksAPI.getNearby(latitude, longitude, window.location.search.includes('debugNearby=true'));
             if (!cancelled) {
               setSharedSongbooks(Array.isArray(nearbyData) ? nearbyData : []);
             }

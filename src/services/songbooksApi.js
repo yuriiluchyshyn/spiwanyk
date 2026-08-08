@@ -37,7 +37,10 @@ export const songbooksAPI = {
   getAvailableSongs: (songbookId, params = {}) =>
     api.get(`/songbooks/${songbookId}/available-songs`, { params }).then((res) => res.data),
   getPublic: () => api.get('/songbooks/public').then((res) => res.data.songbooks || []),
-  getNearby: (lat, lng) =>
-    api.get(`/songbooks/nearby?lat=${lat}&lng=${lng}`).then((res) => res.data.songbooks || []),
+  getNearby: (lat, lng, debugIncludeSelf = false) => {
+    const params = new URLSearchParams({ lat, lng });
+    if (debugIncludeSelf) params.append('debugIncludeSelf', 'true');
+    return api.get(`/songbooks/nearby?${params}`).then((res) => res.data.songbooks || []);
+  },
   share: (id, data) => api.post(`/songbooks/${id}/share`, data).then((res) => res.data)
 };

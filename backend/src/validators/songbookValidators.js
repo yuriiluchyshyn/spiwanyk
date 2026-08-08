@@ -23,7 +23,8 @@ const nearbySongbooksRules = [
   query('lat').notEmpty().isFloat({ min: -90, max: 90 }),
   query('lng').notEmpty().isFloat({ min: -180, max: 180 }),
   query('maxDistance').optional().isInt({ min: 100, max: 5000 }),
-  query('maxAge').optional().isInt({ min: 1, max: 1440 })
+  query('maxAge').optional().isInt({ min: 1, max: 1440 }),
+  query('debugIncludeSelf').optional().isIn(['true', 'false']) // для тестування
 ];
 
 const createSongbookRules = [
