@@ -2,7 +2,7 @@ import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMe
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { songbooksAPI } from '../../services/api';
-import { FiX, FiMusic, FiPlus, FiCornerDownRight, FiEye, FiEyeOff, FiTrash2, FiChevronDown, FiMove } from 'react-icons/fi';
+import { FiX, FiMusic, FiPlus, FiCornerDownRight, FiHash, FiGrid, FiTrash2, FiChevronDown, FiMove } from 'react-icons/fi';
 import FormattedSong from '../Songs/FormattedSong';
 import AddSongsModal from '../Songbooks/AddSongsModal';
 import MusicalNoteLoader from '../Common/MusicalNoteLoader';
@@ -647,7 +647,7 @@ const BookView = ({ onClose, songbookData }) => {
             onClick={() => setShowChords((v) => !v)}
             title={showChords ? 'Сховати акорди' : 'Показати акорди'}
           >
-            {showChords ? <FiEyeOff /> : <FiEye />}
+            {showChords ? <FiHash /> : <FiGrid />}
             <span>{showChords ? 'Сховати акорди' : 'Показати акорди'}</span>
           </button>
 
