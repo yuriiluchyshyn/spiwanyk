@@ -41,5 +41,19 @@ export const songbooksAPI = {
   getPublic: () => api.get('/songbooks/public').then((res) => res.data.songbooks || []),
   getNearby: (lat, lng) =>
     api.get(`/songbooks/nearby?lat=${lat}&lng=${lng}`).then((res) => res.data.songbooks || []),
-  share: (id, data) => api.post(`/songbooks/${id}/share`, data).then((res) => res.data)
+  share: (id, data) => api.post(`/songbooks/${id}/share`, data).then((res) => res.data),
+
+  // Shared "singing now" state. `nowSinging` is { songId, songTitle,
+  // startedByEmail, startedAt } or null.
+  getNowSinging: (songbookId) =>
+    api.get(`/songbooks/${songbookId}/now-singing`).then((res) => res.data.nowSinging),
+  // Aggregated: every songbook (this user can see) that is being sung right now.
+  getAllNowSinging: () =>
+    api.get('/songbooks/now-singing').then((res) => res.data.singing || []),
+  setNowSinging: (songbookId, songId) =>
+    api
+      .put(`/songbooks/${songbookId}/now-singing`, { songId })
+      .then((res) => res.data.nowSinging),
+  stopNowSinging: (songbookId) =>
+    api.delete(`/songbooks/${songbookId}/now-singing`).then((res) => res.data.nowSinging)
 };

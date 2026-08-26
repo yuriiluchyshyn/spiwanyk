@@ -32,10 +32,24 @@ const requireOwner = (songbook, user) => {
   }
 };
 
+// Permission levels that allow modifying songbook content.
+const EDIT_PERMISSIONS = ['edit', 'full'];
+
 const requireEditAccess = (songbook, user) => {
   const access = songbook.canAccess(user);
-  if (!access.canAccess || access.permissions !== 'edit') {
+  if (!access.canAccess || !EDIT_PERMISSIONS.includes(access.permissions)) {
     throw ApiError.forbidden('Недостатньо прав для редагування');
+  }
+  return access;
+};
+
+// "Full" rights: delete the songbook, manage sections and manage other users'
+// access. The owner always has full rights (canAccess returns 'full' for them)
+// and can never be restricted by anyone else.
+const requireFullAccess = (songbook, user) => {
+  const access = songbook.canAccess(user);
+  if (!access.canAccess || access.permissions !== 'full') {
+    throw ApiError.forbidden('Недостатньо прав для керування співаником');
   }
   return access;
 };
@@ -165,6 +179,10 @@ const getById = async (id, user) => {
   }
 
   applyPresentationOrder(songbook);
+
+  // Hide a stale "singing now" marker on open (response-only, not persisted).
+  songbook.nowSinging = normalizeNowSinging(songbook.nowSinging);
+
   return songbook;
 };
 
@@ -183,12 +201,20 @@ const create = async (body, userId) => {
   return songbook;
 };
 
+// Fields that must never be reassigned through a generic update, so a user
+// with full access can manage everything except taking over ownership.
+const PROTECTED_UPDATE_FIELDS = ['owner', '_id', 'accessCount'];
+
 const update = async (id, body, user) => {
   const songbook = await loadActive(id, 'Невірний ID співаника');
-  requireOwner(songbook, user);
+  requireFullAccess(songbook, user);
 
   Object.keys(body).forEach((key) => {
-    if (body[key] !== undefined && key !== 'sharedWith') {
+    if (
+      body[key] !== undefined &&
+      key !== 'sharedWith' &&
+      !PROTECTED_UPDATE_FIELDS.includes(key)
+    ) {
       songbook[key] = body[key];
     }
   });
@@ -198,13 +224,15 @@ const update = async (id, body, user) => {
   }
 
   if (body.sharedWith !== undefined) {
+    // The creator is identified by `owner` (id) and always resolves to full
+    // access in canAccess(), so they can never be locked out via sharedWith.
     songbook.sharedWith = body.sharedWith
       .filter(
         (share) =>
           share.email &&
           typeof share.email === 'string' &&
           share.email.includes('@') &&
-          ['view', 'edit'].includes(share.permissions)
+          ['view', 'edit', 'full'].includes(share.permissions)
       )
       .map((share) => ({
         email: share.email.toLowerCase().trim(),
@@ -219,13 +247,14 @@ const update = async (id, body, user) => {
 };
 
 // Soft delete: keep the document but flag it inactive.
+// Owner and users with full rights can delete.
 const remove = async (id, user) => {
   assertId(id, 'Невірний ID співаника');
   const songbook = await Songbook.findById(id);
   if (!songbook) {
     throw ApiError.notFound('Співаник не знайдено');
   }
-  requireOwner(songbook, user);
+  requireFullAccess(songbook, user);
 
   songbook.isActive = false;
   await songbook.save();
@@ -306,7 +335,7 @@ const moveSong = async (id, songId, { sectionId, targetIndex = 0 }, user) => {
 
 const addSection = async (id, { name, description }, user) => {
   const songbook = await loadActive(id, 'Невірний ID співаника');
-  requireOwner(songbook, user);
+  requireFullAccess(songbook, user);
 
   await songbook.addSection(name, description);
   return songbook;
@@ -314,7 +343,7 @@ const addSection = async (id, { name, description }, user) => {
 
 const removeSection = async (id, sectionId, user) => {
   const songbook = await loadActive(id);
-  requireOwner(songbook, user);
+  requireFullAccess(songbook, user);
 
   await songbook.removeSection(sectionId);
   return songbook;
@@ -322,7 +351,7 @@ const removeSection = async (id, sectionId, user) => {
 
 const share = async (id, { email, permissions = 'view' }, user) => {
   const songbook = await loadActive(id, 'Невірний ID співаника');
-  requireOwner(songbook, user);
+  requireFullAccess(songbook, user);
 
   if (email === user.email) {
     throw ApiError.badRequest('Не можна поділитися з собою');
@@ -334,7 +363,7 @@ const share = async (id, { email, permissions = 'view' }, user) => {
 
 const unshare = async (id, email, user) => {
   const songbook = await loadActive(id, 'Невірний ID співаника');
-  requireOwner(songbook, user);
+  requireFullAccess(songbook, user);
 
   await songbook.unshareWith(email);
   return songbook;
@@ -344,6 +373,114 @@ const unshare = async (id, email, user) => {
  * List songs that are NOT yet in the songbook, with optional text/category
  * filtering and pagination. Requires edit access.
  */
+// --- "Singing now" shared state ---------------------------------------------
+
+const nowSingingWindowMs = () =>
+  (Songbook.NOW_SINGING_WINDOW_MINUTES || 10) * 60 * 1000;
+
+// Return the singing marker only if it is present and fresh; otherwise null.
+const normalizeNowSinging = (nowSinging) => {
+  if (!nowSinging || !nowSinging.songId || !nowSinging.startedAt) return null;
+  const age = Date.now() - new Date(nowSinging.startedAt).getTime();
+  if (age > nowSingingWindowMs()) return null;
+  return {
+    songId: nowSinging.songId,
+    songTitle: nowSinging.songTitle,
+    startedByEmail: nowSinging.startedByEmail,
+    startedAt: nowSinging.startedAt
+  };
+};
+
+// Anyone who can view the songbook can read/lead its singing state.
+const requireViewAccess = (songbook, user) => {
+  if (user) {
+    if (!songbook.canAccess(user).canAccess) {
+      throw ApiError.forbidden();
+    }
+  } else if (songbook.privacy !== 'public') {
+    throw ApiError.forbidden();
+  }
+};
+
+const setNowSinging = async (id, songId, user) => {
+  assertId(songId, 'Невірний ID пісні');
+  const songbook = await loadActive(id, 'Невірний ID співаника');
+  requireViewAccess(songbook, user);
+
+  const inSongbook = songbook.songs.some(
+    (s) => s.song && s.song.toString() === songId.toString()
+  );
+  if (!inSongbook) {
+    throw ApiError.notFound('Пісню не знайдено у співанику');
+  }
+
+  const song = await Song.findById(songId).select('title');
+  if (!song) {
+    throw ApiError.notFound('Пісню не знайдено');
+  }
+
+  await songbook.setNowSinging(song, user);
+
+  // A user may lead only one song at a time: clear any other songbook they were
+  // leading so their "mine" indicator never appears in two places at once.
+  if (user?.email) {
+    await Songbook.updateMany(
+      { _id: { $ne: songbook._id }, 'nowSinging.startedByEmail': user.email },
+      { $set: { nowSinging: null } }
+    );
+  }
+
+  return normalizeNowSinging(songbook.nowSinging);
+};
+
+// Every fresh "singing now" marker across songbooks this user can see. Powers
+// the aggregated header indicator (multiple songbooks singing at once).
+const getAllNowSinging = async (user) => {
+  const candidates = await Songbook.find({
+    isActive: true,
+    'nowSinging.songId': { $ne: null },
+    $or: [
+      { owner: user._id },
+      { 'sharedWith.email': user.email.toLowerCase() },
+      { privacy: 'public' },
+      { privacy: 'nearby' },
+      { shareNearby: true }
+    ]
+  })
+    .select('title nowSinging')
+    .lean();
+
+  return candidates
+    .map((sb) => {
+      const ns = normalizeNowSinging(sb.nowSinging);
+      if (!ns) return null;
+      return {
+        songbookId: sb._id,
+        songbookTitle: sb.title,
+        songId: ns.songId,
+        songTitle: ns.songTitle,
+        startedByEmail: ns.startedByEmail,
+        startedAt: ns.startedAt
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => new Date(a.startedAt) - new Date(b.startedAt));
+};
+
+const stopNowSinging = async (id, user) => {
+  const songbook = await loadActive(id, 'Невірний ID співаника');
+  requireViewAccess(songbook, user);
+
+  await songbook.clearNowSinging();
+  return null;
+};
+
+const getNowSinging = async (id, user) => {
+  const songbook = await loadActive(id, 'Невірний ID співаника');
+  requireViewAccess(songbook, user);
+  return normalizeNowSinging(songbook.nowSinging);
+};
+
 const getAvailableSongs = async (id, params, user) => {
   const songbook = await loadActive(id, 'Невірний ID співаника');
   requireEditAccess(songbook, user);
@@ -395,5 +532,9 @@ module.exports = {
   removeSection,
   share,
   unshare,
-  getAvailableSongs
+  getAvailableSongs,
+  setNowSinging,
+  stopNowSinging,
+  getNowSinging,
+  getAllNowSinging
 };

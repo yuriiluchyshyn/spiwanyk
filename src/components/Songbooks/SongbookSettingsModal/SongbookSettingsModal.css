@@ -28,9 +28,13 @@
   border-radius: 14px;
   width: 100%;
   max-width: 600px;
-  max-height: 90vh; /* Fallback для старих браузерів */
-  max-height: 90dvh; /* Dynamic viewport height для iOS */
-  max-height: 90svh; /* Small viewport height для Android */
+  /* Майже на весь екран по висоті: зайвий контент прокручується всередині. */
+  height: 96vh; /* Fallback для старих браузерів */
+  height: 96dvh; /* iOS */
+  height: 96svh; /* Android */
+  max-height: 96vh; /* Fallback для старих браузерів */
+  max-height: 96dvh; /* Dynamic viewport height для iOS */
+  max-height: 96svh; /* Small viewport height для Android */
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
@@ -101,6 +105,13 @@
   margin-bottom: 0;
 }
 
+/* Незалежна, доповнююча секція — візуально відокремлена від блоку режимів */
+.settings-modal .settings-section--standalone {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px dashed rgba(196, 168, 130, 0.45);
+}
+
 .settings-modal .section-title {
   display: flex;
   align-items: center;
@@ -116,6 +127,13 @@
   flex-shrink: 0;
   font-size: 1.05rem;
   color: var(--fire-orange);
+}
+
+.settings-modal .section-hint {
+  margin: -0.35rem 0 0.85rem;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--stone-gray);
 }
 
 /* ---------- Варіанти видимості ---------- */
@@ -363,10 +381,34 @@
 }
 
 /* ---------- Глобальні права доступу ---------- */
+@keyframes settingsRevealIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.settings-modal .radius-section,
+.settings-modal .default-permissions-section {
+  animation: settingsRevealIn 0.28s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-modal .radius-section,
+  .settings-modal .default-permissions-section {
+    animation: none;
+  }
+}
+
 .settings-modal .default-permissions-section {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  margin-top: 0.75rem;
   padding: 0.75rem;
   background: rgba(196, 168, 130, 0.05);
   border: 1px solid rgba(196, 168, 130, 0.18);
@@ -480,9 +522,12 @@
   }
 
   .settings-modal {
-    max-height: 95vh; /* Fallback для старих браузерів */
-    max-height: 95dvh; /* Dynamic viewport height для iOS */
-    max-height: 95svh; /* Small viewport height для Android */
+    height: 98vh; /* Fallback для старих браузерів */
+    height: 98dvh; /* iOS */
+    height: 98svh; /* Android */
+    max-height: 98vh; /* Fallback для старих браузерів */
+    max-height: 98dvh; /* Dynamic viewport height для iOS */
+    max-height: 98svh; /* Small viewport height для Android */
   }
 
   .settings-modal .shared-user {

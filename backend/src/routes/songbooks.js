@@ -12,12 +12,14 @@ const {
   moveSongRules,
   addSectionRules,
   shareRules,
-  availableSongsRules
+  availableSongsRules,
+  setNowSingingRules
 } = require('../validators/songbookValidators');
 
 const router = express.Router();
 
 // --- Collections (must precede /:id) ---
+router.get('/now-singing', auth, songbookController.getAllNowSinging);
 router.get('/my', auth, songbookController.getMy);
 router.get('/shared-with-me', auth, songbookController.getSharedWithMe);
 router.get('/public', publicSongbooksRules, handleValidation, songbookController.getPublic);
@@ -45,5 +47,10 @@ router.delete('/:id/share/:email', auth, songbookController.unshare);
 
 // --- Song discovery ---
 router.get('/:id/available-songs', auth, availableSongsRules, handleValidation, songbookController.getAvailableSongs);
+
+// --- "Singing now" shared state ---
+router.get('/:id/now-singing', optionalAuth, songbookController.getNowSinging);
+router.put('/:id/now-singing', auth, setNowSingingRules, handleValidation, songbookController.setNowSinging);
+router.delete('/:id/now-singing', auth, songbookController.stopNowSinging);
 
 module.exports = router;

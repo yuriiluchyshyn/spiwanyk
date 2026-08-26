@@ -44,6 +44,29 @@ const songbookSongSchema = new mongoose.Schema({
   }
 });
 
+// Transient "who is singing what right now" state, shared across everyone who
+// has the songbook open. Denormalises the song title and the initiator's email
+// so list endpoints can render the indicator without extra population.
+const nowSingingSchema = new mongoose.Schema({
+  songId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Song',
+    default: null
+  },
+  songTitle: {
+    type: String,
+    default: null
+  },
+  startedByEmail: {
+    type: String,
+    default: null
+  },
+  startedAt: {
+    type: Date,
+    default: null
+  }
+}, { _id: false });
+
 const songbookSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -67,8 +90,11 @@ const songbookSchema = new mongoose.Schema({
     default: 'private'
   },
   defaultPermissions: {
+    // Rights granted to everyone who can reach the songbook (public / nearby).
+    // 'full' means any such user can also delete it and manage sharing — only
+    // the creator is ever protected.
     type: String,
-    enum: ['view', 'edit'],
+    enum: ['view', 'edit', 'full'],
     default: 'view'
   },
   // Visibility to people physically nearby. Independent of `privacy` so a
@@ -91,8 +117,12 @@ const songbookSchema = new mongoose.Schema({
       trim: true
     },
     permissions: {
+      // view  - read only
+      // edit  - can modify songs/content
+      // full  - can edit, delete the songbook and manage other users' access
+      //         (but never the owner/creator)
       type: String,
-      enum: ['view', 'edit'],
+      enum: ['view', 'edit', 'full'],
       default: 'view'
     },
     sharedAt: {
@@ -116,6 +146,11 @@ const songbookSchema = new mongoose.Schema({
   accessCount: {
     type: Number,
     default: 0
+  },
+  // Shared "singing now" state (null when nobody is leading a song).
+  nowSinging: {
+    type: nowSingingSchema,
+    default: null
   }
 }, {
   timestamps: true
@@ -311,7 +346,8 @@ songbookSchema.methods.canAccess = function(user) {
   
   if (ownerId === user._id.toString()) {
     console.log('Access granted: owner');
-    return { canAccess: true, permissions: 'edit' };
+    // The creator always has full rights and can never be restricted.
+    return { canAccess: true, permissions: 'full', isOwner: true };
   }
 
   // Check if user is explicitly shared with (applies to all privacy types)
@@ -359,6 +395,26 @@ songbookSchema.methods.canAccess = function(user) {
 songbookSchema.methods.incrementAccess = function() {
   this.accessCount += 1;
   this.lastAccessed = new Date();
+  return this.save();
+};
+
+// A "singing now" marker older than this is treated as "nobody is singing" when
+// read, so it disappears for everyone ~10 min after it was started.
+songbookSchema.statics.NOW_SINGING_WINDOW_MINUTES = 10;
+
+// Set the shared "singing now" song. `song` must be a loaded Song doc.
+songbookSchema.methods.setNowSinging = function(song, user) {
+  this.nowSinging = {
+    songId: song._id,
+    songTitle: song.title,
+    startedByEmail: user.email,
+    startedAt: new Date()
+  };
+  return this.save();
+};
+
+songbookSchema.methods.clearNowSinging = function() {
+  this.nowSinging = null;
   return this.save();
 };
 

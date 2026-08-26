@@ -107,6 +107,30 @@ const getAvailableSongs = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
+const setNowSinging = asyncHandler(async (req, res) => {
+  const nowSinging = await songbookService.setNowSinging(
+    req.params.id,
+    req.body.songId,
+    req.user
+  );
+  res.json({ nowSinging });
+});
+
+const stopNowSinging = asyncHandler(async (req, res) => {
+  const nowSinging = await songbookService.stopNowSinging(req.params.id, req.user);
+  res.json({ nowSinging });
+});
+
+const getNowSinging = asyncHandler(async (req, res) => {
+  const nowSinging = await songbookService.getNowSinging(req.params.id, req.user);
+  res.json({ nowSinging });
+});
+
+const getAllNowSinging = asyncHandler(async (req, res) => {
+  const singing = await songbookService.getAllNowSinging(req.user);
+  res.json({ singing, total: singing.length });
+});
+
 module.exports = {
   getMy,
   getSharedWithMe,
@@ -124,5 +148,9 @@ module.exports = {
   removeSection,
   share,
   unshare,
-  getAvailableSongs
+  getAvailableSongs,
+  setNowSinging,
+  stopNowSinging,
+  getNowSinging,
+  getAllNowSinging
 };

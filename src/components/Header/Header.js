@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { FiMusic, FiUser, FiLogOut, FiHome } from 'react-icons/fi';
+import { FiMusic, FiUser, FiLogOut, FiHome, FiSettings } from 'react-icons/fi';
+import NowSingingBar from '../NowSinging/NowSingingBar';
 import './Header.css';
 
 const Header = () => {
@@ -18,7 +19,7 @@ const Header = () => {
       <div className="header-content">
         <Link to="/" className="logo">
           <FiMusic />
-          <span>Співаник Твоєї Душі</span>
+          <span>Давай співати</span>
         </Link>
         
         <nav className="nav">
@@ -33,10 +34,13 @@ const Header = () => {
                 <span>Пісні</span>
               </Link>
               <div className="user-menu">
-                <span className="user-email">
+                <Link to="/settings" className="user-email" title="Налаштування акаунта">
                   <FiUser />
                   {user.email}
-                </span>
+                </Link>
+                <Link to="/settings" className="nav-link settings-link" title="Налаштування">
+                  <FiSettings />
+                </Link>
                 <button onClick={handleLogout} className="logout-btn">
                   <FiLogOut />
                   <span>Вийти</span>
@@ -51,6 +55,8 @@ const Header = () => {
           )}
         </nav>
       </div>
+
+      {user && <NowSingingBar className="header-singing" />}
     </header>
   );
 };

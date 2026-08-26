@@ -4,19 +4,19 @@ import { useAuth } from '../../contexts/AuthContext';
 import { songbooksAPI } from '../../services/api';
 import { FiPlus, FiMapPin, FiGlobe, FiEdit, FiUsers } from 'react-icons/fi';
 import CreateSongbookModal from '../Songbooks/CreateSongbookModal';
-import BookView from '../BookView/BookView';
 import MusicalNoteLoader from '../Common/MusicalNoteLoader';
+import { useNowSinging } from '../../contexts/NowSingingContext';
 import './Home.css';
 
 const Home = () => {
   const { user } = useAuth();
+  const { openBook: openBookGlobal } = useNowSinging();
   const [songbooks, setSongbooks] = useState([]);
   const [sharedWithMe, setSharedWithMe] = useState([]); // розшарені по email
   const [sharedSongbooks, setSharedSongbooks] = useState([]); // поблизу (nearby)
   const [publicSongbooks, setPublicSongbooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [bookSongbook, setBookSongbook] = useState(null); // для відкриття книги
 
   // Tracks whether the component is still mounted so async geolocation
   // callbacks don't set state after unmount.
@@ -105,6 +105,28 @@ const Home = () => {
     );
   }, []);
 
+  // Fetch my / shared-with-me / public lists. Reused for the initial load and
+  // for the periodic "who is singing now" refresh, so the badges stay live.
+  const loadLists = useCallback(async () => {
+    try {
+      const myData = await songbooksAPI.getMy();
+      if (mountedRef.current) setSongbooks(Array.isArray(myData) ? myData : []);
+    } catch (e) { console.error('My songbooks error:', e); }
+
+    try {
+      const sharedData = await songbooksAPI.getSharedWithMe();
+      if (mountedRef.current) setSharedWithMe(Array.isArray(sharedData) ? sharedData : []);
+    } catch (e) { console.error('Shared-with-me error:', e); }
+
+    try {
+      const publicData = await songbooksAPI.getPublic();
+      const filteredPublic = Array.isArray(publicData) ? publicData.filter(sb => {
+        return sb.owner?._id !== user?._id && sb.owner?.email !== user?.email;
+      }) : [];
+      if (mountedRef.current) setPublicSongbooks(filteredPublic.slice(0, 6));
+    } catch (e) { console.error('Public error:', e); }
+  }, [user]);
+
   useEffect(() => {
     if (!user) {
       setLoading(false);
@@ -113,38 +135,31 @@ const Home = () => {
 
     let cancelled = false;
     let refreshTimer = null;
+    let singingTimer = null;
 
     // How often we re-announce our presence and re-check who is nearby.
     // Must be well below the backend presence window (60 min) so our own
     // location never goes stale while we sit at the campfire.
     const REFRESH_INTERVAL_MS = 45 * 1000;
+    // How often we re-pull the lists so the "singing now" badges update for
+    // everyone without needing a page reload.
+    const SINGING_REFRESH_MS = 10 * 1000;
 
     const load = async () => {
       try {
-        // Load my songbooks
-        const myData = await songbooksAPI.getMy();
-        if (!cancelled) setSongbooks(Array.isArray(myData) ? myData : []);
-
-        // Songbooks other people shared directly with my email. Independent of
-        // geolocation, so this must not sit inside refreshNearby.
-        try {
-          const sharedData = await songbooksAPI.getSharedWithMe();
-          if (!cancelled) setSharedWithMe(Array.isArray(sharedData) ? sharedData : []);
-        } catch (e) { console.error('Shared-with-me error:', e); }
-
-        // Load public songbooks separately
-        try {
-          const publicData = await songbooksAPI.getPublic();
-          const filteredPublic = Array.isArray(publicData) ? publicData.filter(sb => {
-            return sb.owner?._id !== user?._id && sb.owner?.email !== user?.email;
-          }) : [];
-          if (!cancelled) setPublicSongbooks(filteredPublic.slice(0, 6));
-        } catch (e) { console.error('Public error:', e); }
+        await loadLists();
 
         // Live nearby songbooks: initial fetch + periodic refresh so new
         // arrivals show up and our presence doesn't expire.
         refreshNearby();
         refreshTimer = setInterval(refreshNearby, REFRESH_INTERVAL_MS);
+
+        // Keep the singing badges fresh across all list types.
+        singingTimer = setInterval(() => {
+          if (cancelled) return;
+          loadLists();
+          refreshNearby();
+        }, SINGING_REFRESH_MS);
       } catch (e) { console.error(e); }
       finally { if (!cancelled) setLoading(false); }
     };
@@ -153,14 +168,96 @@ const Home = () => {
     return () => {
       cancelled = true;
       if (refreshTimer) clearInterval(refreshTimer);
+      if (singingTimer) clearInterval(singingTimer);
     };
-  }, [user, refreshNearby]);
+  }, [user, refreshNearby, loadLists]);
 
   const handleCreate = async (data) => {
     await songbooksAPI.create(data);
     setShowModal(false);
     const fresh = await songbooksAPI.getMy();
     setSongbooks(Array.isArray(fresh) ? fresh : []);
+  };
+
+  // Чи може поточний користувач редагувати цей співаник.
+  // Дублює логіку canEdit() у SongbookDetail та canAccess() на бекенді,
+  // щоб показати кнопку редагування на картках, які не належать користувачу
+  // (публічні / поблизу / розшарені), коли власник надав права на редагування.
+  const canEditSongbook = (sb) => {
+    if (!user || !sb) return false;
+
+    // Власник завжди може редагувати
+    const ownerId = sb.owner?._id ? sb.owner._id.toString() : sb.owner?.toString();
+    if (ownerId && user._id && ownerId === user._id.toString()) return true;
+    if (sb.owner?.email && user.email && sb.owner.email === user.email) return true;
+
+    // Явні права на редагування (розшарено по email): edit або full
+    const sharedEntry = sb.sharedWith?.find(
+      (s) => s.email === user.email?.toLowerCase()
+    );
+    if (sharedEntry && (sharedEntry.permissions === 'edit' || sharedEntry.permissions === 'full')) {
+      return true;
+    }
+
+    // Публічні та nearby співаники — дивимось defaultPermissions (edit або full)
+    if (
+      (sb.privacy === 'public' || sb.privacy === 'nearby') &&
+      (sb.defaultPermissions === 'edit' || sb.defaultPermissions === 'full')
+    ) {
+      return true;
+    }
+
+    return false;
+  };
+
+  // Свіжий маркер "співають зараз" (той самий строк давності, що й на бекенді:
+  // 10 хв), або null. Після цього спів зникає з нотіфікацій у всіх.
+  const NOW_SINGING_WINDOW_MS = 10 * 60 * 1000;
+  const getActiveSinging = (sb) => {
+    const ns = sb?.nowSinging;
+    if (!ns || !ns.songId || !ns.startedAt) return null;
+    if (Date.now() - new Date(ns.startedAt).getTime() > NOW_SINGING_WINDOW_MS) return null;
+    return ns;
+  };
+
+  // Відкриваємо книгу через глобальний контекст; якщо scrollToSinging —
+  // одразу скролимо до пісні, яку співають зараз.
+  const openBook = (sb, scrollToSinging = false) => {
+    const singing = scrollToSinging ? getActiveSinging(sb) : null;
+    openBookGlobal(sb._id, singing?.songId || null);
+  };
+
+  // Чи веде спів саме поточний користувач (зелений), чи хтось інший (жовтий).
+  const isSingingMine = (singing) =>
+    !!user?.email && singing?.startedByEmail === user.email;
+
+  // Клас картки: підсвітка залежить від того, хто веде спів.
+  const singingCardClass = (sb) => {
+    const singing = getActiveSinging(sb);
+    if (!singing) return '';
+    return isSingingMine(singing) ? 'is-singing singing-mine' : 'is-singing';
+  };
+
+  const renderSingingBadge = (sb) => {
+    const singing = getActiveSinging(sb);
+    if (!singing) return null;
+    const mine = isSingingMine(singing);
+    return (
+      <button
+        type="button"
+        className={`sb-singing-badge ${mine ? 'mine' : ''}`}
+        title="Перейти до пісні, яку співають зараз"
+        onClick={(e) => {
+          e.stopPropagation();
+          openBook(sb, true);
+        }}
+      >
+        <FiUsers className="sb-singing-icon" />
+        <span className="sb-singing-text">
+          <span className="sb-singing-title">{singing.songTitle || 'пісню'}</span>
+        </span>
+      </button>
+    );
   };
 
   if (loading) return <MusicalNoteLoader text="Завантаження..." />;
@@ -170,7 +267,7 @@ const Home = () => {
       <div className="home-guest">
         <div className="hero">
           <div className="hero-fire">🔥</div>
-          <h1>Співаник Твоєї Душі</h1>
+          <h1>Давай співати</h1>
           <p>Збірка українських пісень</p>
           <Link to="/login" className="cta-btn">Увійти</Link>
         </div>
@@ -192,7 +289,11 @@ const Home = () => {
           {songbooks
             .filter(sb => sb.isActive !== false) // Фільтруємо видалені співаники
             .map(sb => (
-            <div key={sb._id} className="sb-card" onClick={() => setBookSongbook(sb)}>
+            <div
+              key={sb._id}
+              className={`sb-card ${singingCardClass(sb)}`}
+              onClick={() => openBook(sb, false)}
+            >
               <div className="sb-header">
                 <span className="sb-name">{sb.title}</span>
                 <Link
@@ -205,6 +306,7 @@ const Home = () => {
                 </Link>
               </div>
               <span className="sb-cnt">{sb.songs?.length || 0} пісень</span>
+              {renderSingingBadge(sb)}
             </div>
           ))}
         </div>
@@ -220,15 +322,31 @@ const Home = () => {
             {sharedWithMe
               .filter(sb => sb.isActive !== false)
               .map(sb => (
-              <div key={sb._id} className="sb-card shared" onClick={() => setBookSongbook(sb)}>
+              <div
+                key={sb._id}
+                className={`sb-card shared ${singingCardClass(sb)}`}
+                onClick={() => openBook(sb, false)}
+              >
                 <div className="sb-header">
                   <span className="sb-name">{sb.title}</span>
-                  <FiUsers className="shared-icon" />
+                  {canEditSongbook(sb) ? (
+                    <Link
+                      to={'/songbooks/' + sb._id}
+                      className="sb-edit-btn"
+                      onClick={(e) => e.stopPropagation()}
+                      title="Редагувати"
+                    >
+                      <FiEdit />
+                    </Link>
+                  ) : (
+                    <FiUsers className="shared-icon" />
+                  )}
                 </div>
                 <span className="sb-cnt">
                   {sb.songs?.length || 0} пісень
                   {sb.owner?.email ? ` · ${sb.owner.email}` : ''}
                 </span>
+                {renderSingingBadge(sb)}
               </div>
             ))}
           </div>
@@ -246,12 +364,28 @@ const Home = () => {
             {sharedSongbooks
               .filter(sb => sb.isActive !== false) // Фільтруємо видалені співаники
               .map(sb => (
-              <div key={sb._id} className="sb-card shared" onClick={() => setBookSongbook(sb)}>
+              <div
+                key={sb._id}
+                className={`sb-card shared ${singingCardClass(sb)}`}
+                onClick={() => openBook(sb, false)}
+              >
                 <div className="sb-header">
                   <span className="sb-name">{sb.title}</span>
-                  <FiMapPin className="shared-icon" />
+                  {canEditSongbook(sb) ? (
+                    <Link
+                      to={'/songbooks/' + sb._id}
+                      className="sb-edit-btn"
+                      onClick={(e) => e.stopPropagation()}
+                      title="Редагувати"
+                    >
+                      <FiEdit />
+                    </Link>
+                  ) : (
+                    <FiMapPin className="shared-icon" />
+                  )}
                 </div>
                 <span className="sb-cnt">{sb.songs?.length || 0} пісень</span>
+                {renderSingingBadge(sb)}
               </div>
             ))}
           </div>
@@ -267,9 +401,28 @@ const Home = () => {
             {publicSongbooks
               .filter(sb => sb.isActive !== false) // Фільтруємо видалені співаники
               .map(sb => (
-              <div key={sb._id} className="sb-card public" onClick={() => setBookSongbook(sb)}>
-                <span className="sb-name">{sb.title}</span>
+              <div
+                key={sb._id}
+                className={`sb-card public ${singingCardClass(sb)}`}
+                onClick={() => openBook(sb, false)}
+              >
+                <div className="sb-header">
+                  <span className="sb-name">{sb.title}</span>
+                  {canEditSongbook(sb) ? (
+                    <Link
+                      to={'/songbooks/' + sb._id}
+                      className="sb-edit-btn"
+                      onClick={(e) => e.stopPropagation()}
+                      title="Редагувати"
+                    >
+                      <FiEdit />
+                    </Link>
+                  ) : (
+                    <FiGlobe className="shared-icon" />
+                  )}
+                </div>
                 <span className="sb-cnt">{sb.songs?.length || 0} пісень</span>
+                {renderSingingBadge(sb)}
               </div>
             ))}
           </div>
@@ -283,12 +436,6 @@ const Home = () => {
         />
       )}
 
-      {bookSongbook && (
-        <BookView
-          onClose={() => setBookSongbook(null)}
-          songbookData={bookSongbook}
-        />
-      )}
     </div>
   );
 };

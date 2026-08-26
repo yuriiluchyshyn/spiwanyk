@@ -34,6 +34,54 @@
   opacity: 0.45;
 }
 
+/* Анімація зникнення після переміщення пісні в інший розділ:
+   згасання + виїзд праворуч, а потім згортання висоти (щоб список плавно
+   зімкнувся). Тривалість синхронізована з LEAVE_ANIM_MS у SongbookDetail. */
+.song-item.is-leaving {
+  overflow: hidden;
+  pointer-events: none;
+  animation: songLeave 0.4s ease forwards;
+  will-change: max-height, opacity, transform;
+}
+
+@keyframes songLeave {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+    max-height: 600px;
+  }
+  40% {
+    opacity: 0;
+    transform: translateX(56px);
+    max-height: 600px;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(56px);
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-bottom-width: 0;
+  }
+}
+
+/* Повага до системного налаштування «менше руху» — просто швидке згасання */
+@media (prefers-reduced-motion: reduce) {
+  .song-item.is-leaving {
+    animation: songLeaveReduced 0.25s ease forwards;
+  }
+
+  @keyframes songLeaveReduced {
+    to {
+      opacity: 0;
+      max-height: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      border-bottom-width: 0;
+    }
+  }
+}
+
 /* Кнопка видалення, що відкривається свайпом справа наліво (мобільні) */
 .song-swipe-delete {
   position: absolute;

@@ -39,9 +39,10 @@ const updateSongbookRules = [
   body('description').optional().trim().isLength({ max: 1000 }),
   body('privacy').optional().isIn(['private', 'public', 'shared', 'nearby']),
   body('shareNearby').optional().isBoolean(),
-  body('defaultPermissions').optional().isIn(['view', 'edit']),
+  body('defaultPermissions').optional().isIn(['view', 'edit', 'full']),
   body('tags').optional().isArray(),
-  body('sharedWith').optional().isArray()
+  body('sharedWith').optional().isArray(),
+  body('sharedWith.*.permissions').optional().isIn(['view', 'edit', 'full'])
 ];
 
 const addSongRules = [
@@ -67,7 +68,7 @@ const addSectionRules = [
 
 const shareRules = [
   body('email').isEmail().normalizeEmail(),
-  body('permissions').optional().isIn(['view', 'edit'])
+  body('permissions').optional().isIn(['view', 'edit', 'full'])
 ];
 
 const availableSongsRules = [
@@ -75,6 +76,10 @@ const availableSongsRules = [
   query('category').optional().isString(),
   query('limit').optional().isInt({ min: 1, max: 100 }),
   query('skip').optional().isInt({ min: 0 })
+];
+
+const setNowSingingRules = [
+  body('songId').notEmpty().isMongoId()
 ];
 
 module.exports = {
@@ -87,5 +92,6 @@ module.exports = {
   moveSongRules,
   addSectionRules,
   shareRules,
-  availableSongsRules
+  availableSongsRules,
+  setNowSingingRules
 };

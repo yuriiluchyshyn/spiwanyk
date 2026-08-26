@@ -39,12 +39,17 @@
 /* ===== Header ===== */
 .bv-header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   padding: 0.85rem 1.1rem;
   background: linear-gradient(135deg, #5a3018, #8b4513);
   color: #f5edd8;
   border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.bv-header-top {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
 }
 
 .bv-title {
@@ -56,9 +61,11 @@
   font-weight: 700;
   letter-spacing: 0.02em;
   min-width: 0;
+  flex: 0 1 auto;
+  overflow: hidden;
 }
 
-.bv-title span {
+.bv-title-text {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -75,6 +82,7 @@
   justify-content: center;
   width: 34px;
   height: 34px;
+  flex-shrink: 0;
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: rgba(255, 255, 255, 0.1);
@@ -732,10 +740,24 @@
   color: #22c55e;
 }
 
+/* Active sing button: green when I'm the one singing, yellow when it's someone else. */
 .bv-song-sing.active {
-  background: #22c55e;
   color: white;
+}
+
+.bv-song-sing.active.mine {
+  background: #22c55e;
   animation: bv-sing-pulse 2s ease-in-out infinite;
+}
+
+.bv-song-sing.active.by-other {
+  background: #eab308;
+  animation: bv-sing-pulse-other 2s ease-in-out infinite;
+}
+
+.bv-song-sing.active.by-other:hover {
+  background: #ca8a04;
+  color: white;
 }
 
 @keyframes bv-sing-pulse {
@@ -746,6 +768,17 @@
   50% { 
     transform: scale(1.05);
     box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+  }
+}
+
+@keyframes bv-sing-pulse-other {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(202, 138, 4, 0.45);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 8px rgba(202, 138, 4, 0);
   }
 }
 /* ===== Singing Indicator ===== */
@@ -788,4 +821,16 @@
 .bv-singing-icon {
   font-size: 0.8rem;
   animation: bv-sing-pulse 2s ease-in-out infinite;
+}
+
+/* Compact "singing now" chips inline in the header row, between the title and
+   the close button. Takes the free space and scrolls if there are many. */
+.now-singing-bar.bv-singing {
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: flex-start;
+}
+
+.now-singing-bar.bv-singing:empty {
+  display: none;
 }

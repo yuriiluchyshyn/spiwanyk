@@ -15,7 +15,6 @@ import AddSongsModal from '../AddSongsModal';
 import SectionManager from '../SectionManager';
 import { FiX, FiMove } from 'react-icons/fi';
 import useSongDragDrop, { DraggedSong, SongDropTarget } from './useSongDragDrop';
-import SectionDropBar from './SectionDropBar';
 
 import './SongbookDetail.css';
 
@@ -42,6 +41,12 @@ const SongbookDetail: React.FC = () => {
   const [showAddSongs, setShowAddSongs] = useState(false);
   const [showSectionManager, setShowSectionManager] = useState(false);
   const [expandedSongId, setExpandedSongId] = useState<string | null>(null);
+
+  // Пісні, що зараз програють анімацію зникнення (після переміщення в інший розділ).
+  // Тримаємо їх у списку ще ~400мс, щоб CSS встиг згорнути елемент, а вже потім
+  // перезавантажуємо співаник із сервера.
+  const [leavingSongIds, setLeavingSongIds] = useState<Set<string>>(new Set());
+  const LEAVE_ANIM_MS = 400;
 
   // Коротке підтвердження переміщення (пісня зникає з поточного списку —
   // без нього незрозуміло, куди вона поділась)
@@ -108,6 +113,27 @@ const SongbookDetail: React.FC = () => {
       console.error('Error loading songbook:', error);
     }
   };
+
+  // Позначає пісню як «зникаючу» (CSS програє згортання), чекає завершення
+  // анімації, після чого перезавантажує співаник — тоді пісня зникає остаточно.
+  const removeWithLeaveAnimation = (songId: string) =>
+    new Promise<void>((resolve) => {
+      setLeavingSongIds((prev) => {
+        const next = new Set(prev);
+        next.add(songId);
+        return next;
+      });
+
+      window.setTimeout(async () => {
+        await loadSongbook();
+        setLeavingSongIds((prev) => {
+          const next = new Set(prev);
+          next.delete(songId);
+          return next;
+        });
+        resolve();
+      }, LEAVE_ANIM_MS);
+    });
 
   // Після оновлення DOM повертаємо клікнутий рядок на його попередню позицію.
   // Текст пісні розкривається вниз (CSS-анімація), а рядок лишається нерухомим.
@@ -251,9 +277,13 @@ const SongbookDetail: React.FC = () => {
 
     try {
       await songbooksAPI.moveSong(songbook._id, dragged._id, toSection, insertAt);
-      await loadSongbook();
       if (fromSection !== toSection) {
+        // Пісня залишає поточний список — програємо анімацію зникнення
+        await removeWithLeaveAnimation(dragged._id);
         showMoveNotice(`«${dragged.title}» → ${sectionNameById(toSection)}`);
+      } else {
+        // Зміна порядку в межах розділу — пісня лишається, просто оновлюємо
+        await loadSongbook();
       }
     } catch (error) {
       console.error('Error moving song:', error);
@@ -283,7 +313,8 @@ const SongbookDetail: React.FC = () => {
         sectionSongs.length
       );
 
-      await loadSongbook();
+      // Пісня переїжджає в інший розділ — анімуємо її зникнення зі списку
+      await removeWithLeaveAnimation(song._id);
       showMoveNotice(`«${song.title}» → ${sectionNameById(normalizedTarget)}`);
     } catch (error) {
       console.error('Error moving song to section:', error);
@@ -347,20 +378,22 @@ const SongbookDetail: React.FC = () => {
       return true;
     }
     
-    // Перевіряємо права в sharedWith (для всіх типів приватності)
+    // Перевіряємо права в sharedWith (для всіх типів приватності): edit або full
     if (songbook.sharedWith) {
       const sharedEntry = songbook.sharedWith.find((share: any) => 
         share.email === user.email?.toLowerCase()
       );
-      if (sharedEntry && sharedEntry.permissions === 'edit') {
-        console.log('SongbookDetail access: explicit edit permission', sharedEntry);
+      if (sharedEntry && (sharedEntry.permissions === 'edit' || sharedEntry.permissions === 'full')) {
+        console.log('SongbookDetail access: explicit edit/full permission', sharedEntry);
         return true;
       }
     }
     
     // Для публічних та nearby співаників перевіряємо defaultPermissions
     if (songbook.privacy === 'public' || songbook.privacy === 'nearby') {
-      const canEditGlobal = songbook.defaultPermissions === 'edit';
+      const canEditGlobal =
+        songbook.defaultPermissions === 'edit' ||
+        songbook.defaultPermissions === 'full';
       console.log('SongbookDetail access: checking defaultPermissions', {
         privacy: songbook.privacy,
         defaultPermissions: songbook.defaultPermissions,
@@ -487,6 +520,7 @@ const SongbookDetail: React.FC = () => {
           canEdit={userCanEdit}
           sections={songbook.sections || []}
           expandedSongId={expandedSongId}
+          leavingSongIds={leavingSongIds}
           totalSongs={songbook.songs?.length || 0}
           onShowAddSongs={() => setShowAddSongs(true)}
           onDragHandleDown={(e, song) =>
@@ -507,25 +541,16 @@ const SongbookDetail: React.FC = () => {
         document.body
       )}
 
-      {/* Привид пісні + панель зон скидання — тільки під час перетягування */}
+      {/* Привид пісні за курсором/пальцем — тільки під час перетягування.
+          Зони скидання — це самі таби розділів (SectionsNavigation). */}
       {drag.isDragging && drag.draggedSong && createPortal(
-        <>
-          {(songbook.sections || []).length > 0 && (
-            <SectionDropBar
-              sections={songbook.sections}
-              currentSectionId={drag.draggedSong.sectionId ?? null}
-              activeDropSection={drag.sectionDropTarget}
-              songTitle={drag.draggedSong.title}
-            />
-          )}
-          <div
-            className="song-drag-ghost"
-            style={{ left: drag.pointer.x, top: drag.pointer.y }}
-          >
-            <FiMove />
-            <span>{drag.draggedSong.title}</span>
-          </div>
-        </>,
+        <div
+          className="song-drag-ghost"
+          style={{ left: drag.pointer.x, top: drag.pointer.y }}
+        >
+          <FiMove />
+          <span>{drag.draggedSong.title}</span>
+        </div>,
         document.body
       )}
 

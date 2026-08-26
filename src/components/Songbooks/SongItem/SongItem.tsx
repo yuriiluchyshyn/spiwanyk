@@ -40,6 +40,7 @@ interface SongItemProps {
   song: Song;
   index: number;
   isDragging: boolean;
+  isLeaving?: boolean;
   dropPosition?: 'before' | 'after' | null;
   canEdit: boolean;
   sections?: Section[];
@@ -74,6 +75,7 @@ const SongItem: React.FC<SongItemProps> = ({
   song,
   index,
   isDragging,
+  isLeaving = false,
   dropPosition,
   canEdit,
   sections = [],
@@ -192,7 +194,7 @@ const SongItem: React.FC<SongItemProps> = ({
   return (
     <div
       ref={(el) => onRegisterRef?.(song._id, el)}
-      className={`song-item ${isExpanded ? 'is-expanded' : ''} ${isDragging ? 'dragging' : ''} ${swipeX < 0 ? 'is-swiped' : ''} ${dropClass}`}
+      className={`song-item ${isExpanded ? 'is-expanded' : ''} ${isDragging ? 'dragging' : ''} ${isLeaving ? 'is-leaving' : ''} ${swipeX < 0 ? 'is-swiped' : ''} ${dropClass}`}
       data-song-row=""
       data-song-id={song._id}
       data-section-id={currentSectionId || 'none'}

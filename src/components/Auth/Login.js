@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { FiMail, FiLogIn, FiMusic } from 'react-icons/fi';
+import { FiLogIn, FiMusic } from 'react-icons/fi';
 import './Login.css';
 
 const Login = () => {
@@ -31,7 +31,7 @@ const Login = () => {
       <div className="login-card">
         <div className="login-header">
           <FiMusic className="login-icon" />
-          <h1>Співаник Твоєї Душі</h1>
+          <h1>Давай співати</h1>
           <p>Увійдіть за допомогою електронної пошти</p>
         </div>
 
@@ -44,11 +44,10 @@ const Login = () => {
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
+                placeholder="spivanyk@email.com"
                 required
                 disabled={loading}
               />
-              <FiMail className="input-icon" />
             </div>
           </div>
 

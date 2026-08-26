@@ -7,6 +7,9 @@ import { FaGuitar } from 'react-icons/fa';
 import FormattedSong from '../Songs/FormattedSong';
 import AddSongsModal from '../Songbooks/AddSongsModal';
 import MusicalNoteLoader from '../Common/MusicalNoteLoader';
+import NowSingingBar from '../NowSinging/NowSingingBar';
+import { useNowSinging } from '../../contexts/NowSingingContext';
+import { useSettings } from '../../contexts/SettingsContext';
 import './BookView.css';
 
 // Компонент для пісні з свайп-функціональністю
@@ -18,6 +21,7 @@ const SongItem = forwardRef(({
   canEdit,
   showChords,
   currentSingSong,
+  singingIsMine,
   onToggleExpand,
   onRemoveSong,
   onDragStart,
@@ -128,9 +132,9 @@ const SongItem = forwardRef(({
           )}
           {currentSingSong === song._id ? (
             <button
-              className="bv-song-sing active"
+              className={`bv-song-sing active ${singingIsMine ? 'mine' : 'by-other'}`}
               onClick={(e) => { e.stopPropagation(); onStopSinging(); }}
-              title="Зупинити співання"
+              title={singingIsMine ? 'Зупинити співання' : 'Цю пісню співає інша людина'}
             >
               <FiUsers />
             </button>
@@ -178,9 +182,12 @@ const SongItem = forwardRef(({
   );
 });
 
-const BookView = ({ onClose, songbookData }) => {
+const BookView = ({ onClose, songbookData, initialSingScrollSongId = null, scrollNonce = null }) => {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
+  const { sings, refresh: refreshNowSinging } = useNowSinging();
+  const { settings } = useSettings();
+  const autoScrollEnabled = settings.autoScroll !== false;
   const [songbook, setSongbook] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showChords, setShowChords] = useState(false);
@@ -190,6 +197,7 @@ const BookView = ({ onClose, songbookData }) => {
   const [undoState, setUndoState] = useState(null); // { songId, title, timeoutId }
   const [undoVisible, setUndoVisible] = useState(false); // для анімації появи/зникнення
   const [currentSingSong, setCurrentSingSong] = useState(null); // поточна пісня для співу
+  const [singingByEmail, setSingingByEmail] = useState(null); // хто саме зараз веде спів
 
   // Drag and drop state
   const [draggedSong, setDraggedSong] = useState(null);
@@ -221,6 +229,131 @@ const BookView = ({ onClose, songbookData }) => {
   useEffect(() => {
     loadSongbook();
   }, [loadSongbook]);
+
+  // Плавний скрол до ПОЧАТКУ пісні всередині вікна перегляду.
+  // Вирівнюємо верх рядка пісні до верху області прокрутки (з невеликим
+  // відступом), а не центруємо — інакше довга розгорнута пісня опиняється
+  // на кілька рядків нижче свого початку.
+  // Мапа songId -> ключ розділу, щоб при автопрокрутці підсвітити правильний
+  // розділ (працює і між різними розділами).
+  const songSectionKeyRef = useRef({});
+
+  const scrollToSong = useCallback((songId) => {
+    const scroller = scrollRef.current;
+    if (!scroller || !songId) return;
+
+    // Одразу переходимо на розділ пісні — критично, коли спів перемикається
+    // між розділами (інакше активним лишається старий розділ).
+    const key = songSectionKeyRef.current[songId];
+    if (key) setActiveGroup(key);
+
+    const computeTop = (el) =>
+      Math.max(
+        el.getBoundingClientRect().top -
+          scroller.getBoundingClientRect().top +
+          scroller.scrollTop -
+          8,
+        0
+      );
+
+    // Пісня може бути в іншому розділі й ще не встигнути відрендеритись/
+    // розгорнутись — пробуємо кілька разів, потім коригуємо позицію після
+    // завершення анімації розгортання (0.3s), щоб точно стати на початок пісні.
+    let attempts = 0;
+    const tryScroll = (behavior) => {
+      const el = songRefs.current[songId];
+      if (!el) {
+        if (attempts++ < 15) setTimeout(() => tryScroll(behavior), 60);
+        return;
+      }
+      scroller.scrollTo({ top: computeTop(el), behavior });
+    };
+
+    tryScroll('smooth');
+    // Коригуючий скрол після можливих змін розкладки (розгортання пісні,
+    // згортання попередньої в іншому розділі).
+    setTimeout(() => {
+      const el = songRefs.current[songId];
+      if (el) scroller.scrollTo({ top: computeTop(el), behavior: 'smooth' });
+    }, 420);
+  }, []);
+
+  // Остання пісня, до якої ми вже проскролили. Захищає від повторних скролів
+  // на кожному опитуванні — скролимо лише коли "співають зараз" змінюється.
+  const lastScrolledSingRef = useRef(null);
+
+  // Один раз після першого завантаження підхоплюємо поточну "співають зараз"
+  // пісню з сервера (для кольору/активного стану). Скрол при відкритті НЕ
+  // робимо: перехід до пісні виконує лише клік по значку співу (значок "2",
+  // обробляється ефектом за scrollNonce нижче). Клік по тілу картки (значок
+  // "1") відкриває співаник без стрибка до пісні.
+  const singInitializedRef = useRef(false);
+  useEffect(() => {
+    if (!songbook || singInitializedRef.current) return;
+    singInitializedRef.current = true;
+
+    const singingId = songbook.nowSinging?.songId || null;
+    if (singingId) {
+      setCurrentSingSong(singingId);
+      setSingingByEmail(songbook.nowSinging?.startedByEmail || null);
+    }
+
+    // Позначаємо поточну пісню як уже опрацьовану, щоб пасивний автоскрол
+    // (ефект контексту нижче) не стрибав до неї при відкритті, а спрацьовував
+    // лише коли пісню ЗМІНЯТЬ на іншу вже після відкриття.
+    lastScrolledSingRef.current = singingId;
+  }, [songbook]);
+
+  // Прокрутка до пісні за явним запитом (клік по індикатору/чипу/картці).
+  // Реагує на scrollNonce, тож повторні кліки — навіть по тому самому
+  // співанику, що вже відкритий — щоразу прокручують до пісні.
+  const lastScrollNonceRef = useRef(null);
+  useEffect(() => {
+    if (!songbook) return;
+    if (!scrollNonce || !initialSingScrollSongId) return;
+    if (lastScrollNonceRef.current === scrollNonce) return;
+    lastScrollNonceRef.current = scrollNonce;
+
+    lastScrolledSingRef.current = initialSingScrollSongId;
+    setExpandedSongId(initialSingScrollSongId);
+    setTimeout(() => scrollToSong(initialSingScrollSongId), 250);
+  }, [songbook, scrollNonce, initialSingScrollSongId, scrollToSong]);
+
+  // Єдине джерело правди про "хто зараз співає" — агрегований стан із
+  // NowSingingContext (той самий, що живить чипи в хедері). Завдяки цьому колір
+  // кнопки біля пісні та колір чипа в хедері завжди однакові й оновлюються
+  // разом на кожному опитуванні, зокрема коли статус змінює інша людина.
+  const contextSinging = useMemo(() => {
+    const id = songbookData?._id?.toString();
+    if (!id) return null;
+    return sings.find((s) => s.songbookId?.toString() === id) || null;
+  }, [sings, songbookData]);
+
+  // Синхронізуємо локальний стан співу з контекстом. Коли хтось інший починає/
+  // зупиняє спів або змінює пісню, контекст оновлюється — і тут одразу
+  // перемальовується активна пісня, колір (мій/чужий) та (за потреби) автоскрол.
+  useEffect(() => {
+    const singingId = contextSinging?.songId ? contextSinging.songId.toString() : null;
+    setCurrentSingSong(singingId);
+    setSingingByEmail(contextSinging?.startedByEmail || null);
+
+    // Автоскрол лише ПІСЛЯ первинної ініціалізації (щоб при відкритті не
+    // стрибати до поточної пісні — це робота значка "2") і лише коли пісню
+    // дійсно змінили на іншу.
+    if (!singInitializedRef.current) return;
+
+    if (singingId && singingId !== lastScrolledSingRef.current) {
+      lastScrolledSingRef.current = singingId;
+      // Пасивна автопрокрутка (хтось інший почав співати іншу пісню) — лише
+      // якщо увімкнено в налаштуваннях акаунта.
+      if (autoScrollEnabled) {
+        setExpandedSongId(singingId);
+        setTimeout(() => scrollToSong(singingId), 150);
+      }
+    } else if (!singingId) {
+      lastScrolledSingRef.current = null;
+    }
+  }, [contextSinging, autoScrollEnabled, scrollToSong]);
 
   // Очищуємо таймер при закритті
   useEffect(() => {
@@ -281,6 +414,16 @@ const BookView = ({ onClose, songbookData }) => {
   }, [songbook]);
 
   const flatSongs = useMemo(() => groupedSongs.flatMap((g) => g.songs), [groupedSongs]);
+
+  // Тримаємо мапу songId -> ключ розділу актуальною для автопрокрутки.
+  useEffect(() => {
+    const map = {};
+    groupedSongs.forEach((g) => {
+      const key = g.id ? g.id.toString() : 'no-section';
+      g.songs.forEach((s) => { map[s._id] = key; });
+    });
+    songSectionKeyRef.current = map;
+  }, [groupedSongs]);
 
   // ---- Навігація по розділах ----
   const groupKey = (id) => (id ? id.toString() : 'no-section');
@@ -357,7 +500,10 @@ const BookView = ({ onClose, songbookData }) => {
       const sharedEntry = songbook.sharedWith.find((share) => 
         share.email === currentUser.email?.toLowerCase()
       );
-      if (sharedEntry && sharedEntry.permissions === 'edit') {
+      if (
+        sharedEntry &&
+        (sharedEntry.permissions === 'edit' || sharedEntry.permissions === 'full')
+      ) {
         console.log('BookView access: explicit edit permission', sharedEntry);
         return true;
       }
@@ -365,7 +511,9 @@ const BookView = ({ onClose, songbookData }) => {
     
     // Для публічних та nearby співаників перевіряємо defaultPermissions
     if (songbook.privacy === 'public' || songbook.privacy === 'nearby') {
-      const canEditGlobal = songbook.defaultPermissions === 'edit';
+      const canEditGlobal =
+        songbook.defaultPermissions === 'edit' ||
+        songbook.defaultPermissions === 'full';
       console.log('BookView access: checking defaultPermissions', {
         privacy: songbook.privacy,
         defaultPermissions: songbook.defaultPermissions,
@@ -493,39 +641,35 @@ const BookView = ({ onClose, songbookData }) => {
     setTimeout(() => setUndoState(null), 300);
   };
 
-  // ---- Функція для встановлення пісні для співу ----
+  // ---- Встановлення пісні для співу (синхронізується з усіма) ----
   const handleSetSingSong = async (song) => {
+    // Оптимістично оновлюємо локально — інші побачать через опитування
+    setCurrentSingSong(song._id);
+    setSingingByEmail(currentUser?.email || null);
+    lastScrolledSingRef.current = song._id;
+    setExpandedSongId(song._id);
+    setTimeout(() => scrollToSong(song._id), 100);
+
     try {
-      // Тут буде API виклик для оповіщення інших користувачів
-      // Поки що тільки локально
-      setCurrentSingSong(song._id);
-      
-      // Розгортаємо пісню та скролимо до неї
-      setExpandedSongId(song._id);
-      
-      // Скролимо до пісні
-      setTimeout(() => {
-        const songElement = songRefs.current[song._id];
-        if (songElement && scrollRef.current) {
-          songElement.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'center',
-            inline: 'nearest'
-          });
-        }
-      }, 100);
-      
-      console.log(`Встановлено для співу: ${song.title}`);
-      
+      await songbooksAPI.setNowSinging(songbook._id, song._id);
+      // Оновлюємо агрегований індикатор у хедері одразу
+      refreshNowSinging();
     } catch (error) {
       console.error('Error setting sing song:', error);
     }
   };
 
-  // ---- Функція для скасування співу ----
-  const handleStopSinging = () => {
+  // ---- Скасування співу (синхронізується з усіма) ----
+  const handleStopSinging = async () => {
     setCurrentSingSong(null);
-    console.log('Співання зупинено');
+    setSingingByEmail(null);
+    lastScrolledSingRef.current = null;
+    try {
+      await songbooksAPI.stopNowSinging(songbook._id);
+      refreshNowSinging();
+    } catch (error) {
+      console.error('Error stopping singing:', error);
+    }
   };
 
   // ---- Drag & Drop ----
@@ -673,6 +817,9 @@ const BookView = ({ onClose, songbookData }) => {
     }
   };
 
+  // Чи веду спів саме я (для кольору кнопки: зелений — мій, жовтий — чужий)
+  const singingIsMine = !!currentUser?.email && singingByEmail === currentUser.email;
+
   // ---- Render ----
   if (loading) {
     return (
@@ -691,40 +838,16 @@ const BookView = ({ onClose, songbookData }) => {
       <div className="bv-modal" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <header className="bv-header">
-          <div className="bv-title">
-            <FiMusic className="bv-title-icon" />
-            <span>{songbook.title}</span>
-            {currentSingSong && (
-              <div 
-                className="bv-singing-indicator"
-                onClick={() => {
-                  // Скролимо до пісні при кліку на індикатор
-                  const songElement = songRefs.current[currentSingSong];
-                  if (songElement && scrollRef.current) {
-                    songElement.scrollIntoView({ 
-                      behavior: 'smooth', 
-                      block: 'center',
-                      inline: 'nearest'
-                    });
-                  }
-                }}
-              >
-                <FiUsers className="bv-singing-icon" />
-                <span className="bv-singing-text">
-                  <span className="bv-singing-label">Співають:</span>
-                  <span className="bv-singing-song-title">
-                    {(() => {
-                      const currentSong = songbook.songs?.find(s => s._id === currentSingSong);
-                      return currentSong?.title || 'пісню';
-                    })()}
-                  </span>
-                </span>
-              </div>
-            )}
+          <div className="bv-header-top">
+            <div className="bv-title">
+              <FiMusic className="bv-title-icon" />
+              <span className="bv-title-text">{songbook.title}</span>
+            </div>
+            <NowSingingBar className="bv-singing" />
+            <button className="bv-close" onClick={handleClose} aria-label="Закрити">
+              <FiX />
+            </button>
           </div>
-          <button className="bv-close" onClick={handleClose} aria-label="Закрити">
-            <FiX />
-          </button>
         </header>
 
         {/* Body: ліва навігація по розділах + прокручуваний вміст */}
@@ -790,6 +913,7 @@ const BookView = ({ onClose, songbookData }) => {
                       canEdit={canEditSongbook()}
                       showChords={showChords}
                       currentSingSong={currentSingSong}
+                      singingIsMine={singingIsMine}
                       onToggleExpand={handleToggleExpand}
                       onRemoveSong={handleRemoveSong}
                       onDragStart={handleDragStart}

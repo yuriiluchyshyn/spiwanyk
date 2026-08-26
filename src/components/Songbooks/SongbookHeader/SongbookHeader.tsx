@@ -60,25 +60,58 @@ const SongbookHeader: React.FC<SongbookHeaderProps> = ({
     return ownerId === userId;
   };
 
+  // Явний запис доступу для поточного користувача (розшарено по email)
+  const sharedEntryForUser = () => {
+    if (!currentUser || !songbook?.sharedWith) return null;
+    return (
+      songbook.sharedWith.find(
+        (share: any) => share.email === currentUser.email?.toLowerCase()
+      ) || null
+    );
+  };
+
+  // Повні права: видалення співаника та керування доступом інших користувачів.
+  // Власник завжди має повні права. Логіка дзеркалить canAccess() на бекенді.
+  const hasFullAccess = () => {
+    if (isOwner()) return true;
+
+    // Іменний доступ по email із рівнем 'full'.
+    const entry = sharedEntryForUser();
+    if (entry?.permissions === 'full') return true;
+
+    // Публічні / поруч / opted-in nearby співаники: повний доступ отримують усі,
+    // якщо власник виставив defaultPermissions === 'full'.
+    if (
+      songbook &&
+      (songbook.privacy === 'public' ||
+        songbook.privacy === 'nearby' ||
+        songbook.shareNearby) &&
+      songbook.defaultPermissions === 'full'
+    ) {
+      return true;
+    }
+
+    return false;
+  };
+
   const canEditSongbook = () => {
     if (!currentUser || !songbook) return false;
     
     // Власник завжди може редагувати
     if (isOwner()) return true;
     
-    // Перевіряємо права в sharedWith (для всіх типів приватності)
-    if (songbook.sharedWith) {
-      const sharedEntry = songbook.sharedWith.find((share: any) => 
-        share.email === currentUser.email?.toLowerCase()
-      );
-      if (sharedEntry && sharedEntry.permissions === 'edit') {
-        return true;
-      }
+    // Перевіряємо права в sharedWith (для всіх типів приватності): edit або full
+    const sharedEntry = sharedEntryForUser();
+    if (sharedEntry && (sharedEntry.permissions === 'edit' || sharedEntry.permissions === 'full')) {
+      return true;
     }
     
     // Для публічних та nearby співаників перевіряємо defaultPermissions
     if (songbook.privacy === 'public' || songbook.privacy === 'nearby') {
-      return songbook.defaultPermissions === 'edit';
+      return (
+        songbook.defaultPermissions === 'edit' ||
+        songbook.defaultPermissions === 'full'
+      );
     }
     
     return false;
@@ -106,17 +139,11 @@ const SongbookHeader: React.FC<SongbookHeaderProps> = ({
         requestBody.defaultPermissions = settings.defaultPermissions || 'view';
       }
 
-      // Handle sharedWith based on privacy type
-      if (settings.privacy === 'shared') {
-        // For shared songbooks, use the sharedWith array
-        requestBody.sharedWith = settings.sharedWith || [];
-      } else if (settings.privacy === 'public' || settings.privacy === 'nearby') {
-        // For public/nearby songbooks, sharedWith contains users with special permissions
-        requestBody.sharedWith = settings.sharedWith || [];
-      } else {
-        // For private songbooks, clear sharedWith
-        requestBody.sharedWith = [];
-      }
+      // Individual access ("Додатковий доступ окремим людям") is additive to any
+      // privacy mode — private, nearby or public — so it is always persisted
+      // as-is. Previously it was wiped for private songbooks, which silently
+      // revoked edit/full rights for already-invited people.
+      requestBody.sharedWith = settings.sharedWith || [];
       
       const response = await fetch(`/api/songbooks/${songbook._id}`, {
         method: 'PUT',
@@ -156,6 +183,7 @@ const SongbookHeader: React.FC<SongbookHeaderProps> = ({
         <SongbookActions
           canEdit={canEditSongbook()}
           isOwner={isOwner()}
+          canManage={hasFullAccess()}
           onShowAddSongs={onShowAddSongs}
           onToggleSectionManager={onToggleSectionManager}
           onDeleteSongbook={onDeleteSongbook}
@@ -194,6 +222,7 @@ const SongbookHeader: React.FC<SongbookHeaderProps> = ({
                 <span key={share.email} className="shared-user-preview">
                   {share.email}
                   {share.permissions === 'edit' && ' (редагування)'}
+                  {share.permissions === 'full' && ' (повний доступ)'}
                   {index < Math.min(songbook.sharedWith.length, 3) - 1 && ', '}
                 </span>
               ))}

@@ -135,3 +135,86 @@
 .sb-card {
   cursor: pointer;
 }
+
+/* ===== "Singing now" badge on songbook cards =====
+   Yellow when someone else is leading, green when it's the current user —
+   consistent with the header chips. */
+@keyframes sb-sing-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(202, 138, 4, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(202, 138, 4, 0); }
+}
+
+@keyframes sb-sing-pulse-mine {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+}
+
+/* Default (someone else singing) — yellow */
+.sb-card.is-singing {
+  border-color: rgba(202, 138, 4, 0.55);
+  background: linear-gradient(135deg, #ffffff, rgba(234, 179, 8, 0.1));
+}
+
+/* Current user leading — green */
+.sb-card.is-singing.singing-mine {
+  border-color: rgba(34, 197, 94, 0.55);
+  background: linear-gradient(135deg, #ffffff, rgba(34, 197, 94, 0.08));
+}
+
+.sb-singing-badge {
+  margin-top: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.55rem;
+  border: none;
+  border-radius: 10px;
+  background: #fef9c3;
+  color: #713f12;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s ease, transform 0.2s ease;
+  animation: sb-sing-pulse 2s ease-in-out infinite;
+}
+
+.sb-singing-badge:hover {
+  background: #fdf0a6;
+  transform: translateY(-1px);
+}
+
+.sb-singing-badge.mine {
+  background: #ecfdf3;
+  color: #14532d;
+  animation-name: sb-sing-pulse-mine;
+}
+
+.sb-singing-badge.mine:hover {
+  background: #d7f8e3;
+}
+
+.sb-singing-icon {
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.sb-singing-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  min-width: 0;
+}
+
+.sb-singing-label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  opacity: 0.85;
+}
+
+.sb-singing-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

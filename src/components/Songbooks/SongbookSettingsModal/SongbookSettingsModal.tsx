@@ -9,13 +9,22 @@ import {
   FiMapPin,
   FiMail,
   FiLoader,
-  FiEdit
+  FiEdit,
+  FiShield
 } from 'react-icons/fi';
 import './SongbookSettingsModal.css';
+import PermissionSelect, { Permission, PermissionOption } from './PermissionSelect';
+
+// Три рівні доступу — однаковий набір усюди, де обирають права.
+const PERMISSION_OPTIONS: PermissionOption[] = [
+  { value: 'view', label: 'Перегляд', icon: <FiEye /> },
+  { value: 'edit', label: 'Редагування', icon: <FiEdit /> },
+  { value: 'full', label: 'Повний доступ', icon: <FiShield /> }
+];
 
 interface SharedUser {
   email: string;
-  permissions: 'view' | 'edit';
+  permissions: Permission;
   sharedAt?: string;
 }
 
@@ -38,13 +47,14 @@ const SongbookSettingsModal: React.FC<SongbookSettingsModalProps> = ({
   onClose,
   onSave
 }) => {
-  const [privacy, setPrivacy] = useState(songbook.privacy || 'private');
-  const [defaultPermissions, setDefaultPermissions] = useState(songbook.defaultPermissions || 'view');
-  // Nearby visibility is independent of the privacy mode, so a songbook can be
-  // shared by email and still be discoverable at the campfire.
-  const [shareNearby, setShareNearby] = useState(
-    songbook.shareNearby ?? songbook.privacy === 'nearby'
+  // "shared" is no longer a base privacy mode — it became the independent
+  // "individual access" section. Legacy 'shared' songbooks map to 'private'
+  // (their access was always driven by sharedWith, which still applies).
+  const [privacy, setPrivacy] = useState(
+    songbook.privacy === 'shared' ? 'private' : (songbook.privacy || 'private')
   );
+  const [defaultPermissions, setDefaultPermissions] = useState(songbook.defaultPermissions || 'view');
+  // Nearby visibility is tied to the "Поруч" (nearby) privacy mode only.
   const [radiusMeters, setRadiusMeters] = useState(
     songbook.radiusMeters || 100 // Default 100 meters
   );
@@ -52,7 +62,7 @@ const SongbookSettingsModal: React.FC<SongbookSettingsModalProps> = ({
     songbook.sharedWith || []
   );
   const [newUserEmail, setNewUserEmail] = useState('');
-  const [newUserPermissions, setNewUserPermissions] = useState<'view' | 'edit'>('view');
+  const [newUserPermissions, setNewUserPermissions] = useState<Permission>('view');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -93,12 +103,6 @@ const SongbookSettingsModal: React.FC<SongbookSettingsModalProps> = ({
       title: 'Приватний',
       description: 'Тільки ви маєте доступ до цього співаника',
       icon: <FiLock />
-    },
-    {
-      value: 'shared',
-      title: 'Розшарений',
-      description: 'Доступний конкретним людям за email адресами',
-      icon: <FiUsers />
     },
     {
       value: 'nearby',
@@ -145,7 +149,7 @@ const SongbookSettingsModal: React.FC<SongbookSettingsModalProps> = ({
     setSharedWith(sharedWith.filter(user => user.email !== email));
   };
 
-  const handlePermissionChange = (email: string, permissions: 'view' | 'edit') => {
+  const handlePermissionChange = (email: string, permissions: Permission) => {
     setSharedWith(sharedWith.map(user => 
       user.email === email ? { ...user, permissions } : user
     ));
@@ -159,10 +163,11 @@ const SongbookSettingsModal: React.FC<SongbookSettingsModalProps> = ({
     try {
       await onSave({
         privacy,
-        sharedWith: privacy !== 'private' ? sharedWith : [],
+        // Individual access is additive to any privacy mode and always saved.
+        sharedWith,
         defaultPermissions,
-        shareNearby: privacy === 'private' ? false : shareNearby,
-        radiusMeters: (privacy === 'nearby' || shareNearby) ? radiusMeters : undefined
+        shareNearby: privacy === 'nearby',
+        radiusMeters: privacy === 'nearby' ? radiusMeters : undefined
       });
       
       // Показуємо спінер 2 секунди, потім закриваємо модал
@@ -188,7 +193,7 @@ const SongbookSettingsModal: React.FC<SongbookSettingsModalProps> = ({
         <div className="settings-modal-header">
           <h2 className="settings-modal-title">
             <FiSettings />
-            Налаштування співаника
+            Видимість співаника
           </h2>
           <button className="close-button" onClick={onClose}>
             <FiX />
@@ -200,10 +205,6 @@ const SongbookSettingsModal: React.FC<SongbookSettingsModalProps> = ({
           {success && <div className="success-message">{success}</div>}
 
           <div className="settings-section">
-            <h3 className="section-title">
-              <FiEye />
-              Видимість співаника
-            </h3>
             <div className="privacy-options">
               {privacyOptions.map((option) => (
                 <label 
@@ -234,26 +235,7 @@ const SongbookSettingsModal: React.FC<SongbookSettingsModalProps> = ({
               ))}
             </div>
 
-            {privacy !== 'private' && privacy !== 'nearby' && (
-              <label className="nearby-toggle">
-                <input
-                  type="checkbox"
-                  checked={shareNearby}
-                  onChange={(e) => setShareNearby(e.target.checked)}
-                />
-                <span className="nearby-toggle-content">
-                  <span className="nearby-toggle-title">
-                    <FiMapPin />
-                    Показувати також людям поблизу
-                  </span>
-                  <span className="nearby-toggle-description">
-                    Співаник побачать ті, хто зараз біля вас, додатково до вибраного режиму
-                  </span>
-                </span>
-              </label>
-            )}
-
-            {(privacy === 'nearby' || shareNearby) && (
+            {privacy === 'nearby' && (
               <div className="radius-section">
                 <div className="radius-header">
                   <FiMapPin />
@@ -279,13 +261,28 @@ const SongbookSettingsModal: React.FC<SongbookSettingsModalProps> = ({
                 </div>
               </div>
             )}
+
+            {(privacy === 'nearby' || privacy === 'public') && (
+              <div className="default-permissions-section" key={privacy}>
+                <h4 className="permissions-title">
+                  {privacy === 'nearby'
+                    ? 'Права доступу для всіх, хто поруч:'
+                    : 'Права доступу для всіх користувачів платформи:'}
+                </h4>
+                <PermissionSelect
+                  value={defaultPermissions as Permission}
+                  options={PERMISSION_OPTIONS}
+                  onChange={(v) => setDefaultPermissions(v)}
+                  ariaLabel="Права доступу за замовчуванням"
+                />
+              </div>
+            )}
           </div>
 
-          {(privacy === 'shared' || privacy === 'nearby' || privacy === 'public') && (
-            <div className="settings-section">
+          <div className="settings-section settings-section--standalone">
               <h3 className="section-title">
                 <FiUsers />
-                Доступ користувачів
+                Додатковий доступ окремим людям
               </h3>
 
               <div className="shared-users-section">
@@ -298,31 +295,15 @@ const SongbookSettingsModal: React.FC<SongbookSettingsModalProps> = ({
                             <FiMail style={{ marginRight: '6px', fontSize: '14px' }} />
                             {user.email}
                           </div>
-                          <div className="shared-user-permissions">
-                            {user.permissions === 'view' ? (
-                              <>
-                                <FiEye style={{ marginRight: '4px' }} />
-                                Тільки перегляд
-                              </>
-                            ) : (
-                              <>
-                                <FiEdit style={{ marginRight: '4px' }} />
-                                Може редагувати
-                              </>
-                            )}
-                          </div>
                         </div>
                         <div className="shared-user-actions">
-                          <select
-                            className="permission-select"
+                          <PermissionSelect
+                            className="perm-select--inline"
                             value={user.permissions}
-                            onChange={(e) => 
-                              handlePermissionChange(user.email, e.target.value as 'view' | 'edit')
-                            }
-                          >
-                            <option value="view">Перегляд</option>
-                            <option value="edit">Редагування</option>
-                          </select>
+                            options={PERMISSION_OPTIONS}
+                            onChange={(v) => handlePermissionChange(user.email, v)}
+                            ariaLabel={`Права доступу для ${user.email}`}
+                          />
                           <button
                             className="remove-share-button"
                             onClick={() => handleRemoveUser(user.email)}
@@ -335,63 +316,37 @@ const SongbookSettingsModal: React.FC<SongbookSettingsModalProps> = ({
                   </div>
                 ) : (
                   <div className="no-shared-users">
-                    {privacy === 'shared' 
-                      ? 'Співаник поки що ні з ким не поділений'
-                      : 'Поки що немає користувачів зі спеціальними правами'
-                    }
+                    Співаник поки що ні з ким не поділений
                   </div>
                 )}
 
                 <div className="add-share-form">
-                  {privacy === 'shared' ? (
-                    // Для розшарених співаників - можна додавати нових користувачів
-                    <>
-                      <div className="add-share-inputs">
-                        <input
-                          type="email"
-                          className="share-email-input"
-                          placeholder="Введіть email користувача"
-                          value={newUserEmail}
-                          onChange={(e) => setNewUserEmail(e.target.value)}
-                          onKeyPress={(e) => e.key === 'Enter' && handleAddUser()}
-                        />
-                        <select
-                          className="share-permission-select"
-                          value={newUserPermissions}
-                          onChange={(e) => setNewUserPermissions(e.target.value as 'view' | 'edit')}
-                        >
-                          <option value="view">Тільки перегляд</option>
-                          <option value="edit">Може редагувати пісні</option>
-                        </select>
-                      </div>
-                      <button
-                        className="add-share-button"
-                        onClick={handleAddUser}
-                        disabled={!newUserEmail.trim()}
-                      >
-                        Додати
-                      </button>
-                    </>
-                  ) : (
-                    // Для публічних та nearby співаників - глобальні права доступу
-                    <div className="default-permissions-section">
-                      <h4 className="permissions-title">
-                        Права доступу для всіх користувачів:
-                      </h4>
-                      <select
-                        className="default-permissions-select"
-                        value={defaultPermissions}
-                        onChange={(e) => setDefaultPermissions(e.target.value as 'view' | 'edit')}
-                      >
-                        <option value="view">Тільки перегляд</option>
-                        <option value="edit">Можуть редагувати пісні</option>
-                      </select>
-                    </div>
-                  )}
+                  <div className="add-share-inputs">
+                    <input
+                      type="email"
+                      className="share-email-input"
+                      placeholder="Введіть email користувача"
+                      value={newUserEmail}
+                      onChange={(e) => setNewUserEmail(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleAddUser()}
+                    />
+                    <PermissionSelect
+                      value={newUserPermissions}
+                      options={PERMISSION_OPTIONS}
+                      onChange={(v) => setNewUserPermissions(v)}
+                      ariaLabel="Права доступу для нового користувача"
+                    />
+                  </div>
+                  <button
+                    className="add-share-button"
+                    onClick={handleAddUser}
+                    disabled={!newUserEmail.trim()}
+                  >
+                    Додати
+                  </button>
                 </div>
               </div>
             </div>
-          )}
         </div>
 
         <div className="settings-modal-actions">

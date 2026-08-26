@@ -5,6 +5,9 @@ import './SongbookActions.css';
 interface SongbookActionsProps {
   canEdit: boolean;
   isOwner: boolean;
+  // Повні права: керування розділами, доступом та видалення співаника.
+  // Власник завжди має ці права; інші — лише з дозволом 'full'.
+  canManage?: boolean;
   onShowAddSongs: () => void;
   onToggleSectionManager: () => void;
   onDeleteSongbook: () => void;
@@ -14,11 +17,15 @@ interface SongbookActionsProps {
 const SongbookActions: React.FC<SongbookActionsProps> = ({
   canEdit,
   isOwner,
+  canManage,
   onShowAddSongs,
   onToggleSectionManager,
   onDeleteSongbook,
   onShowSettings
 }) => {
+  // Власник має повні права навіть якщо canManage не передано.
+  const manage = canManage || isOwner;
+
   return (
     <div className="songbook-actions">
       {canEdit && (
@@ -30,7 +37,7 @@ const SongbookActions: React.FC<SongbookActionsProps> = ({
           <FiPlus />
         </button>
       )}
-      {isOwner && (
+      {manage && (
         <button 
           onClick={onToggleSectionManager} 
           className="manage-sections-btn"
@@ -39,16 +46,16 @@ const SongbookActions: React.FC<SongbookActionsProps> = ({
           <FiFolder />
         </button>
       )}
-      {isOwner && onShowSettings && (
+      {manage && onShowSettings && (
         <button 
           onClick={onShowSettings}
           className="visibility-btn"
-          title="Видимість співаника"
+          title="Доступ та видимість співаника"
         >
           <FiEye />
         </button>
       )}
-      {isOwner && (
+      {manage && (
         <button 
           onClick={onDeleteSongbook}
           className="delete-songbook-btn"

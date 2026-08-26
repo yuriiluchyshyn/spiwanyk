@@ -27,6 +27,8 @@ interface SongsListProps {
   canEdit: boolean;
   sections?: Section[];
   expandedSongId?: string | null;
+  /** Пісні, що зараз програють анімацію зникнення */
+  leavingSongIds?: Set<string>;
   totalSongs?: number;
   onShowAddSongs: () => void;
   onDragHandleDown?: (e: React.PointerEvent, song: Song) => void;
@@ -44,6 +46,7 @@ const SongsList: React.FC<SongsListProps> = ({
   canEdit,
   sections = [],
   expandedSongId,
+  leavingSongIds,
   totalSongs,
   onShowAddSongs,
   onDragHandleDown,
@@ -74,6 +77,7 @@ const SongsList: React.FC<SongsListProps> = ({
             song={song}
             index={index}
             isDragging={draggedSong?._id === song._id}
+            isLeaving={leavingSongIds?.has(song._id) ?? false}
             dropPosition={dropPosition}
             canEdit={canEdit}
             sections={sections}

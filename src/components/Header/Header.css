@@ -74,6 +74,12 @@
   gap: 0.25rem;
   font-size: 0.85rem;
   color: var(--soft-beige);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.user-email:hover {
+  color: var(--cream-white);
 }
 
 .logout-btn {
@@ -128,4 +134,11 @@
     min-width: 2.5rem;
     justify-content: center;
   }
+}
+
+/* Aggregated "singing now" chips row under the main header bar. */
+.now-singing-bar.header-singing {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.4rem 0 0.6rem;
 }
