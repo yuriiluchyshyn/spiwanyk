@@ -10,8 +10,20 @@
   background: #ffffff;
   border-radius: 14px;
   border: 1px solid rgba(196, 168, 130, 0.2);
-  overflow: hidden;
+  /* overflow: visible — інакше position: sticky у навігації не працює */
+  overflow: visible;
   animation: fadeInUp 0.5s ease-out 0.1s backwards;
+}
+
+/* Липка навігація по розділах: прилипає до верху вікна при прокрутці */
+.sections-nav-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  border-radius: 14px 14px 0 0;
+  background: #ffffff;
+  border-bottom: 1px solid rgba(196, 168, 130, 0.18);
+  box-shadow: 0 6px 14px -10px rgba(61, 53, 48, 0.45);
 }
 
 /* Анімації */

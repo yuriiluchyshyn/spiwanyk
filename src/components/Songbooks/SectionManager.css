@@ -18,6 +18,7 @@
   align-items: center;
   z-index: 1000;
   padding: 20px;
+  animation: sectionOverlayFade 0.2s ease;
 }
 
 .section-manager-modal {
@@ -30,6 +31,24 @@
   overflow-y: auto;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   border-radius: 14px;
+  animation: sectionModalIn 0.26s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes sectionOverlayFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sectionModalIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section-manager-overlay,
+  .section-manager-modal {
+    animation: none;
+  }
 }
 
 .section-manager-close {
@@ -232,6 +251,9 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  /* Стримуємо горизонтальний виїзд рядка під час анімації видалення,
+     не створюючи вертикального скролу (clip не робить вісь Y = auto). */
+  overflow-x: clip;
 }
 
 .section-item {
@@ -243,11 +265,51 @@
   background: rgba(196, 168, 130, 0.05);
   border: 1px solid rgba(196, 168, 130, 0.15);
   border-radius: 10px;
-  transition: all 0.25s ease;
+  transition: background 0.25s ease;
+  /* Плавна поява (стаггер через inline animation-delay у SectionRow).
+     backwards — щоб під час затримки застосовувався стартовий кадр,
+     а після завершення НЕ утримувати transform (щоб не заважати свайпу). */
+  animation: sectionAppear 0.32s ease backwards;
+  /* Свайп справа наліво по горизонталі, вертикаль — звичайний скрол */
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .section-item:hover {
   background: rgba(196, 168, 130, 0.1);
+}
+
+/* Рядок під час анімації зникнення (transform/opacity/max-height — інлайн) */
+.section-item.is-leaving {
+  overflow: hidden;
+  pointer-events: none;
+  will-change: max-height, opacity, transform;
+}
+
+@keyframes sectionAppear {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section-item {
+    animation: none;
+  }
+}
+
+/* Підказка про свайп-видалення */
+.sections-swipe-hint {
+  margin: 0.6rem 0 0;
+  text-align: center;
+  color: var(--stone-gray);
+  font-size: 0.75rem;
+  opacity: 0.7;
 }
 
 .section-info {
@@ -283,38 +345,6 @@
   background: rgba(196, 168, 130, 0.15);
   padding: 4px 8px;
   border-radius: 999px;
-}
-
-.section-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  flex-shrink: 0;
-}
-
-.remove-section-btn {
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: none;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  font-size: 0.85rem;
-  background: rgba(220, 38, 38, 0.08);
-  color: #dc2626;
-}
-
-.remove-section-btn:hover:not(:disabled) {
-  background: rgba(220, 38, 38, 0.18);
-}
-
-.remove-section-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }
 
 /* ---------- Порожній стан ---------- */

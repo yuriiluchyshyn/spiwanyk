@@ -8,6 +8,9 @@ export const songbooksAPI = {
   getById: (id) => api.get(`/songbooks/${id}`).then((res) => res.data.songbook),
   create: (data) => api.post('/songbooks', data).then((res) => res.data),
   update: (id, data) => api.put(`/songbooks/${id}`, data).then((res) => res.data),
+  // Порядок пісень у межах розділів: 'manual' | 'alpha'
+  setSongSort: (id, sort) =>
+    api.put(`/songbooks/${id}/song-sort`, { sort }).then((res) => res.data),
   delete: (id) => api.delete(`/songbooks/${id}`).then((res) => res.data),
   addSong: (songbookId, songId, sectionId) => {
     const data = { songId };

@@ -8,11 +8,12 @@ import { useAuth } from '../../../contexts/AuthContext';
 // Компоненти
 import SongbookHeader from '../SongbookHeader/SongbookHeader';
 import SectionsNavigation, { NO_SECTION } from '../SectionsNavigation/SectionsNavigation';
-import SongsList from '../SongsList/SongsList';
+import SongsList, { SongGroup } from '../SongsList/SongsList';
 import LoadingState from '../LoadingState/LoadingState';
 import ErrorState from '../ErrorState/ErrorState';
 import AddSongsModal from '../AddSongsModal';
 import SectionManager from '../SectionManager';
+import UndoToast from '../../Common/UndoToast';
 import { FiX, FiMove } from 'react-icons/fi';
 import useSongDragDrop, { DraggedSong, SongDropTarget } from './useSongDragDrop';
 
@@ -41,12 +42,31 @@ const SongbookDetail: React.FC = () => {
   const [showAddSongs, setShowAddSongs] = useState(false);
   const [showSectionManager, setShowSectionManager] = useState(false);
   const [expandedSongId, setExpandedSongId] = useState<string | null>(null);
+  // Сортувати пісні за алфавітом у межах кожного розділу.
+  // Початкове значення береться зі співаника й зберігається в БД при перемиканні.
+  const [sortAlpha, setSortAlpha] = useState(false);
 
   // Пісні, що зараз програють анімацію зникнення (після переміщення в інший розділ).
   // Тримаємо їх у списку ще ~400мс, щоб CSS встиг згорнути елемент, а вже потім
   // перезавантажуємо співаник із сервера.
   const [leavingSongIds, setLeavingSongIds] = useState<Set<string>>(new Set());
   const LEAVE_ANIM_MS = 400;
+
+  // Undo-видалення пісні: показуємо тост, а фактичне видалення на сервері
+  // відкладаємо, щоб дію можна було скасувати.
+  const [songUndo, setSongUndo] = useState<{ message: string } | null>(null);
+  const [songUndoVisible, setSongUndoVisible] = useState(false);
+  const songUndoCommitTimer = useRef<number | null>(null);
+  const songUndoHideTimer = useRef<number | null>(null);
+  // Відкладене видалення: пам'ятаємо, що саме прибрати і як відновити
+  const pendingSongDeleteRef = useRef<{ songId: string; songbookId: string; backupSongs: any[] } | null>(null);
+  const SONG_UNDO_MS = 5000;
+
+  // Висота липкої навігації — щоб заголовки розділів прилипали одразу під нею
+  const [navHeight, setNavHeight] = useState(0);
+  // Висота головного хедера сайту (він теж sticky зверху) — навігація розділів
+  // має прилипати саме під ним, а не ховатись за ним
+  const [headerHeight, setHeaderHeight] = useState(0);
 
   // Коротке підтвердження переміщення (пісня зникає з поточного списку —
   // без нього незрозуміло, куди вона поділась)
@@ -57,6 +77,68 @@ const SongbookDetail: React.FC = () => {
   const songRefs = useRef<Record<string, HTMLElement | null>>({});
   const pendingAnchor = useRef<{ id: string; top: number } | null>(null);
 
+  // Реєстр заголовків груп (розділів) для скролу та scroll-spy
+  const groupRefs = useRef<Record<string, HTMLElement | null>>({});
+  const navRef = useRef<HTMLDivElement | null>(null);
+  // Поки триває програмний плавний скрол до розділу — не даємо scroll-spy миготіти
+  const programmaticScrollUntil = useRef<number>(0);
+
+  const registerGroupRef = (groupId: string, el: HTMLElement | null) => {
+    groupRefs.current[groupId] = el;
+  };
+
+  // Відстань від верху вікна до місця, де має опинятись заголовок розділу:
+  // під головним хедером сайту і під навігацією розділів
+  const getNavOffset = (): number => headerHeight + navHeight;
+
+  // Стежимо за висотою навігації (вона змінюється, коли таби переносяться на
+  // кілька рядків), щоб заголовки розділів прилипали точно під нею
+  useLayoutEffect(() => {
+    const nav = navRef.current;
+    if (!nav) {
+      setNavHeight(0);
+      return;
+    }
+    const measure = () => setNavHeight(nav.getBoundingClientRect().height);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(nav);
+    return () => ro.disconnect();
+  }, [songbook]);
+
+  // Стежимо за висотою головного хедера сайту (position: sticky зверху).
+  // NowSingingBar усередині нього може з'являтись/зникати — тому ResizeObserver.
+  useLayoutEffect(() => {
+    const header = document.querySelector('.header') as HTMLElement | null;
+    if (!header) {
+      setHeaderHeight(0);
+      return;
+    }
+    const measure = () => setHeaderHeight(header.getBoundingClientRect().height);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(header);
+    window.addEventListener('resize', measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, []);
+
+  // Клік по табу розділу: підсвічуємо і плавно скролимо до його пісень
+  const handleSectionClick = (sectionId: string) => {
+    setActiveSection(sectionId);
+
+    const el = groupRefs.current[sectionId];
+    if (!el) return;
+
+    const navOffset = getNavOffset();
+    const y = el.getBoundingClientRect().top + window.scrollY - navOffset - 8;
+
+    programmaticScrollUntil.current = Date.now() + 800;
+    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+  };
+
   const showMoveNotice = (text: string) => {
     setMoveNotice(text);
     if (moveNoticeTimer.current) window.clearTimeout(moveNoticeTimer.current);
@@ -65,6 +147,15 @@ const SongbookDetail: React.FC = () => {
 
   useEffect(() => () => {
     if (moveNoticeTimer.current) window.clearTimeout(moveNoticeTimer.current);
+    if (songUndoCommitTimer.current) window.clearTimeout(songUndoCommitTimer.current);
+    if (songUndoHideTimer.current) window.clearTimeout(songUndoHideTimer.current);
+    // Якщо лишилось невідкладене видалення — фіксуємо його на сервері,
+    // щоб не втратити дію при закритті сторінки.
+    const pending = pendingSongDeleteRef.current;
+    if (pending) {
+      pendingSongDeleteRef.current = null;
+      songbooksAPI.removeSong(pending.songbookId, pending.songId).catch(() => {});
+    }
   }, []);
 
   const sectionNameById = (sectionId: string | null): string => {
@@ -84,6 +175,7 @@ const SongbookDetail: React.FC = () => {
         console.log('Loaded songbook:', data);
         console.log('Current user:', user);
         setSongbook(data);
+        setSortAlpha(data?.songSort === 'alpha');
       } catch (error) {
         console.error('Error loading songbook:', error);
       } finally {
@@ -102,6 +194,59 @@ const SongbookDetail: React.FC = () => {
     );
     if (!exists) setActiveSection(NO_SECTION);
   }, [songbook, activeSection]);
+
+  // Scroll-spy: під час прокрутки підсвічуємо розділ, чиї пісні зараз угорі.
+  useEffect(() => {
+    if (!songbook?.sections || songbook.sections.length === 0) return;
+
+    const orderedIds: string[] = [
+      NO_SECTION,
+      ...[...songbook.sections]
+        .sort((a: any, b: any) => a.name.localeCompare(b.name, 'uk'))
+        .map((s: any) => s._id?.toString())
+        .filter(Boolean)
+    ];
+
+    let rafId: number | null = null;
+
+    const update = () => {
+      rafId = null;
+      if (Date.now() < programmaticScrollUntil.current) return;
+
+      const navBottom = navRef.current
+        ? navRef.current.getBoundingClientRect().bottom
+        : 0;
+      const line = navBottom + 12;
+
+      let current = orderedIds[0];
+      for (const gid of orderedIds) {
+        const el = groupRefs.current[gid];
+        if (!el) continue;
+        if (el.getBoundingClientRect().top <= line) {
+          current = gid;
+        } else {
+          break;
+        }
+      }
+
+      setActiveSection((prev) => (prev === current ? prev : current));
+    };
+
+    const onScroll = () => {
+      if (rafId === null) rafId = requestAnimationFrame(update);
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    // Первинна синхронізація
+    update();
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
+  }, [songbook]);
 
   const loadSongbook = async () => {
     if (!id) return;
@@ -179,6 +324,25 @@ const SongbookDetail: React.FC = () => {
     songRefs.current[songId] = el;
   };
 
+  // Перемикання сортування за алфавітом + збереження в БД (оптимістично)
+  const handleToggleSort = async () => {
+    if (!songbook) return;
+    const next = !sortAlpha;
+    setSortAlpha(next);
+    try {
+      await songbooksAPI.setSongSort(songbook._id, next ? 'alpha' : 'manual');
+      setSongbook((prev: any) =>
+        prev ? { ...prev, songSort: next ? 'alpha' : 'manual' } : prev
+      );
+    } catch (error) {
+      // Не вдалося зберегти — повертаємо попередній стан
+      setSortAlpha(!next);
+      console.error('Error saving song sort:', error);
+      const responseMessage = (error as any).response?.data?.message;
+      alert('Не вдалося зберегти сортування: ' + (responseMessage || 'спробуйте ще раз'));
+    }
+  };
+
   const handleDeleteSongbook = async () => {
     console.log('handleDeleteSongbook called');
     if (!songbook) return;
@@ -222,18 +386,101 @@ const SongbookDetail: React.FC = () => {
     }
   };
 
-  const handleRemoveSong = async (songId: string) => {
-    if (!window.confirm('Видалити пісню зі співаника?')) return;
-    
+  // Ховаємо тост undo (з анімацією зникнення)
+  const hideSongUndo = () => {
+    if (songUndoHideTimer.current) window.clearTimeout(songUndoHideTimer.current);
+    setSongUndoVisible(false);
+    songUndoHideTimer.current = window.setTimeout(() => setSongUndo(null), 300);
+  };
+
+  // Остаточно видаляємо пісню на сервері (виконується, якщо undo не натиснули)
+  const commitSongDelete = async () => {
+    const pending = pendingSongDeleteRef.current;
+    pendingSongDeleteRef.current = null;
+    if (!pending) return;
     try {
-      await songbooksAPI.removeSong(songbook._id, songId);
-      loadSongbook();
+      await songbooksAPI.removeSong(pending.songbookId, pending.songId);
     } catch (error) {
       console.error('Error removing song:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Невідома помилка';
       const responseMessage = (error as any).response?.data?.message;
+      const errorMessage = error instanceof Error ? error.message : 'Невідома помилка';
       alert('Помилка видалення пісні: ' + (responseMessage || errorMessage));
+      // Не вдалося — повертаємо пісню назад зі списку
+      await loadSongbook();
     }
+  };
+
+  const handleRemoveSong = (songId: string) => {
+    if (!songbook) return;
+
+    // Якщо вже є невідкладене видалення — спершу фіксуємо його на сервері
+    if (pendingSongDeleteRef.current) {
+      if (songUndoCommitTimer.current) window.clearTimeout(songUndoCommitTimer.current);
+      commitSongDelete();
+    }
+
+    const entry = (songbook.songs || []).find((s: any) => {
+      const sid = (s.song?._id || s.song)?.toString();
+      return sid === songId.toString();
+    });
+    const title = entry?.song?.title || 'Пісню';
+
+    // Запам'ятовуємо повний список для можливого відновлення
+    const backupSongs = songbook.songs ? [...songbook.songs] : [];
+    pendingSongDeleteRef.current = { songId, songbookId: songbook._id, backupSongs };
+
+    // 1) Анімація зникнення рядка (виїзд вліво + згортання)
+    setLeavingSongIds((prev) => new Set(prev).add(songId));
+
+    // 2) Після анімації прибираємо пісню з локального списку (сервер поки не чіпаємо)
+    window.setTimeout(() => {
+      setSongbook((prev: any) =>
+        prev
+          ? {
+              ...prev,
+              songs: prev.songs.filter((s: any) => {
+                const sid = (s.song?._id || s.song)?.toString();
+                return sid !== songId.toString();
+              }),
+            }
+          : prev
+      );
+      setLeavingSongIds((prev) => {
+        const next = new Set(prev);
+        next.delete(songId);
+        return next;
+      });
+      if (expandedSongId === songId) setExpandedSongId(null);
+    }, LEAVE_ANIM_MS);
+
+    // 3) Тост undo
+    if (songUndoHideTimer.current) window.clearTimeout(songUndoHideTimer.current);
+    setSongUndo({ message: `«${title}» видалено` });
+    window.setTimeout(() => setSongUndoVisible(true), 30);
+
+    // 4) За SONG_UNDO_MS фіксуємо видалення на сервері
+    if (songUndoCommitTimer.current) window.clearTimeout(songUndoCommitTimer.current);
+    songUndoCommitTimer.current = window.setTimeout(() => {
+      commitSongDelete();
+      hideSongUndo();
+    }, SONG_UNDO_MS);
+  };
+
+  const handleUndoRemoveSong = () => {
+    if (songUndoCommitTimer.current) window.clearTimeout(songUndoCommitTimer.current);
+    const pending = pendingSongDeleteRef.current;
+    pendingSongDeleteRef.current = null;
+
+    // Відновлюємо список пісень (сервер не чіпали — тож просто повертаємо стан)
+    if (pending) {
+      setLeavingSongIds((prev) => {
+        const next = new Set(prev);
+        next.delete(pending.songId);
+        return next;
+      });
+      setSongbook((prev: any) => (prev ? { ...prev, songs: pending.backupSongs } : prev));
+    }
+    hideSongUndo();
   };
 
   // Записи songbook.songs, що належать заданому розділу, у порядку відображення
@@ -324,21 +571,55 @@ const SongbookDetail: React.FC = () => {
     }
   };
 
-  // Перший таб — пісні без розділу, далі конкретний розділ
-  const getFilteredSongs = (): Song[] => {
+  // Усі пісні, згруповані по розділах: спершу «Без розділу», далі розділи
+  // за алфавітом (той самий порядок, що й у навігації). Показуємо завжди все.
+  const buildGroups = (): SongGroup[] => {
     if (!songbook?.songs) return [];
 
-    const songs = songbook.songs
+    const all: Song[] = songbook.songs
       .map((s: any) => s.song ? { ...s.song, sectionId: s.section, _songbookEntry: s } : null)
       .filter(Boolean);
 
-    if (activeSection === NO_SECTION) {
-      return songs.filter((song: Song) => !song.sectionId);
+    // За потреби сортуємо пісні за назвою (в межах кожного розділу).
+    // Копіюємо масив, щоб не міняти вихідний порядок для drag&drop.
+    const orderSongs = (list: Song[]): Song[] =>
+      sortAlpha
+        ? [...list].sort((a, b) =>
+            (a.title || '').localeCompare(b.title || '', 'uk', { sensitivity: 'base' })
+          )
+        : list;
+
+    const groups: SongGroup[] = [];
+
+    groups.push({
+      id: NO_SECTION,
+      sectionId: null,
+      name: 'Без розділу',
+      icon: 'inbox',
+      songs: orderSongs(all.filter((song) => !song.sectionId))
+    });
+
+    const sortedSections = [...(songbook.sections || [])].sort(
+      (a: any, b: any) => a.name.localeCompare(b.name, 'uk')
+    );
+
+    for (const section of sortedSections) {
+      const secId = section._id?.toString();
+      if (!secId) continue;
+      groups.push({
+        id: secId,
+        sectionId: secId,
+        name: section.name,
+        icon: 'folder',
+        songs: orderSongs(
+          all.filter(
+            (song) => song.sectionId && song.sectionId.toString() === secId
+          )
+        )
+      });
     }
 
-    return songs.filter((song: Song) =>
-      song.sectionId && song.sectionId.toString() === activeSection
-    );
+    return groups;
   };
 
   const isOwner = () => {
@@ -486,7 +767,8 @@ const SongbookDetail: React.FC = () => {
     );
   }
 
-  const filteredSongs = getFilteredSongs();
+  const groups = buildGroups();
+  const hasSections = !!(songbook.sections && songbook.sections.length > 0);
   const userCanEdit = canEdit();
 
   return (
@@ -501,20 +783,30 @@ const SongbookDetail: React.FC = () => {
       />
 
       <div className="songbook-content">
-        {songbook.sections && songbook.sections.length > 0 && (
-          <SectionsNavigation
-            sections={songbook.sections}
-            activeSection={activeSection}
-            songbook={songbook}
-            dragOverSection={drag.sectionDropTarget}
-            onSectionClick={setActiveSection}
-            isDragging={drag.isDragging}
-          />
+        {hasSections && (
+          <div
+            className="sections-nav-sticky"
+            ref={navRef}
+            style={{ top: headerHeight }}
+          >
+            <SectionsNavigation
+              sections={songbook.sections}
+              activeSection={activeSection}
+              songbook={songbook}
+              dragOverSection={drag.sectionDropTarget}
+              onSectionClick={handleSectionClick}
+              isDragging={drag.isDragging}
+              sortAlpha={sortAlpha}
+              onToggleSort={userCanEdit ? handleToggleSort : undefined}
+            />
+          </div>
         )}
 
         <SongsList
-          songs={filteredSongs}
-          activeSection={activeSection}
+          groups={groups}
+          showGroupHeaders={hasSections}
+          stickyTop={headerHeight + navHeight}
+          dragOverSection={drag.sectionDropTarget}
           draggedSong={drag.draggedSong as any}
           dropTarget={drag.songDropTarget}
           canEdit={userCanEdit}
@@ -523,6 +815,7 @@ const SongbookDetail: React.FC = () => {
           leavingSongIds={leavingSongIds}
           totalSongs={songbook.songs?.length || 0}
           onShowAddSongs={() => setShowAddSongs(true)}
+          onRegisterGroupRef={registerGroupRef}
           onDragHandleDown={(e, song) =>
             drag.beginDrag(
               { _id: song._id, title: song.title, sectionId: song.sectionId ?? null },
@@ -539,6 +832,14 @@ const SongbookDetail: React.FC = () => {
       {moveNotice && createPortal(
         <div className="song-move-toast" role="status">{moveNotice}</div>,
         document.body
+      )}
+
+      {songUndo && (
+        <UndoToast
+          message={songUndo.message}
+          visible={songUndoVisible}
+          onUndo={handleUndoRemoveSong}
+        />
       )}
 
       {/* Привид пісні за курсором/пальцем — тільки під час перетягування.

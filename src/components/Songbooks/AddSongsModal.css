@@ -167,17 +167,15 @@
 /* Mobile */
 @media (max-width: 768px) {
   .modal-overlay {
-    padding: 0;
+    padding: 12px;
+    padding-top: max(12px, env(safe-area-inset-top)); /* Safe Area для iOS */
+    padding-bottom: max(12px, env(safe-area-inset-bottom)); /* Safe Area для iOS */
   }
 
   .add-songs-modal {
-    max-height: 100vh; /* Fallback для старих браузерів */
-    max-height: 100dvh; /* Dynamic viewport height для iOS */
-    max-height: 100svh; /* Small viewport height для Android */
-    height: 100vh; /* Fallback для старих браузерів */
-    height: 100dvh; /* Dynamic viewport height для iOS */
-    height: 100svh; /* Small viewport height для Android */
-    border-radius: 0;
+    max-height: 100%;
+    height: auto;
+    border-radius: 16px;
     max-width: 100%;
   }
 

@@ -104,6 +104,14 @@ const songbookSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  // Як відображати пісні в межах кожного розділу:
+  //  'manual' — ручний порядок (drag&drop),
+  //  'alpha'  — за алфавітом (назва пісні)
+  songSort: {
+    type: String,
+    enum: ['manual', 'alpha'],
+    default: 'manual'
+  },
   sections: [sectionSchema],
   songs: [songbookSongSchema],
   sharedWith: [{

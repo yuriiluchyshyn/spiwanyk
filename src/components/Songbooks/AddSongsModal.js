@@ -4,7 +4,7 @@ import { FiX, FiMusic } from 'react-icons/fi';
 import SongBrowser from '../Songs/SongBrowser';
 import './AddSongsModal.css';
 
-const AddSongsModal = ({ songbook, isOpen, onClose, onSongAdded, embedded = false }) => {
+const AddSongsModal = ({ songbook, isOpen, onClose, onSongAdded, onSongRemoved = null, embedded = false, sessionOnly = false }) => {
   const [addingSongs, setAddingSongs] = useState(new Set());
   const [addedSongs, setAddedSongs] = useState(new Set());
   const [removedSongs, setRemovedSongs] = useState(new Set());
@@ -39,8 +39,11 @@ const AddSongsModal = ({ songbook, isOpen, onClose, onSongAdded, embedded = fals
     setAddingSongs(prev => new Set([...prev, song._id]));
 
     try {
-      const sectionIdToSend = selectedSection && selectedSection.trim() ? selectedSection : undefined;
-      await songbooksAPI.addSong(songbook._id, song._id, sectionIdToSend);
+      // sessionOnly: зміни діють лише в межах сесії, у базу не зберігаємо.
+      if (!sessionOnly) {
+        const sectionIdToSend = selectedSection && selectedSection.trim() ? selectedSection : undefined;
+        await songbooksAPI.addSong(songbook._id, song._id, sectionIdToSend);
+      }
 
       setAddedSongs(prev => new Set([...prev, song._id]));
       setRemovedSongs(prev => {
@@ -80,7 +83,10 @@ const AddSongsModal = ({ songbook, isOpen, onClose, onSongAdded, embedded = fals
     setRemovingSongs(prev => new Set([...prev, song._id]));
 
     try {
-      await songbooksAPI.removeSong(songbook._id, song._id);
+      // sessionOnly: зміни діють лише в межах сесії, у базу не зберігаємо.
+      if (!sessionOnly) {
+        await songbooksAPI.removeSong(songbook._id, song._id);
+      }
 
       setRemovedSongs(prev => new Set([...prev, song._id]));
       setAddedSongs(prev => {
@@ -89,7 +95,9 @@ const AddSongsModal = ({ songbook, isOpen, onClose, onSongAdded, embedded = fals
         return newSet;
       });
 
-      if (onSongAdded) {
+      if (sessionOnly) {
+        if (onSongRemoved) onSongRemoved(song);
+      } else if (onSongAdded) {
         onSongAdded(null, null); // trigger refresh
       }
     } catch (error) {

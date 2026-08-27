@@ -1,6 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import { FiMove, FiTrash2, FiFolder, FiCheck, FiChevronDown, FiYoutube } from 'react-icons/fi';
+import React, { useState, useRef, useLayoutEffect } from 'react';
+import { FiMove, FiChevronDown, FiYoutube } from 'react-icons/fi';
 import { FaGuitar } from 'react-icons/fa';
 // FormattedSong is plain JS
 // @ts-ignore
@@ -67,9 +66,10 @@ const songHasChords = (song: Song): boolean => {
   return false;
 };
 
-// Свайп-видалення (мобільні): ширина відкритого стану та пороги
-const SWIPE_OPEN = 88;       // наскільки відкривається кнопка видалення
-const SWIPE_DELETE_NOW = 180; // свайп далі за цей поріг — видаляємо одразу
+// Свайп справа наліво (мобільні): поріг видалення та максимальний зсув.
+// Видалення відбувається одразу (з можливістю undo), без окремої кнопки.
+const SWIPE_DELETE_THRESHOLD = 80;
+const SWIPE_MAX = 160;
 
 const SongItem: React.FC<SongItemProps> = ({
   song,
@@ -78,15 +78,12 @@ const SongItem: React.FC<SongItemProps> = ({
   isLeaving = false,
   dropPosition,
   canEdit,
-  sections = [],
   isExpanded,
   onDragHandleDown,
   onToggleExpand,
   onRegisterRef,
-  onRemoveSong,
-  onMoveToSection
+  onRemoveSong
 }) => {
-  const [showMoveMenu, setShowMoveMenu] = useState(false);
   const [showChords, setShowChords] = useState(false);
 
   // ---- Свайп-видалення ----
@@ -98,32 +95,69 @@ const SongItem: React.FC<SongItemProps> = ({
   const swipeActiveRef = useRef(false);
   const suppressClickRef = useRef(false);
 
+  // ---- Анімація зникнення рядка (як у BookView) ----
+  // Заміряємо реальну висоту, потім плавно від'їжджаємо вліво, згасаємо і
+  // згортаємо висоту до нуля — список плавно змикається.
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const [leaveMaxH, setLeaveMaxH] = useState<number | null>(null);
+  const [leaveCollapsed, setLeaveCollapsed] = useState(false);
+
+  const setRootRef = (el: HTMLDivElement | null) => {
+    rootRef.current = el;
+    onRegisterRef?.(song._id, el);
+  };
+
+  useLayoutEffect(() => {
+    if (!isLeaving) {
+      setLeaveMaxH(null);
+      setLeaveCollapsed(false);
+      return;
+    }
+    const el = rootRef.current;
+    const h = el ? el.scrollHeight : 0;
+    setLeaveMaxH(h); // фіксуємо стартову висоту
+    const raf = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setLeaveMaxH(0);
+        setLeaveCollapsed(true);
+      });
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [isLeaving]);
+
+  const prefersReducedMotion =
+    typeof window !== 'undefined' &&
+    window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const leaveStyle: React.CSSProperties | undefined = isLeaving
+    ? {
+        maxHeight: leaveMaxH == null ? undefined : leaveMaxH,
+        opacity: leaveCollapsed ? 0 : 1,
+        transform:
+          leaveCollapsed && !prefersReducedMotion
+            ? 'translateX(-100%)'
+            : 'translateX(0)',
+        overflow: 'hidden',
+        pointerEvents: 'none',
+        transition:
+          'max-height 0.4s ease, opacity 0.34s ease, transform 0.4s ease',
+      }
+    : undefined;
+
   const setSwipe = (v: number) => {
     swipeXRef.current = v;
     setSwipeX(v);
   };
 
   const currentSectionId = song.sectionId ? song.sectionId.toString() : null;
-  const hasSections = sections.length > 0;
   const hasChords = songHasChords(song);
-
-  // Розділи в меню переміщення — завжди за алфавітом
-  const sortedSections = React.useMemo(
-    () => [...sections].sort((a, b) => a.name.localeCompare(b.name, 'uk')),
-    [sections]
-  );
 
   const dropClass = dropPosition === 'before'
     ? 'drop-before'
     : dropPosition === 'after'
       ? 'drop-after'
       : '';
-
-  const handleMove = (sectionId: string | null) => {
-    setShowMoveMenu(false);
-    if (currentSectionId === sectionId) return;
-    onMoveToSection?.(song, sectionId);
-  };
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (!canEdit) return;
@@ -157,7 +191,7 @@ const SongItem: React.FC<SongItemProps> = ({
 
     let next = swipeBaseRef.current + dx;
     if (next > 0) next = 0;
-    if (next < -SWIPE_DELETE_NOW) next = -SWIPE_DELETE_NOW;
+    if (next < -SWIPE_MAX) next = -SWIPE_MAX;
     setSwipe(next);
   };
 
@@ -171,52 +205,31 @@ const SongItem: React.FC<SongItemProps> = ({
     setTimeout(() => { suppressClickRef.current = false; }, 60);
 
     const x = swipeXRef.current;
-    if (x <= -SWIPE_DELETE_NOW + 1) {
+    // Свайп далі за поріг — видаляємо (parent програє анімацію + показує undo)
+    if (x < -SWIPE_DELETE_THRESHOLD) {
       setSwipe(0);
       onRemoveSong(song._id);
-    } else if (x <= -(SWIPE_OPEN / 2)) {
-      setSwipe(-SWIPE_OPEN);
     } else {
+      // Інакше — повертаємо рядок на місце
       setSwipe(0);
     }
   };
 
   const handleRowClick = () => {
     if (suppressClickRef.current) return;
-    // Якщо рядок відкритий свайпом — перший тап закриває його
-    if (swipeXRef.current !== 0) {
-      setSwipe(0);
-      return;
-    }
     onToggleExpand(song);
   };
 
   return (
     <div
-      ref={(el) => onRegisterRef?.(song._id, el)}
+      ref={setRootRef}
       className={`song-item ${isExpanded ? 'is-expanded' : ''} ${isDragging ? 'dragging' : ''} ${isLeaving ? 'is-leaving' : ''} ${swipeX < 0 ? 'is-swiped' : ''} ${dropClass}`}
       data-song-row=""
       data-song-id={song._id}
       data-section-id={currentSectionId || 'none'}
+      style={leaveStyle}
     >
       <div className="song-item-swipe">
-        {canEdit && (
-          <button
-            type="button"
-            className="song-swipe-delete"
-            aria-label="Видалити зі співаника"
-            tabIndex={-1}
-            onClick={(e) => {
-              e.stopPropagation();
-              setSwipe(0);
-              onRemoveSong(song._id);
-            }}
-          >
-            <FiTrash2 />
-            <span>Видалити</span>
-          </button>
-        )}
-
         <div
           className="song-item-row"
           style={{
@@ -264,57 +277,6 @@ const SongItem: React.FC<SongItemProps> = ({
                 onClick={(e) => e.preventDefault()}
               >
                 <FiMove />
-              </button>
-            )}
-            {canEdit && hasSections && onMoveToSection && (
-              <div className="move-wrapper">
-                <button
-                  className={`action-btn move ${showMoveMenu ? 'active' : ''}`}
-                  title="Перемістити в розділ"
-                  onClick={() => setShowMoveMenu(prev => !prev)}
-                >
-                  <FiFolder />
-                </button>
-                {showMoveMenu && createPortal(
-                  <>
-                    <div
-                      className="move-menu-backdrop"
-                      onClick={() => setShowMoveMenu(false)}
-                    />
-                    <div className="move-menu" role="menu">
-                      <div className="move-menu-title">Перемістити в розділ</div>
-                      <button
-                        className={`move-menu-item ${!currentSectionId ? 'current' : ''}`}
-                        onClick={() => handleMove(null)}
-                      >
-                        <span>Без розділу</span>
-                        {!currentSectionId && <FiCheck className="move-menu-check" />}
-                      </button>
-                      {sortedSections.map(section => (
-                        <button
-                          key={section._id}
-                          className={`move-menu-item ${currentSectionId === section._id ? 'current' : ''}`}
-                          onClick={() => handleMove(section._id)}
-                        >
-                          <span>{section.name}</span>
-                          {currentSectionId === section._id && (
-                            <FiCheck className="move-menu-check" />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </>,
-                  document.body
-                )}
-              </div>
-            )}
-            {canEdit && (
-              <button
-                onClick={() => onRemoveSong(song._id)}
-                className="action-btn remove"
-                title="Видалити зі співаника"
-              >
-                <FiTrash2 />
               </button>
             )}
             <button

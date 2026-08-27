@@ -83,6 +83,7 @@
   width: 34px;
   height: 34px;
   flex-shrink: 0;
+  margin-left: auto;
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: rgba(255, 255, 255, 0.1);
@@ -179,7 +180,7 @@
   flex: 1;
   min-width: 0;
   overflow-y: auto;
-  padding: 1.25rem 1.5rem 2rem;
+  padding: 1.5rem 1.5rem 2rem;
   scroll-behavior: smooth;
   scrollbar-width: thin;
   scrollbar-color: #c4a882 transparent;
@@ -548,7 +549,7 @@
   }
 
   .bv-scroll {
-    padding: 1rem 0.85rem 1.25rem;
+    padding: 1rem 1.25rem 1.25rem;
   }
 
   .bv-song-row {
@@ -630,6 +631,12 @@
 
 .bv-song.swiping {
   z-index: 10;
+}
+
+/* Рядок під час анімації видалення свайпом — не реагує на дотики */
+.bv-song.is-leaving {
+  pointer-events: none;
+  z-index: 1;
 }
 
 .bv-swipe-indicator {
@@ -833,4 +840,97 @@
 
 .now-singing-bar.bv-singing:empty {
   display: none;
+}
+
+/* ===== Алфавітний індекс (лише мобільна версія) ===== */
+.bv-alpha-index {
+  display: none;
+}
+
+.bv-alpha-bubble {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  /* bv-body стає контейнером для абсолютно позиційованих індексу та бульбашки */
+  .bv-body {
+    position: relative;
+  }
+
+  .bv-alpha-index {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 25%;
+    width: 20px;
+    padding: 4px 2px;
+    z-index: 30;
+    background: transparent;
+    /* Не даємо сторінці скролитись під час свайпу по індексу */
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .bv-alpha-letter {
+    font-family: 'Georgia', serif;
+    font-size: 0.6rem;
+    font-weight: 700;
+    line-height: 1.05;
+    color: #8b5e34;
+    transition: transform 0.12s ease, color 0.12s ease;
+    pointer-events: none;
+  }
+
+  .bv-alpha-letter.active {
+    transform: scale(2.1);
+    color: #d2691e;
+  }
+
+  /* Велика літера в центрі, поки палець тримає індекс */
+  .bv-alpha-bubble {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 96px;
+    height: 96px;
+    border-radius: 22px;
+    background: rgba(90, 48, 24, 0.92);
+    color: #ffe8c8;
+    font-family: 'Georgia', serif;
+    font-size: 3rem;
+    font-weight: 700;
+    z-index: 40;
+    pointer-events: none;
+    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.4);
+    animation: bv-alpha-pop 0.12s ease;
+  }
+}
+
+@keyframes bv-alpha-pop {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.85); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+.night-mode .bv-alpha-letter {
+  color: #b89870;
+}
+
+.night-mode .bv-alpha-letter.active {
+  color: #e8a866;
+}
+
+.night-mode .bv-alpha-bubble {
+  background: rgba(40, 28, 18, 0.95);
+  color: #e8c9a0;
 }

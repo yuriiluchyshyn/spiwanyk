@@ -47,6 +47,11 @@ const update = asyncHandler(async (req, res) => {
   res.json({ message: 'Співаник оновлено', songbook });
 });
 
+const setSongSort = asyncHandler(async (req, res) => {
+  const songbook = await songbookService.setSongSort(req.params.id, req.body.sort, req.user);
+  res.json({ message: 'Сортування збережено', songbook });
+});
+
 const remove = asyncHandler(async (req, res) => {
   await songbookService.remove(req.params.id, req.user);
   res.json({ message: 'Співаник видалено' });
@@ -139,6 +144,7 @@ module.exports = {
   getById,
   create,
   update,
+  setSongSort,
   remove,
   addSong,
   removeSong,

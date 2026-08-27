@@ -10,7 +10,7 @@
 .songbook-header-top {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.75rem;
   margin-bottom: 0.75rem;
 }
@@ -36,6 +36,8 @@
 }
 
 .songbook-info {
+  flex: 1;
+  min-width: 0;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;

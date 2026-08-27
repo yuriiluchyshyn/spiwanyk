@@ -298,6 +298,20 @@ const removeSong = async (id, songId, user) => {
   return songbook.populate('songs.song', 'title author');
 };
 
+const setSongSort = async (id, sort, user) => {
+  const normalized = sort === 'alpha' ? 'alpha' : 'manual';
+
+  const songbook = await loadActive(id);
+  requireEditAccess(songbook, user);
+
+  songbook.songSort = normalized;
+  await songbook.save();
+
+  await songbook.populate('owner', 'email');
+  await songbook.populate('songs.song', 'title author');
+  return songbook;
+};
+
 const reorderSongs = async (id, { sectionId, orderedSongIds }, user) => {
   const normalizedSectionId = sectionId && sectionId !== '' ? sectionId : null;
 
@@ -523,6 +537,7 @@ module.exports = {
   getById,
   create,
   update,
+  setSongSort,
   remove,
   addSong,
   removeSong,

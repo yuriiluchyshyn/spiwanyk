@@ -116,7 +116,7 @@ const SongCard = ({ song, isExpanded, onToggleExpand, onAddSong, isAdding, isAdd
       
       <div className="song-card-header" onClick={() => onToggleExpand(song._id)}>
         <div className="song-card-info">
-          <h3 className="song-title">{song.title}</h3>
+          <h2 className="song-title">{song.title}</h2>
           {song.author && <span className="song-author">{song.author}</span>}
           
           {(song.metadata?.words || song.metadata?.music || song.metadata?.performer) && (
@@ -287,7 +287,7 @@ const SongBrowser = ({ onAddSong, addingSongs, addedSongs, excludeSongIds, compa
         {filteredSongs.length === 0 && (
           <div className="no-results">
             <FiMusic className="no-results-icon" />
-            <h3>Пісні не знайдено</h3>
+            <h2>Пісні не знайдено</h2>
           </div>
         )}
       </div>
@@ -299,6 +299,7 @@ const SongBrowser = ({ onAddSong, addingSongs, addedSongs, excludeSongIds, compa
 
   return (
     <div className={`song-list ${compact ? 'compact' : ''}`}>
+      <h1 className="song-list-heading">Пісні</h1>
       <div className="search-bar">
         <FiSearch className="search-icon" />
         <input
@@ -345,7 +346,7 @@ const SongBrowser = ({ onAddSong, addingSongs, addedSongs, excludeSongIds, compa
               >
                 <span className="category-icon">{category.icon}</span>
                 <div className="category-info">
-                  <h3>{category.name}</h3>
+                  <h2>{category.name}</h2>
                   <span className="category-count">{count}</span>
                 </div>
               </div>

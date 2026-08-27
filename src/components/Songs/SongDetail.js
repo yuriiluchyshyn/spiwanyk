@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { songsAPI } from '../../services/api';
 import { FiArrowLeft, FiYoutube, FiMusic } from 'react-icons/fi';
 import FormattedSong from './FormattedSong';
+import Seo from '../Common/Seo';
 import './SongDetail.css';
 
 const SongDetail = () => {
@@ -43,8 +44,16 @@ const SongDetail = () => {
     );
   }
 
+  const seoDescription = `${song.title}${song.author ? ` — ${song.author}` : ''}. Слова та акорди пісні на сайті "Давай співати".`;
+
   return (
     <div className="song-detail">
+      <Seo
+        title={song.author ? `${song.title} — ${song.author}` : song.title}
+        description={seoDescription}
+        path={`/songs/${id}`}
+        type="article"
+      />
       <div className="detail-top">
         <Link to="/songs" className="back-link"><FiArrowLeft /></Link>
         <div className="detail-title">

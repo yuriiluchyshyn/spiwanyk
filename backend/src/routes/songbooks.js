@@ -29,6 +29,7 @@ router.get('/nearby', auth, nearbySongbooksRules, handleValidation, songbookCont
 router.get('/:id', optionalAuth, songbookController.getById);
 router.post('/', auth, createSongbookRules, handleValidation, songbookController.create);
 router.put('/:id', auth, updateSongbookRules, handleValidation, songbookController.update);
+router.put('/:id/song-sort', auth, songbookController.setSongSort);
 router.delete('/:id', auth, songbookController.remove);
 
 // --- Songs within a songbook ---

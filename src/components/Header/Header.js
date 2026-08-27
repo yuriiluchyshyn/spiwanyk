@@ -1,26 +1,43 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { FiMusic, FiUser, FiLogOut, FiHome, FiSettings } from 'react-icons/fi';
+import { FiMusic, FiUser, FiLogOut, FiHome, FiSettings, FiArrowLeft } from 'react-icons/fi';
 import NowSingingBar from '../NowSinging/NowSingingBar';
 import './Header.css';
 
 const Header = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = () => {
     logout();
     navigate('/');
   };
 
+  // Кнопка "Назад" не потрібна на головній та сторінці входу.
+  const canGoBack = location.pathname !== '/' && location.pathname !== '/login';
+
   return (
     <header className="header">
       <div className="header-content">
-        <Link to="/" className="logo">
-          <FiMusic />
-          <span>Давай співати</span>
-        </Link>
+        <div className="header-left">
+          <Link to="/" className="logo">
+            <FiMusic />
+            <span>Давай співати</span>
+          </Link>
+          {canGoBack && (
+            <button
+              type="button"
+              className="back-btn"
+              onClick={() => navigate(-1)}
+              title="Назад"
+              aria-label="Повернутися на попередню сторінку"
+            >
+              <FiArrowLeft />
+            </button>
+          )}
+        </div>
         
         <nav className="nav">
           {user ? (

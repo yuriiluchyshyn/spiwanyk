@@ -1,0 +1,15 @@
+# robots.txt для "Давай співати"
+User-agent: *
+Allow: /
+
+# Системні / приватні сторінки — не індексувати
+Disallow: /login
+Disallow: /settings
+Disallow: /admin-songs-panel
+
+# Внутрішній пошук та службові параметри
+Disallow: /*?search=
+Disallow: /*?q=
+
+# Карта сайту
+Sitemap: https://spivanyk.yluch.app/sitemap.xml

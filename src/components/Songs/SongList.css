@@ -5,6 +5,13 @@
   animation: fadeIn 0.4s ease-out;
 }
 
+.song-list-heading {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--dark-brown);
+  margin: 0 0 1rem;
+}
+
 /* Search */
 .search-bar {
   position: relative;

@@ -5,6 +5,7 @@ import { songbooksAPI } from '../../services/api';
 import { FiPlus, FiMapPin, FiGlobe, FiEdit, FiUsers } from 'react-icons/fi';
 import CreateSongbookModal from '../Songbooks/CreateSongbookModal';
 import MusicalNoteLoader from '../Common/MusicalNoteLoader';
+import Seo from '../Common/Seo';
 import { useNowSinging } from '../../contexts/NowSingingContext';
 import './Home.css';
 
@@ -265,6 +266,11 @@ const Home = () => {
   if (!user) {
     return (
       <div className="home-guest">
+        <Seo
+          title="Збірка українських пісень з акордами"
+          description="Давай співати — колекція українських пісень зі словами та акордами. Створюйте власні співаники, діліться ними та співайте разом."
+          path="/"
+        />
         <div className="hero">
           <div className="hero-fire">🔥</div>
           <h1>Давай співати</h1>
@@ -277,6 +283,11 @@ const Home = () => {
 
   return (
     <div className="home">
+      <Seo
+        title="Збірка українських пісень з акордами"
+        description="Давай співати — колекція українських пісень зі словами та акордами. Створюйте власні співаники, діліться ними та співайте разом."
+        path="/"
+      />
       <section className="section" id="my-songbooks">
         <div className="sec-head">
           <h2>📚 Мої співаники</h2>

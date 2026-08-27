@@ -1,9 +1,41 @@
 .songs-list {
   background: white;
   border-radius: 0 0 14px 14px;
-  overflow: hidden;
+  /* overflow: visible — інакше position: sticky у заголовках розділів не працює */
+  overflow: visible;
 }
 
 .songs-list .song-item:last-child {
   border-bottom: none;
+}
+
+/* ===== Групи (розділи) у суцільному списку ===== */
+.songs-group {
+  display: block;
+}
+
+/* Заголовок розділу — просто роздільник між групами пісень.
+   Непрозорий фон потрібен, бо він прилипає зверху під час прокрутки. */
+.songs-group-header {
+  height: 10px;
+  background: #ffffff;
+  border-bottom: 2px solid rgba(196, 168, 130, 0.35);
+  /* Прилипає до верху одразу під липкою навігацією (top задається інлайн) */
+  position: sticky;
+  top: 0;
+  z-index: 15;
+}
+
+/* Підсвітка роздільника як цілі перетягування */
+.songs-group-header.drag-over {
+  background: linear-gradient(135deg, var(--fire-orange), var(--warm-amber));
+  border-color: var(--fire-orange);
+}
+
+.songs-group-empty {
+  padding: 1rem 1.1rem;
+  color: var(--stone-gray);
+  font-size: 0.85rem;
+  font-style: italic;
+  background: rgba(196, 168, 130, 0.03);
 }

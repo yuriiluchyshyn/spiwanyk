@@ -5,6 +5,42 @@
   box-shadow: 0 2px 16px var(--card-shadow);
   border-bottom: 1px solid var(--guitar-wood);
   animation: fadeIn 0.3s ease-out;
+  /* Хедер завжди прикріплений до верху сторінки.
+     z-index нижче за модальні вікна (1000+), але вище за звичайний контент. */
+  position: sticky;
+  top: 0;
+  z-index: 900;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  color: var(--cream-white);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+}
+
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.back-btn:active {
+  transform: translateY(0);
 }
 
 .header-content {

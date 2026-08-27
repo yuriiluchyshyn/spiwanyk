@@ -12,6 +12,48 @@ import { useNowSinging } from '../../contexts/NowSingingContext';
 import { useSettings } from '../../contexts/SettingsContext';
 import './BookView.css';
 
+// Перша літера назви пісні для алфавітного індексу (у верхньому регістрі).
+// Нелітерні початки (цифри, лапки тощо) групуються під символом «#».
+const getFirstLetter = (title) => {
+  if (!title) return '#';
+  const ch = title.trim().charAt(0);
+  if (!ch) return '#';
+  const upper = ch.toLocaleUpperCase('uk');
+  return /[A-ZА-ЯІЇЄҐ]/i.test(upper) ? upper : '#';
+};
+
+// Локальна (в межах поточної сесії) зміна порядку пісень.
+// Працює тільки з масивом songbook.songs і НЕ звертається до бази.
+// Прибирає перетягнуту пісню, за потреби змінює її розділ і вставляє
+// на потрібну позицію, після чого перенумеровує order у цільовому розділі.
+const reorderSongsLocally = (songs, draggedId, targetSectionId, insertAt) => {
+  const getId = (s) => (s.song?._id || s.song)?.toString();
+  const dragKey = draggedId?.toString();
+  const dragged = songs.find((s) => getId(s) === dragKey);
+  if (!dragged) return songs;
+
+  const targetKey = targetSectionId ? targetSectionId.toString() : null;
+
+  const targetEntries = songs
+    .filter((s) => {
+      const sKey = s.section ? s.section.toString() : null;
+      return sKey === targetKey && getId(s) !== dragKey;
+    })
+    .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+  const movedEntry = { ...dragged, section: targetSectionId || null };
+  const idx = Math.max(0, Math.min(insertAt, targetEntries.length));
+  targetEntries.splice(idx, 0, movedEntry);
+  targetEntries.forEach((s, i) => { s.order = i; });
+
+  const others = songs.filter((s) => {
+    const sKey = s.section ? s.section.toString() : null;
+    return getId(s) !== dragKey && sKey !== targetKey;
+  });
+
+  return [...others, ...targetEntries];
+};
+
 // Компонент для пісні з свайп-функціональністю
 const SongItem = forwardRef(({
   song,
@@ -32,60 +74,124 @@ const SongItem = forwardRef(({
   onSetSingSong,
   onStopSinging
 }, ref) => {
-  const [touchStart, setTouchStart] = useState(null);
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isSwipeActive, setIsSwipeActive] = useState(false);
+  // Анімація зникнення рядка під час видалення свайпом
+  const [isLeaving, setIsLeaving] = useState(false);
+  const [collapseH, setCollapseH] = useState(null); // висота для плавного схлопування
 
-  const minSwipeDistance = 80; // Мінімальна відстань для свайпу
+  const touchStartRef = useRef(null); // { x, y }
+  const swipeDirRef = useRef(null);    // 'h' | 'v' — фіксуємо напрям жесту
+  const suppressClickRef = useRef(false); // не розгортати пісню після свайпу
+  const articleRef = useRef(null);
+
+  const minSwipeDistance = 80; // Мінімальна відстань для видалення
+  const maxSwipeDistance = 160;
+
+  // Прокидаємо DOM-вузол і у forwardRef батька, і у власний ref
+  const setRefs = (el) => {
+    articleRef.current = el;
+    if (typeof ref === 'function') ref(el);
+    else if (ref) ref.current = el;
+  };
+
+  // Запускаємо анімацію видалення: рядок від'їжджає вліво, згасає й
+  // схлопується по висоті — і лише після цього прибираємо його з даних.
+  const animateRemove = () => {
+    const el = articleRef.current;
+    const h = el ? el.offsetHeight : 0;
+    setIsSwipeActive(false);
+    setSwipeOffset(0);
+    setCollapseH(h); // фіксуємо поточну висоту
+    // Два кадри, щоб браузер зафіксував стартову висоту перед переходом у 0
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setIsLeaving(true);
+        setCollapseH(0);
+      });
+    });
+    setTimeout(() => onRemoveSong(song), 340);
+  };
 
   const onTouchStart = (e) => {
-    if (!canEdit) return;
-    
-    setTouchStart(e.targetTouches[0].clientX);
-    setIsSwipeActive(true);
+    if (!canEdit || isLeaving) return;
+    const t = e.targetTouches[0];
+    touchStartRef.current = { x: t.clientX, y: t.clientY };
+    swipeDirRef.current = null;
   };
 
   const onTouchMove = (e) => {
-    if (!canEdit || !touchStart || !isSwipeActive) return;
-    
-    const currentTouch = e.targetTouches[0].clientX;
-    const distance = currentTouch - touchStart;
-    
+    if (!canEdit || isLeaving || !touchStartRef.current) return;
+    const t = e.targetTouches[0];
+    const dx = t.clientX - touchStartRef.current.x;
+    const dy = t.clientY - touchStartRef.current.y;
+
+    // Визначаємо напрям один раз: вертикальний рух — це скрол, не свайп
+    if (!swipeDirRef.current) {
+      if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+      swipeDirRef.current = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
+      if (swipeDirRef.current === 'h') setIsSwipeActive(true);
+    }
+    if (swipeDirRef.current !== 'h') return;
+
     // Дозволяємо тільки свайп вліво (для видалення)
-    if (distance <= 0 && Math.abs(distance) <= 150) {
-      setSwipeOffset(distance);
+    let offset = Math.min(0, dx);
+    if (offset < -maxSwipeDistance) offset = -maxSwipeDistance;
+    setSwipeOffset(offset);
+  };
+
+  const onTouchEnd = () => {
+    if (!canEdit || isLeaving) return;
+    const wasHorizontal = swipeDirRef.current === 'h';
+    const shouldRemove = wasHorizontal && swipeOffset < -minSwipeDistance;
+    touchStartRef.current = null;
+    swipeDirRef.current = null;
+
+    // Після горизонтального жесту гасимо наступний клік, щоб пісня не
+    // розгорталась одразу після свайпу
+    if (wasHorizontal) {
+      suppressClickRef.current = true;
+      setTimeout(() => { suppressClickRef.current = false; }, 350);
+    }
+
+    if (shouldRemove) {
+      animateRemove();
+    } else {
+      setSwipeOffset(0);
+      setIsSwipeActive(false);
     }
   };
 
-  const onTouchEnd = (e) => {
-    if (!canEdit || !touchStart || !isSwipeActive) return;
-    
-    const touch = e.changedTouches[0];
-    const distance = touch.clientX - touchStart;
-    
-    // Повертаємо в нормальну позицію
-    setSwipeOffset(0);
-    setIsSwipeActive(false);
-    setTouchStart(null);
-    
-    // Якщо свайп вліво достатньо довгий - видаляємо пісню
-    if (distance < -minSwipeDistance) {
-      onRemoveSong(song); // Не передаємо event, щоб не було stopPropagation
-    }
+  const handleRowClick = () => {
+    if (suppressClickRef.current) return;
+    onToggleExpand(song._id);
   };
 
-  const itemStyle = {
-    transform: isSwipeActive ? `translateX(${swipeOffset}px)` : 'translateX(0)',
-    transition: isSwipeActive ? 'none' : 'transform 0.2s ease-out'
-  };
+  let itemStyle;
+  if (collapseH !== null) {
+    // Фаза видалення: одночасно від'їзд вліво, згасання і схлопування висоти
+    itemStyle = {
+      maxHeight: isLeaving ? 0 : collapseH,
+      opacity: isLeaving ? 0 : 1,
+      marginBottom: isLeaving ? 0 : undefined,
+      transform: isLeaving ? 'translateX(-100%)' : 'translateX(0)',
+      transition:
+        'max-height 0.34s ease, opacity 0.28s ease, transform 0.34s ease, margin 0.34s ease',
+    };
+  } else {
+    itemStyle = {
+      transform: isSwipeActive ? `translateX(${swipeOffset}px)` : 'translateX(0)',
+      transition: isSwipeActive ? 'none' : 'transform 0.2s ease-out',
+    };
+  }
 
   // Показуємо індикатор видалення при свайпі вліво
   const getSwipeIndicator = () => {
     if (!isSwipeActive || swipeOffset >= -30) return null;
-    
+
     return (
-      <div 
-        className="bv-swipe-indicator bv-swipe-remove" 
+      <div
+        className="bv-swipe-indicator bv-swipe-remove"
         style={{ opacity: Math.min(Math.abs(swipeOffset) / 100, 1) }}
       >
         <FiTrash2 /> Видалити
@@ -95,8 +201,8 @@ const SongItem = forwardRef(({
 
   return (
     <article
-      ref={ref}
-      className={`bv-song ${isExpanded ? 'is-expanded' : ''} ${isDragging ? 'is-dragging' : ''} ${dropClass} ${isSwipeActive ? 'swiping' : ''}`}
+      ref={setRefs}
+      className={`bv-song ${isExpanded ? 'is-expanded' : ''} ${isDragging ? 'is-dragging' : ''} ${dropClass} ${isSwipeActive ? 'swiping' : ''} ${isLeaving ? 'is-leaving' : ''}`}
       draggable={canEdit}
       onDragStart={canEdit ? (e) => onDragStart(e, song) : undefined}
       onDragOver={canEdit ? (e) => onDragOver(e, song) : undefined}
@@ -110,7 +216,7 @@ const SongItem = forwardRef(({
     >
       {getSwipeIndicator()}
       
-      <div className="bv-song-row" onClick={() => onToggleExpand(song._id)}>
+      <div className="bv-song-row" onClick={handleRowClick}>
         {canEdit && (
           <span className="bv-drag-handle" title="Перетягнути">
             <FiMove />
@@ -121,15 +227,6 @@ const SongItem = forwardRef(({
           {song.author && <span className="bv-song-author">{song.author}</span>}
         </div>
         <div className="bv-song-actions">
-          {canEdit && (
-            <button
-              className="bv-song-remove"
-              onClick={(e) => onRemoveSong(song, e)}
-              title="Видалити"
-            >
-              <FiTrash2 />
-            </button>
-          )}
           {currentSingSong === song._id ? (
             <button
               className={`bv-song-sing active ${singingIsMine ? 'mine' : 'by-other'}`}
@@ -207,9 +304,14 @@ const BookView = ({ onClose, songbookData, initialSingScrollSongId = null, scrol
   // Навігація по розділах (ліва колонка)
   const [activeGroup, setActiveGroup] = useState(null);
 
+  // Алфавітний індекс (лише мобільна версія)
+  const [indexLetter, setIndexLetter] = useState(null); // активна літера під пальцем
+  const [indexActive, setIndexActive] = useState(false); // чи торкається користувач індексу
+
   const scrollRef = useRef(null);
   const songRefs = useRef({});
   const sectionRefs = useRef({});
+  const alphaRef = useRef(null);
   // Зберігає позицію клікнутого рядка, щоб компенсувати зсув при згортанні/розгортанні
   const pendingAnchor = useRef(null);
 
@@ -415,6 +517,23 @@ const BookView = ({ onClose, songbookData, initialSingScrollSongId = null, scrol
 
   const flatSongs = useMemo(() => groupedSongs.flatMap((g) => g.songs), [groupedSongs]);
 
+  // ---- Алфавітний індекс: лише ті літери, на які є пісні ----
+  const alphaLetters = useMemo(() => {
+    const set = new Set();
+    flatSongs.forEach((s) => set.add(getFirstLetter(s.title)));
+    return [...set].sort((a, b) => a.localeCompare(b, 'uk'));
+  }, [flatSongs]);
+
+  // Перша пісня (у поточному порядку списку) для кожної літери — до неї скролимо.
+  const letterToSongId = useMemo(() => {
+    const map = {};
+    flatSongs.forEach((s) => {
+      const l = getFirstLetter(s.title);
+      if (!(l in map)) map[l] = s._id;
+    });
+    return map;
+  }, [flatSongs]);
+
   // Тримаємо мапу songId -> ключ розділу актуальною для автопрокрутки.
   useEffect(() => {
     const map = {};
@@ -591,25 +710,11 @@ const BookView = ({ onClose, songbookData, initialSingScrollSongId = null, scrol
       setExpandedSongId(null);
     }
 
-    // Запускаємо таймер на 10 секунд
-    const timeoutId = setTimeout(async () => {
-      try {
-        await songbooksAPI.removeSong(songbook._id, song._id);
-        // Анімація зникнення toast
-        setUndoVisible(false);
-        setTimeout(() => setUndoState(null), 300);
-      } catch (err) {
-        console.error('Error removing song:', err);
-        // Повертаємо пісню назад у разі помилки
-        const fresh = await songbooksAPI.getById(songbook._id);
-        setSongbook(fresh);
-        alert(
-          'Помилка видалення пісні: ' +
-            (err.response?.data?.message || err.message || 'невідома помилка')
-        );
-        setUndoVisible(false);
-        setTimeout(() => setUndoState(null), 300);
-      }
+    // Видалення діє ЛИШЕ в межах поточної сесії — у базу не зберігаємо.
+    // Через 10 секунд просто ховаємо toast (пісня лишається прихованою на сесію).
+    const timeoutId = setTimeout(() => {
+      setUndoVisible(false);
+      setTimeout(() => setUndoState(null), 300);
     }, 10000);
 
     // Зберігаємо стан для можливості відміни
@@ -698,7 +803,7 @@ const BookView = ({ onClose, songbookData, initialSingScrollSongId = null, scrol
     // Don't clear immediately - next dragover will set it
   };
 
-  const handleDrop = async (e, targetSong) => {
+  const handleDrop = (e, targetSong) => {
     e.preventDefault();
     if (!draggedSong || draggedSong._id === targetSong._id) {
       resetDrag();
@@ -733,14 +838,11 @@ const BookView = ({ onClose, songbookData, initialSingScrollSongId = null, scrol
 
     if (insertAt < 0) insertAt = 0;
 
-    try {
-      await songbooksAPI.moveSong(songbook._id, draggedSong._id, targetSectionId, insertAt);
-      const fresh = await songbooksAPI.getById(songbook._id);
-      setSongbook(fresh);
-    } catch (err) {
-      console.error('Error reordering song:', err);
-      alert('Помилка зміни порядку: ' + (err.response?.data?.message || err.message));
-    }
+    // Зміна порядку діє ЛИШЕ в межах поточної сесії — у базу не зберігаємо.
+    setSongbook((prev) => ({
+      ...prev,
+      songs: reorderSongsLocally(prev.songs, draggedSong._id, targetSectionId, insertAt),
+    }));
 
     resetDrag();
   };
@@ -755,6 +857,43 @@ const BookView = ({ onClose, songbookData, initialSingScrollSongId = null, scrol
     setDragPosition(null);
   };
 
+  // ---- Алфавітний індекс (мобільний) ----
+  // Визначаємо літеру за вертикальним положенням пальця над смугою.
+  const letterFromTouchY = (clientY) => {
+    const strip = alphaRef.current;
+    if (!strip || alphaLetters.length === 0) return null;
+    const rect = strip.getBoundingClientRect();
+    const perLetter = rect.height / alphaLetters.length;
+    let idx = Math.floor((clientY - rect.top) / perLetter);
+    idx = Math.max(0, Math.min(alphaLetters.length - 1, idx));
+    return alphaLetters[idx];
+  };
+
+  const scrollToLetter = (letter) => {
+    const id = letterToSongId[letter];
+    if (id) scrollToSong(id);
+  };
+
+  const handleAlphaStart = (e) => {
+    setIndexActive(true);
+    const l = letterFromTouchY(e.touches[0].clientY);
+    if (l) setIndexLetter(l);
+  };
+
+  const handleAlphaMove = (e) => {
+    const l = letterFromTouchY(e.touches[0].clientY);
+    // Літера змінюється відповідно до напрямку руху пальця
+    if (l) setIndexLetter((prev) => (prev === l ? prev : l));
+  };
+
+  const handleAlphaEnd = () => {
+    // Як тільки палець відпущено — скролимо до відповідної пісні
+    if (indexLetter) scrollToLetter(indexLetter);
+    setIndexActive(false);
+    // Ховаємо збільшену літеру трохи згодом (плавне зникнення)
+    setTimeout(() => setIndexLetter(null), 250);
+  };
+
   const handleClose = () => {
     setIsClosing(true);
     setTimeout(() => {
@@ -767,54 +906,73 @@ const BookView = ({ onClose, songbookData, initialSingScrollSongId = null, scrol
   const openAddEnd = () => setAddMode('end');
   const openAddAfter = () => setAddMode('after');
 
-  const handleSongAdded = async (newSong) => {
-    try {
-      const fresh = await songbooksAPI.getById(songbook._id);
+  // Додавання пісні діє ЛИШЕ в межах поточної сесії — у базу не зберігаємо.
+  // AddSongsModal передає повний об'єкт пісні, тож будуємо запис локально.
+  const handleSongAdded = (newSong, sectionId) => {
+    if (!newSong?._id) return; // видалення обробляється окремо (onSongRemoved)
 
-      if (addMode === 'after' && expandedSongId && newSong?._id) {
-        const currentEntry = fresh.songs.find((s) => {
+    setSongbook((prev) => {
+      const already = prev.songs.some((s) => {
+        const sid = s.song?._id || s.song;
+        return sid?.toString() === newSong._id.toString();
+      });
+      if (already) return prev;
+
+      const targetSectionId = sectionId && sectionId.trim() ? sectionId : null;
+      const targetKey = targetSectionId ? targetSectionId.toString() : null;
+
+      const maxOrder = prev.songs
+        .filter((s) => {
+          const sKey = s.section ? s.section.toString() : null;
+          return sKey === targetKey;
+        })
+        .reduce((m, s) => Math.max(m, s.order || 0), -1);
+
+      const entry = { song: newSong, section: targetSectionId, order: maxOrder + 1 };
+      let songs = [...prev.songs, entry];
+
+      // "Додати після поточної" — ставимо одразу за розгорнутою піснею
+      // у її розділі (теж лише локально).
+      if (addMode === 'after' && expandedSongId) {
+        const currentEntry = prev.songs.find((s) => {
           const sid = s.song?._id || s.song;
           return sid?.toString() === expandedSongId.toString();
         });
 
         if (currentEntry) {
-          const targetSectionId = currentEntry.section || null;
-          const targetKey = targetSectionId ? targetSectionId.toString() : null;
-
-          const entries = fresh.songs
+          const secId = currentEntry.section || null;
+          const secKey = secId ? secId.toString() : null;
+          const secEntries = prev.songs
             .filter((s) => {
               const sKey = s.section ? s.section.toString() : null;
-              return sKey === targetKey;
-            })
-            .filter((s) => {
-              const sid = s.song?._id || s.song;
-              return sid?.toString() !== newSong._id.toString();
+              return sKey === secKey;
             })
             .sort((a, b) => (a.order || 0) - (b.order || 0));
-
-          const idxOfCurrent = entries.findIndex((s) => {
+          const idxOfCurrent = secEntries.findIndex((s) => {
             const sid = s.song?._id || s.song;
             return sid?.toString() === expandedSongId.toString();
           });
-
           if (idxOfCurrent !== -1) {
-            await songbooksAPI.moveSong(
-              songbook._id,
-              newSong._id,
-              targetSectionId,
-              idxOfCurrent + 1
-            );
-            const refreshed = await songbooksAPI.getById(songbook._id);
-            setSongbook(refreshed);
-            return;
+            songs = reorderSongsLocally(songs, newSong._id, secId, idxOfCurrent + 1);
           }
         }
       }
 
-      setSongbook(fresh);
-    } catch (e) {
-      console.error('Error finalizing add:', e);
-    }
+      return { ...prev, songs };
+    });
+  };
+
+  // Видалення пісні з панелі додавання — лише в межах поточної сесії.
+  const handleSongRemovedFromPanel = (song) => {
+    if (!song?._id) return;
+    setSongbook((prev) => ({
+      ...prev,
+      songs: prev.songs.filter((s) => {
+        const sid = s.song?._id || s.song;
+        return sid?.toString() !== song._id.toString();
+      }),
+    }));
+    if (expandedSongId === song._id) setExpandedSongId(null);
   };
 
   // Чи веду спів саме я (для кольору кнопки: зелений — мій, жовтий — чужий)
@@ -931,6 +1089,32 @@ const BookView = ({ onClose, songbookData, initialSingScrollSongId = null, scrol
             ))
           )}
           </div>
+
+          {/* Алфавітний індекс (лише мобільна версія) */}
+          {alphaLetters.length > 1 && (
+            <div
+              className="bv-alpha-index"
+              ref={alphaRef}
+              onTouchStart={handleAlphaStart}
+              onTouchMove={handleAlphaMove}
+              onTouchEnd={handleAlphaEnd}
+              onTouchCancel={handleAlphaEnd}
+            >
+              {alphaLetters.map((letter) => (
+                <span
+                  key={letter}
+                  className={`bv-alpha-letter ${indexLetter === letter ? 'active' : ''}`}
+                >
+                  {letter}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Збільшена літера під час дотику */}
+          {indexActive && indexLetter && (
+            <div className="bv-alpha-bubble">{indexLetter}</div>
+          )}
         </div>
 
         {/* Footer */}
@@ -968,10 +1152,12 @@ const BookView = ({ onClose, songbookData, initialSingScrollSongId = null, scrol
           <div className="bv-add-panel">
             <AddSongsModal
               embedded
+              sessionOnly
               songbook={songbook}
               isOpen={true}
               onClose={() => setAddMode(null)}
               onSongAdded={handleSongAdded}
+              onSongRemoved={handleSongRemovedFromPanel}
             />
           </div>
         )}

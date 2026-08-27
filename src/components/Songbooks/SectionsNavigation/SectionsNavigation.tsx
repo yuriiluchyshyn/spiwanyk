@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { FiFolder, FiInbox } from 'react-icons/fi';
+import { FaSortAlphaDown } from 'react-icons/fa';
 import './SectionsNavigation.css';
 
 interface Section {
@@ -16,6 +17,9 @@ interface SectionsNavigationProps {
   dragOverSection: string | null;
   isDragging?: boolean;
   onSectionClick: (sectionId: string) => void;
+  /** Активне сортування пісень за алфавітом у межах розділів */
+  sortAlpha?: boolean;
+  onToggleSort?: () => void;
 }
 
 export const NO_SECTION = 'none';
@@ -26,7 +30,9 @@ const SectionsNavigation: React.FC<SectionsNavigationProps> = ({
   songbook,
   dragOverSection,
   isDragging = false,
-  onSectionClick
+  onSectionClick,
+  sortAlpha = false,
+  onToggleSort
 }) => {
   const getSectionSongCount = (sectionId: string) =>
     songbook.songs?.filter(
@@ -72,6 +78,19 @@ const SectionsNavigation: React.FC<SectionsNavigationProps> = ({
           {section.name} ({getSectionSongCount(section._id)})
         </button>
       ))}
+
+      {onToggleSort && (
+        <button
+          type="button"
+          className={`section-sort-btn ${sortAlpha ? 'active' : ''}`}
+          onClick={onToggleSort}
+          title="Сортувати пісні за алфавітом у межах розділів"
+          aria-pressed={sortAlpha}
+        >
+          <FaSortAlphaDown className="section-btn-icon" />
+          А–Я
+        </button>
+      )}
     </div>
   );
 };

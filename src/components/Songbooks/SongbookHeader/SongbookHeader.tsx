@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { FiArrowLeft, FiMusic, FiUsers, FiLock, FiGlobe, FiMapPin } from 'react-icons/fi';
+import { FiMusic, FiUsers, FiLock, FiGlobe, FiMapPin } from 'react-icons/fi';
 import SongbookActions from '../SongbookActions/SongbookActions';
 import SongbookSettingsModal from '../SongbookSettingsModal/SongbookSettingsModal';
 import './SongbookHeader.css';
@@ -176,23 +175,8 @@ const SongbookHeader: React.FC<SongbookHeaderProps> = ({
   return (
     <div className="songbook-header">
       <div className="songbook-header-top">
-        <Link to="/my-songbooks" className="back-link" title="Назад до співаників">
-          <FiArrowLeft />
-        </Link>
-
-        <SongbookActions
-          canEdit={canEditSongbook()}
-          isOwner={isOwner()}
-          canManage={hasFullAccess()}
-          onShowAddSongs={onShowAddSongs}
-          onToggleSectionManager={onToggleSectionManager}
-          onDeleteSongbook={onDeleteSongbook}
-          onShowSettings={() => setShowSettingsModal(true)}
-        />
-      </div>
-
-      <div className="songbook-info">
-        <div className="songbook-title-section">
+        <div className="songbook-info">
+          <div className="songbook-title-section">
           <div className="songbook-title-row">
             <h1>
               <FiMusic className="sec-icon" />
@@ -231,7 +215,18 @@ const SongbookHeader: React.FC<SongbookHeaderProps> = ({
               )}
             </div>
           )}
+          </div>
         </div>
+
+        <SongbookActions
+          canEdit={canEditSongbook()}
+          isOwner={isOwner()}
+          canManage={hasFullAccess()}
+          onShowAddSongs={onShowAddSongs}
+          onToggleSectionManager={onToggleSectionManager}
+          onDeleteSongbook={onDeleteSongbook}
+          onShowSettings={() => setShowSettingsModal(true)}
+        />
       </div>
 
       {showSettingsModal && (
