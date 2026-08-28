@@ -398,9 +398,29 @@ function AdminPanel() {
   };
 
   // === Фільтрація та пагінація пісень ===
+  // Вибраний розділ разом з усіма підрозділами (щоб фільтр за батьківським
+  // розділом показував і пісні його дочірніх розділів).
+  const getCategoryWithDescendants = (categoryId) => {
+    const ids = new Set([categoryId]);
+    const stack = [categoryId];
+    while (stack.length) {
+      const current = stack.pop();
+      categories.forEach(c => {
+        if ((c.parentId || null) === current && !ids.has(c.id)) {
+          ids.add(c.id);
+          stack.push(c.id);
+        }
+      });
+    }
+    return ids;
+  };
+
   const normalizedSearch = songSearch.trim().toLowerCase();
+  const categoryFilterIds = songCategoryFilter
+    ? getCategoryWithDescendants(songCategoryFilter)
+    : null;
   const filteredSongs = songs.filter(song => {
-    if (songCategoryFilter && song.category !== songCategoryFilter) return false;
+    if (categoryFilterIds && !categoryFilterIds.has(song.category)) return false;
     if (songChordsFilter === 'with' && !song.hasChords) return false;
     if (songChordsFilter === 'without' && song.hasChords) return false;
     if (normalizedSearch) {

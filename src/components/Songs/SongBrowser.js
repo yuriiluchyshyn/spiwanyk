@@ -199,7 +199,7 @@ const SongBrowser = ({ onAddSong, addingSongs, addedSongs, excludeSongIds, compa
   const [songs, setSongs] = useState([]);
   const [categories, setCategories] = useState(defaultCategories);
   const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [currentCategoryId, setCurrentCategoryId] = useState(null); // null = корінь
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedSongId, setExpandedSongId] = useState(null);
 
@@ -229,26 +229,83 @@ const SongBrowser = ({ onAddSong, addingSongs, addedSongs, excludeSongIds, compa
     return songs.filter(s => !excludeSongIds.has(s._id));
   };
 
-  const getSongsByCategory = (categoryId) => {
-    return getVisibleSongs().filter(song => song.category === categoryId);
+  // Прямі підрозділи заданого рівня (parentId === parent). Порядок з бекенду
+  // (order) вже застосований під час завантаження.
+  const getChildCategories = (parentId) =>
+    categories.filter(c => (c.parentId || null) === (parentId || null));
+
+  // id категорії разом з усіма її нащадками (для підрахунку пісень у гілці).
+  const getDescendantIds = (categoryId) => {
+    const ids = [categoryId];
+    const stack = [categoryId];
+    while (stack.length) {
+      const current = stack.pop();
+      categories.forEach(c => {
+        if ((c.parentId || null) === current) {
+          ids.push(c.id);
+          stack.push(c.id);
+        }
+      });
+    }
+    return ids;
   };
 
-  const getFilteredSongs = () => {
-    let filtered = selectedCategory ? getSongsByCategory(selectedCategory) : getVisibleSongs();
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      filtered = filtered.filter(song =>
-        song.title.toLowerCase().includes(q) ||
-        song.lyrics?.toLowerCase().includes(q) ||
-        song.author?.toLowerCase().includes(q)
-      );
-    }
-    return filtered;
+  // Кількість пісень у розділі та всіх його підрозділах.
+  const getSongCount = (categoryId) => {
+    const ids = new Set(getDescendantIds(categoryId));
+    return getVisibleSongs().filter(song => ids.has(song.category)).length;
+  };
+
+  // Пісні, що належать безпосередньо цьому розділу (без підрозділів).
+  const getDirectSongs = (categoryId) =>
+    getVisibleSongs().filter(song => song.category === categoryId);
+
+  const getSearchResults = () => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return [];
+    return getVisibleSongs().filter(song =>
+      song.title.toLowerCase().includes(q) ||
+      song.lyrics?.toLowerCase().includes(q) ||
+      song.author?.toLowerCase().includes(q)
+    );
   };
 
   const handleToggleExpand = (songId) => {
     setExpandedSongId(expandedSongId === songId ? null : songId);
   };
+
+  // Заходимо на рівень нижче (у підрозділи або до пісень розділу).
+  // У повноекранному режимі додаємо запис в історію, щоб кнопка "Назад" у
+  // хедері піднімала рівнем вище (окремої кнопки "назад" тут не показуємо).
+  const openCategory = (categoryId) => {
+    setCurrentCategoryId(categoryId);
+    if (!compact) {
+      window.history.pushState({ songBrowserCategory: categoryId }, '');
+    }
+  };
+
+  // Піднятись на рівень вище (до батьківського розділу або в корінь).
+  const goUp = () => {
+    setCurrentCategoryId(prev => {
+      if (prev == null) return null;
+      const cat = categories.find(c => c.id === prev);
+      return cat?.parentId || null;
+    });
+  };
+
+  // У режимі сторінки кнопка "Назад" браузера/хедера піднімає на рівень вище.
+  useEffect(() => {
+    if (compact) return;
+    const handlePopState = () => {
+      setCurrentCategoryId(prev => {
+        if (prev == null) return null;
+        const cat = categories.find(c => c.id === prev);
+        return cat?.parentId || null;
+      });
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [compact, categories]);
 
   if (loading) {
     return (
@@ -259,49 +316,83 @@ const SongBrowser = ({ onAddSong, addingSongs, addedSongs, excludeSongIds, compa
     );
   }
 
-  if (selectedCategory) {
-    const category = categories.find(c => c.id === selectedCategory);
-    const filteredSongs = getFilteredSongs();
-    
+  const renderSongCard = (song) => (
+    <SongCard
+      key={song._id}
+      song={song}
+      isExpanded={expandedSongId === song._id}
+      onToggleExpand={handleToggleExpand}
+      onAddSong={onAddSong}
+      isAdding={addingSongs?.has(song._id)}
+      isAdded={addedSongs?.has(song._id)}
+    />
+  );
+
+  const renderCategoryCard = (category) => (
+    <div
+      key={category.id}
+      className="category-card"
+      onClick={() => openCategory(category.id)}
+      style={{ '--category-color': category.color }}
+    >
+      <span className="category-icon">{category.icon}</span>
+      <div className="category-info">
+        <h2>{category.name}</h2>
+        <span className="category-count">{getSongCount(category.id)}</span>
+      </div>
+    </div>
+  );
+
+  const isRoot = currentCategoryId == null;
+
+  // --- Вид розділу (заглиблений рівень): підрозділи цього рівня + пісні розділу ---
+  if (!isRoot) {
+    const category = categories.find(c => c.id === currentCategoryId);
+    const childCategories = getChildCategories(currentCategoryId);
+    const directSongs = getDirectSongs(currentCategoryId);
+
     return (
       <div className={`song-list ${compact ? 'compact' : ''}`}>
         <div className="category-header">
-          <button className="back-btn" onClick={() => { setSelectedCategory(null); }}>
-            <FiArrowLeft />
-          </button>
+          {compact && (
+            <button className="back-btn" onClick={goUp}>
+              <FiArrowLeft />
+            </button>
+          )}
           <FiMusic className="category-header-icon" />
           <div className="category-header-text">
-            <h1>{category.name}</h1>
-            <span className="song-count">{filteredSongs.length} пісень</span>
+            <h1>{category ? category.name : 'Розділ'}</h1>
+            <span className="song-count">
+              {getSongCount(currentCategoryId)} пісень
+            </span>
           </div>
         </div>
 
-        <div className="songs-grid">
-          {filteredSongs.map(song => (
-            <SongCard
-              key={song._id}
-              song={song}
-              isExpanded={expandedSongId === song._id}
-              onToggleExpand={handleToggleExpand}
-              onAddSong={onAddSong}
-              isAdding={addingSongs?.has(song._id)}
-              isAdded={addedSongs?.has(song._id)}
-            />
-          ))}
-        </div>
+        {childCategories.length > 0 && (
+          <div className="categories-grid">
+            {childCategories.map(renderCategoryCard)}
+          </div>
+        )}
 
-        {filteredSongs.length === 0 && (
+        {directSongs.length > 0 && (
+          <div className="songs-grid">
+            {directSongs.map(renderSongCard)}
+          </div>
+        )}
+
+        {childCategories.length === 0 && directSongs.length === 0 && (
           <div className="no-results">
             <FiMusic className="no-results-icon" />
-            <h2>Пісні не знайдено</h2>
+            <h2>Пісень поки немає</h2>
           </div>
         )}
       </div>
     );
   }
 
-  // Global search results (when searching from categories view)
-  const globalSearchResults = searchQuery.trim() ? getFilteredSongs() : null;
+  // --- Кореневий вид: пошук + розділи верхнього рівня ---
+  const searchResults = searchQuery.trim() ? getSearchResults() : null;
+  const rootCategories = getChildCategories(null);
 
   return (
     <div className={`song-list ${compact ? 'compact' : ''}`}>
@@ -316,23 +407,13 @@ const SongBrowser = ({ onAddSong, addingSongs, addedSongs, excludeSongIds, compa
         />
       </div>
 
-      {globalSearchResults ? (
+      {searchResults ? (
         <>
           <div className="songs-grid">
-            {globalSearchResults.map(song => (
-              <SongCard
-                key={song._id}
-                song={song}
-                isExpanded={expandedSongId === song._id}
-                onToggleExpand={handleToggleExpand}
-                onAddSong={onAddSong}
-                isAdding={addingSongs?.has(song._id)}
-                isAdded={addedSongs?.has(song._id)}
-              />
-            ))}
+            {searchResults.map(renderSongCard)}
           </div>
 
-          {globalSearchResults.length === 0 && (
+          {searchResults.length === 0 && (
             <div className="no-results">
               <FiMusic className="no-results-icon" />
               <h3>Пісні не знайдено</h3>
@@ -341,23 +422,7 @@ const SongBrowser = ({ onAddSong, addingSongs, addedSongs, excludeSongIds, compa
         </>
       ) : (
         <div className="categories-grid">
-          {categories.map(category => {
-            const count = getSongsByCategory(category.id).length;
-            return (
-              <div
-                key={category.id}
-                className="category-card"
-                onClick={() => setSelectedCategory(category.id)}
-                style={{ '--category-color': category.color }}
-              >
-                <span className="category-icon">{category.icon}</span>
-                <div className="category-info">
-                  <h2>{category.name}</h2>
-                  <span className="category-count">{count}</span>
-                </div>
-              </div>
-            );
-          })}
+          {rootCategories.map(renderCategoryCard)}
         </div>
       )}
     </div>
