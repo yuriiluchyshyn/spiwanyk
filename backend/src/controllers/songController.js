@@ -57,6 +57,26 @@ const adminDeleteById = asyncHandler(async (req, res) => {
   res.json({ message: 'Пісню видалено', song });
 });
 
+const adminUpdateCategory = asyncHandler(async (req, res) => {
+  const song = await songService.adminUpdateCategory(req.params.id, req.body.category);
+  res.json({ message: 'Категорію пісні оновлено', song });
+});
+
+const adminGetById = asyncHandler(async (req, res) => {
+  const song = await songService.adminGetById(req.params.id);
+  res.json({ song });
+});
+
+const adminCreate = asyncHandler(async (req, res) => {
+  const song = await songService.adminCreate(req.body);
+  res.status(201).json({ message: 'Пісню створено', song });
+});
+
+const adminUpdate = asyncHandler(async (req, res) => {
+  const song = await songService.adminUpdate(req.params.id, req.body);
+  res.json({ message: 'Пісню оновлено', song });
+});
+
 module.exports = {
   list,
   getPopular,
@@ -67,5 +87,9 @@ module.exports = {
   remove,
   adminList,
   adminDeleteAll,
-  adminDeleteById
+  adminDeleteById,
+  adminUpdateCategory,
+  adminGetById,
+  adminCreate,
+  adminUpdate
 };

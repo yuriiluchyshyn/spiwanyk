@@ -19,6 +19,70 @@ const getPublicCategories = async () => {
 
 const getLegacyMetaCategories = () => LEGACY_META_CATEGORIES;
 
+// Транслітерація українських літер у латиницю для генерації id (slug).
+const UA_TRANSLIT = {
+  а: 'a', б: 'b', в: 'v', г: 'h', ґ: 'g', д: 'd', е: 'e', є: 'ie', ж: 'zh',
+  з: 'z', и: 'y', і: 'i', ї: 'i', й: 'i', к: 'k', л: 'l', м: 'm', н: 'n',
+  о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'kh', ц: 'ts',
+  ч: 'ch', ш: 'sh', щ: 'shch', ь: '', ю: 'iu', я: 'ia', ъ: '', ы: 'y', э: 'e', ё: 'e'
+};
+
+const slugify = (text) => {
+  const slug = String(text || '')
+    .toLowerCase()
+    .split('')
+    .map((ch) => (Object.prototype.hasOwnProperty.call(UA_TRANSLIT, ch) ? UA_TRANSLIT[ch] : ch))
+    .join('')
+    .replace(/[^a-z0-9]+/g, '-') // все, крім латиниці/цифр → дефіс
+    .replace(/^-+|-+$/g, '')     // прибираємо дефіси по краях
+    .replace(/-{2,}/g, '-');     // стискаємо повтори дефісів
+  return slug;
+};
+
+// Порівняння назв за українським алфавітом (регістронезалежно).
+const nameCompare = (a, b) =>
+  (a || '').localeCompare(b || '', 'uk', { sensitivity: 'base' });
+
+/**
+ * Вставляє категорію на алфавітну позицію в межах її групи (той самий parentId)
+ * і перенумеровує order групи на 0..n. Наявний відносний порядок решти
+ * зберігається, тож ручне перевпорядкування не руйнується.
+ */
+const placeAlphabeticallyInGroup = async (category) => {
+  const parentId = category.parentId || null;
+  const others = (await Category.find({ parentId }).sort({ order: 1 })).filter(
+    (c) => c.id !== category.id
+  );
+
+  let insertIndex = others.findIndex((c) => nameCompare(c.name, category.name) > 0);
+  if (insertIndex === -1) insertIndex = others.length;
+
+  const ordered = [...others];
+  ordered.splice(insertIndex, 0, category);
+
+  await Promise.all(
+    ordered.map((c, idx) =>
+      c.order === idx ? Promise.resolve() : Category.updateOne({ _id: c._id }, { order: idx })
+    )
+  );
+};
+
+/**
+ * Генерує унікальний id (slug) на основі назви. Якщо такий id вже існує,
+ * додає числовий суфікс: name-2, name-3, ...
+ */
+const generateUniqueId = async (name) => {
+  const base = slugify(name) || 'rozdil';
+  let candidate = base;
+  let suffix = 1;
+  // eslint-disable-next-line no-await-in-loop
+  while (await Category.exists({ id: candidate })) {
+    suffix += 1;
+    candidate = `${base}-${suffix}`;
+  }
+  return candidate;
+};
+
 /**
  * Categories for the admin panel. Seeds the canonical defaults into the DB the
  * first time it is called on an empty collection.
@@ -26,25 +90,48 @@ const getLegacyMetaCategories = () => LEGACY_META_CATEGORIES;
 const getAdminCategories = async () => {
   let categories = await Category.find({}).sort({ order: 1 });
   if (categories.length === 0) {
-    categories = await Category.insertMany(DEFAULT_CATEGORIES);
+    // За замовчуванням розділи впорядковані за алфавітом.
+    const seeded = [...DEFAULT_CATEGORIES]
+      .sort((a, b) => nameCompare(a.name, b.name))
+      .map((c, idx) => ({ ...c, order: idx }));
+    categories = await Category.insertMany(seeded);
   }
   return categories;
 };
 
-const createCategory = async ({ id, name, icon, color }) => {
-  if (!id || !name) {
-    throw ApiError.badRequest('id та name обовʼязкові');
+const createCategory = async ({ id, name, icon, color, parentId }) => {
+  if (!name || !name.trim()) {
+    throw ApiError.badRequest('Назва розділу обовʼязкова');
   }
 
-  const maxOrder = await Category.findOne({}).sort({ order: -1 });
-  const order = maxOrder ? maxOrder.order + 1 : 0;
+  // id генерується автоматично з назви (унікальний slug). Якщо id передали
+  // явно — використовуємо його, теж перевіряючи на унікальність нижче.
+  const normalizedId = id && id.trim()
+    ? slugify(id) || (await generateUniqueId(name))
+    : await generateUniqueId(name);
+
+  // Валідація батьківської категорії (для вкладених розділів)
+  let normalizedParent = null;
+  if (parentId) {
+    normalizedParent = parentId.toLowerCase();
+    if (normalizedParent === normalizedId) {
+      throw ApiError.badRequest('Категорія не може бути власним батьком');
+    }
+    const parent = await Category.findOne({ id: normalizedParent });
+    if (!parent) {
+      throw ApiError.badRequest('Батьківську категорію не знайдено');
+    }
+  }
 
   const category = new Category({
-    id: id.toLowerCase(),
+    id: normalizedId,
     name,
-    icon: icon || '🎵',
+    // Іконка не обовʼязкова: порожній рядок означає, що замість емодзі
+    // на клієнті малюється кружечок з кольором категорії.
+    icon: icon === undefined ? '🎵' : icon,
     color: color || '#8B4513',
-    order
+    parentId: normalizedParent,
+    order: 0
   });
 
   try {
@@ -56,21 +143,80 @@ const createCategory = async ({ id, name, icon, color }) => {
     throw error;
   }
 
+  // Ставимо на алфавітну позицію серед розділів того ж рівня.
+  await placeAlphabeticallyInGroup(category);
+
   return category;
 };
 
-const updateCategory = async (categoryId, { name, icon, color }) => {
+const updateCategory = async (categoryId, { name, icon, color, parentId }) => {
   const category = await Category.findOne({ id: categoryId });
   if (!category) {
     throw ApiError.notFound('Категорію не знайдено');
   }
 
   if (name) category.name = name;
-  if (icon) category.icon = icon;
+  // icon !== undefined дозволяє очистити іконку (порожній рядок → кружечок кольору)
+  if (icon !== undefined) category.icon = icon;
   if (color) category.color = color;
 
+  // Зміна батьківського розділу (переміщення у вкладеність або в корінь)
+  if (parentId !== undefined) {
+    if (!parentId) {
+      category.parentId = null;
+    } else {
+      const normalizedParent = parentId.toLowerCase();
+      if (normalizedParent === category.id) {
+        throw ApiError.badRequest('Категорія не може бути власним батьком');
+      }
+      const parent = await Category.findOne({ id: normalizedParent });
+      if (!parent) {
+        throw ApiError.badRequest('Батьківську категорію не знайдено');
+      }
+      // Запобігаємо циклу: новий батько не може бути нащадком цієї категорії
+      let ancestor = parent;
+      while (ancestor && ancestor.parentId) {
+        if (ancestor.parentId === category.id) {
+          throw ApiError.badRequest('Не можна перемістити категорію у власний підрозділ');
+        }
+        // eslint-disable-next-line no-await-in-loop
+        ancestor = await Category.findOne({ id: ancestor.parentId });
+      }
+      category.parentId = normalizedParent;
+    }
+  }
+
+  const parentChanged = category.isModified('parentId');
   await category.save();
+
+  // Після зміни рівня — ставимо на алфавітну позицію в новій групі.
+  if (parentChanged) {
+    await placeAlphabeticallyInGroup(category);
+  }
+
   return category;
+};
+
+/**
+ * Ручне перевпорядкування (drag-and-drop) розділів у межах одного рівня.
+ * orderedIds — id розділів групи в бажаному порядку.
+ */
+const reorderCategories = async (parentId, orderedIds) => {
+  if (!Array.isArray(orderedIds) || orderedIds.length === 0) {
+    throw ApiError.badRequest('orderedIds обовʼязковий');
+  }
+  const normalizedParent = parentId ? String(parentId).toLowerCase() : null;
+
+  await Promise.all(
+    orderedIds.map((id, idx) =>
+      Category.updateOne(
+        { id: String(id).toLowerCase(), parentId: normalizedParent },
+        { order: idx }
+      )
+    )
+  );
+
+  return getAdminCategories();
 };
 
 const deleteCategory = async (categoryId) => {
@@ -78,6 +224,13 @@ const deleteCategory = async (categoryId) => {
   if (!category) {
     throw ApiError.notFound('Категорію не знайдено');
   }
+
+  // Підрозділи видаленої категорії піднімаємо на рівень її батька,
+  // щоб вони не лишалися "сиротами" з неіснуючим parentId.
+  await Category.updateMany(
+    { parentId: category.id },
+    { parentId: category.parentId || null }
+  );
 
   const affectedSongs = await Song.countDocuments({ category: categoryId });
   return { deletedCategory: category.name, affectedSongs };
@@ -89,5 +242,6 @@ module.exports = {
   getAdminCategories,
   createCategory,
   updateCategory,
-  deleteCategory
+  deleteCategory,
+  reorderCategories
 };

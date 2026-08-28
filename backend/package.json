@@ -8,6 +8,8 @@
     "dev": "nodemon src/server.js",
     "seed": "node src/scripts/seedData.js",
     "scrape": "node src/scripts/scrapeSongs.js",
+    "scrape-molytvy": "node src/scripts/scrapeMolytvy.js",
+    "export-import": "node src/scripts/exportForImport.js",
     "scrape-test": "node src/scripts/testParser.js",
     "improve-chords": "node src/scripts/improveChords.js",
     "fix-youtube": "node src/scripts/fixYouTubeUrls.js",

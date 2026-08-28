@@ -1,27 +1,86 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { FiMusic } from 'react-icons/fi';
+import { FaGuitar } from 'react-icons/fa';
+import ToastContainer from '../Common/Toast';
+import SongEditor from './SongEditor';
 import './AdminPanel.css';
 
+let toastCounter = 0;
+
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+
+const EMPTY_CATEGORY = { name: '', icon: '', color: '#8B4513', parentId: '' };
+
+// Розкладає плоский список категорій у порядок з урахуванням вкладеності
+// та проставляє глибину (depth) для відступів у UI.
+function buildCategoryTree(cats) {
+  const result = [];
+  const childrenOf = (pid) => cats.filter(c => (c.parentId || null) === (pid || null));
+
+  const walk = (list, depth) => {
+    list.forEach(c => {
+      result.push({ ...c, depth });
+      walk(childrenOf(c.id), depth + 1);
+    });
+  };
+  walk(childrenOf(null), 0);
+
+  // Категорії з неіснуючим parentId показуємо як кореневі, щоб не загубити
+  const seen = new Set(result.map(r => r.id || r._id));
+  cats.forEach(c => {
+    if (!seen.has(c.id || c._id)) result.push({ ...c, depth: 0 });
+  });
+  return result;
+}
+
+// Іконка категорії або кружечок з кольором, якщо емодзі не задано.
+function CategoryGlyph({ icon, color }) {
+  if (icon && icon.trim()) {
+    return <span className="admin-category-icon">{icon}</span>;
+  }
+  return (
+    <span
+      className="admin-category-icon-circle"
+      style={{ background: color || '#8B4513' }}
+      title="Без іконки"
+    />
+  );
+}
 
 function AdminPanel() {
   const [songs, setSongs] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState(null);
+  const [toasts, setToasts] = useState([]);
   const [activeTab, setActiveTab] = useState('songs'); // 'songs' | 'categories'
 
   // Category editing state
   const [editingCategory, setEditingCategory] = useState(null);
-  const [newCategory, setNewCategory] = useState({ id: '', name: '', icon: '🎵', color: '#8B4513' });
+  const [newCategory, setNewCategory] = useState({ ...EMPTY_CATEGORY });
   const [showAddCategory, setShowAddCategory] = useState(false);
 
+  // Song editor state: { open, song } — song=null для нової пісні
+  const [songEditor, setSongEditor] = useState({ open: false, song: null });
+
+  // Drag-and-drop розділів
+  const [dragCatId, setDragCatId] = useState(null);
+  const [dropTargetId, setDropTargetId] = useState(null);
+
+  // Export state
+  const [showExport, setShowExport] = useState(false);
+  const [exportCats, setExportCats] = useState([]); // обрані id розділів
+
+  const dismissToast = (id) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
+
   const showStatus = (type, text) => {
-    setStatus({ type, text });
-    if (type !== 'error') {
-      setTimeout(() => setStatus(null), 5000);
-    }
+    toastCounter += 1;
+    const id = toastCounter;
+    // Помилки не зникають самі — їх закривають вручну; решта через 5с.
+    const duration = type === 'error' ? 0 : 5000;
+    setToasts((prev) => [...prev, { id, type, text, duration }]);
   };
 
   const fetchSongs = useCallback(async () => {
@@ -80,6 +139,51 @@ function AdminPanel() {
     }
   };
 
+  const toggleExportCat = (id) => {
+    setExportCats(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  // Експорт пісень у JSON (готовий для імпорту). Без вибору — усі пісні.
+  const handleExport = async () => {
+    try {
+      setLoading(true);
+      const params = exportCats.length > 0
+        ? `?categories=${encodeURIComponent(exportCats.join(','))}`
+        : '';
+      const res = await axios.get(`${API_BASE_URL}/songs/admin/export${params}`, {
+        responseType: 'blob'
+      });
+
+      // Дістаємо імʼя файлу із заголовка, якщо є
+      const disp = res.headers['content-disposition'] || '';
+      const match = disp.match(/filename="?([^"]+)"?/);
+      const filename = match ? match[1] : 'spivanyk-export.json';
+
+      const url = window.URL.createObjectURL(
+        new Blob([res.data], { type: 'application/json' })
+      );
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+      showStatus('success',
+        exportCats.length > 0
+          ? `Експортовано розділів: ${exportCats.length}. Файл завантажується.`
+          : 'Експортовано всі пісні. Файл завантажується.'
+      );
+    } catch (err) {
+      showStatus('error', 'Помилка експорту: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleFileSelect = () => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -119,16 +223,71 @@ function AdminPanel() {
     }
   };
 
+  // Перемістити пісню в інший розділ
+  const handleChangeSongCategory = async (id, category) => {
+    const prevCategory = songs.find(s => s._id === id)?.category;
+    // Оптимістичне оновлення
+    setSongs(prev => prev.map(s => (s._id === id ? { ...s, category } : s)));
+    try {
+      await axios.put(`${API_BASE_URL}/songs/admin/${id}/category`, { category });
+      showStatus('success', 'Пісню переміщено в інший розділ');
+    } catch (err) {
+      // Відкат при помилці
+      setSongs(prev => prev.map(s => (s._id === id ? { ...s, category: prevCategory } : s)));
+      showStatus('error', 'Помилка переміщення: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
+  // Відкрити редактор для нової пісні
+  const handleNewSong = () => {
+    setSongEditor({ open: true, song: null });
+  };
+
+  // Відкрити редактор існуючої пісні (тягнемо повний документ)
+  const handleEditSong = async (id) => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/songs/admin/${id}`);
+      setSongEditor({ open: true, song: res.data.song });
+    } catch (err) {
+      showStatus('error', 'Не вдалося завантажити пісню: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
+  // Зберегти пісню (створення або оновлення)
+  const handleSaveSong = async (payload) => {
+    const editing = songEditor.song;
+    try {
+      if (editing && editing._id) {
+        await axios.put(`${API_BASE_URL}/songs/admin/${editing._id}`, payload);
+        showStatus('success', `Пісню "${payload.title}" оновлено`);
+      } else {
+        await axios.post(`${API_BASE_URL}/songs/admin/songs`, payload);
+        showStatus('success', `Пісню "${payload.title}" створено`);
+      }
+      setSongEditor({ open: false, song: null });
+      await fetchSongs();
+    } catch (err) {
+      showStatus('error', 'Помилка збереження: ' + (err.response?.data?.message || err.message));
+      throw err; // щоб редактор не закривався і зняв стан "збереження"
+    }
+  };
+
   // === CATEGORIES ===
   const handleAddCategory = async () => {
-    if (!newCategory.id.trim() || !newCategory.name.trim()) {
-      showStatus('error', 'ID та назва обовʼязкові');
+    if (!newCategory.name.trim()) {
+      showStatus('error', 'Назва розділу обовʼязкова');
       return;
     }
     try {
-      await axios.post(`${API_BASE_URL}/songs/admin/categories`, newCategory);
+      // id не надсилаємо — бекенд згенерує унікальний slug з назви
+      await axios.post(`${API_BASE_URL}/songs/admin/categories`, {
+        name: newCategory.name,
+        icon: newCategory.icon,
+        color: newCategory.color,
+        parentId: newCategory.parentId || null
+      });
       showStatus('success', `Категорію "${newCategory.name}" додано`);
-      setNewCategory({ id: '', name: '', icon: '🎵', color: '#8B4513' });
+      setNewCategory({ ...EMPTY_CATEGORY });
       setShowAddCategory(false);
       await fetchCategories();
     } catch (err) {
@@ -139,7 +298,12 @@ function AdminPanel() {
   const handleUpdateCategory = async (categoryId) => {
     if (!editingCategory) return;
     try {
-      await axios.put(`${API_BASE_URL}/songs/admin/categories/${categoryId}`, editingCategory);
+      await axios.put(`${API_BASE_URL}/songs/admin/categories/${categoryId}`, {
+        name: editingCategory.name,
+        icon: editingCategory.icon,
+        color: editingCategory.color,
+        parentId: editingCategory.parentId || null
+      });
       showStatus('success', `Категорію оновлено`);
       setEditingCategory(null);
       await fetchCategories();
@@ -149,7 +313,7 @@ function AdminPanel() {
   };
 
   const handleDeleteCategory = async (categoryId, name) => {
-    if (!window.confirm(`Видалити категорію "${name}"? Пісні цієї категорії залишаться в базі.`)) return;
+    if (!window.confirm(`Видалити категорію "${name}"? Пісні цієї категорії залишаться в базі, а підрозділи піднімуться на рівень вище.`)) return;
     try {
       const res = await axios.delete(`${API_BASE_URL}/songs/admin/categories/${categoryId}`);
       showStatus('success', `Видалено "${name}". Пісень з цією категорією: ${res.data.affectedSongs}`);
@@ -159,15 +323,78 @@ function AdminPanel() {
     }
   };
 
+  // === DRAG & DROP розділів (у межах одного рівня) ===
+  const sameLevel = (a, b) => (a?.parentId || null) === (b?.parentId || null);
+
+  const handleCatDragStart = (e, cat) => {
+    setDragCatId(cat.id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleCatDragOver = (e, cat) => {
+    const src = categories.find(c => c.id === dragCatId);
+    if (!src || src.id === cat.id || !sameLevel(src, cat)) return;
+    e.preventDefault(); // дозволяємо drop лише для сусідів того ж рівня
+    e.dataTransfer.dropEffect = 'move';
+    if (dropTargetId !== cat.id) setDropTargetId(cat.id);
+  };
+
+  const handleCatDragEnd = () => {
+    setDragCatId(null);
+    setDropTargetId(null);
+  };
+
+  const handleCatDrop = async (e, targetCat) => {
+    e.preventDefault();
+    const src = categories.find(c => c.id === dragCatId);
+    setDropTargetId(null);
+    setDragCatId(null);
+    if (!src || src.id === targetCat.id || !sameLevel(src, targetCat)) return;
+
+    const parentId = src.parentId || null;
+    // Поточний порядок групи (сусіди того ж рівня) за order
+    const group = categories
+      .filter(c => (c.parentId || null) === parentId)
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+    const ids = group.map(c => c.id);
+    const from = ids.indexOf(src.id);
+    const to = ids.indexOf(targetCat.id);
+    if (from === -1 || to === -1) return;
+    ids.splice(from, 1);
+    ids.splice(to, 0, src.id);
+
+    // Оптимістично оновлюємо локальний порядок
+    setCategories(prev =>
+      prev.map(c =>
+        (c.parentId || null) === parentId ? { ...c, order: ids.indexOf(c.id) } : c
+      )
+    );
+
+    try {
+      await axios.put(`${API_BASE_URL}/songs/admin/categories/reorder`, { parentId, orderedIds: ids });
+    } catch (err) {
+      showStatus('error', 'Помилка перевпорядкування: ' + (err.response?.data?.message || err.message));
+      await fetchCategories(); // відкат до серверного стану
+    }
+  };
+
+  const orderedCategories = buildCategoryTree(categories);
+
+  // Опції для вибору батьківського розділу (виключаємо саму категорію, що редагується)
+  const parentOptions = (excludeId) =>
+    orderedCategories.filter(c => c.id !== excludeId);
+
+  const categoryNameById = (id) => {
+    const c = categories.find(cat => cat.id === id);
+    return c ? c.name : id;
+  };
+
   return (
     <div className="admin-panel">
       <h1>⚙️ Адмін-панель</h1>
 
-      {status && (
-        <div className={`admin-status ${status.type}`}>
-          {status.text}
-        </div>
-      )}
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
       <div className="admin-tabs">
         <button
@@ -188,8 +415,14 @@ function AdminPanel() {
       {activeTab === 'songs' && (
         <>
           <div className="admin-actions">
+            <button className="btn-import" onClick={handleNewSong} disabled={loading}>
+              ➕ Додати пісню
+            </button>
             <button className="btn-import" onClick={handleFileSelect} disabled={loading}>
               📥 Імпорт з JSON
+            </button>
+            <button className="btn-import" onClick={() => setShowExport(!showExport)} disabled={loading}>
+              📤 Експорт
             </button>
             <button className="btn-delete-all" onClick={handleDeleteAll} disabled={loading}>
               🗑️ Видалити всі
@@ -198,6 +431,47 @@ function AdminPanel() {
               🔄 Оновити
             </button>
           </div>
+
+          {showExport && (
+            <div className="admin-category-form">
+              <h3>📤 Експорт пісень у JSON</h3>
+              <p className="category-form-hint">
+                Оберіть розділи для експорту. Якщо не вибрано жодного — експортуються всі пісні.
+                Отриманий файл можна завантажити назад через «Імпорт з JSON».
+              </p>
+              <div className="export-cat-grid">
+                {orderedCategories.map(cat => (
+                  <label
+                    key={cat.id || cat._id}
+                    className="export-cat-item"
+                    style={{ paddingLeft: `${0.6 + cat.depth * 1.5}rem` }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={exportCats.includes(cat.id)}
+                      onChange={() => toggleExportCat(cat.id)}
+                    />
+                    {cat.depth > 0 && <span className="admin-category-branch">└</span>}
+                    <span>{cat.icon ? `${cat.icon} ` : ''}{cat.name}</span>
+                  </label>
+                ))}
+              </div>
+              <div className="export-actions">
+                <button
+                  className="btn-refresh"
+                  onClick={() => setExportCats(orderedCategories.map(c => c.id))}
+                >
+                  Вибрати всі
+                </button>
+                <button className="btn-refresh" onClick={() => setExportCats([])}>
+                  Очистити
+                </button>
+                <button className="btn-import" onClick={handleExport} disabled={loading}>
+                  ⬇️ Завантажити JSON{exportCats.length > 0 ? ` (${exportCats.length})` : ' (всі)'}
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="admin-song-list">
             <div className="admin-song-list-header">
@@ -219,12 +493,42 @@ function AdminPanel() {
             {!loading && songs.map(song => (
               <div key={song._id} className="admin-song-item">
                 <div className="admin-song-info">
-                  <div className="admin-song-title">{song.title}</div>
+                  <div className="admin-song-title">
+                    <span className="admin-song-title-text">{song.title}</span>
+                    {song.hasChords && (
+                      <span className="admin-chords-badge" title="Є акорди">
+                        <FaGuitar />
+                      </span>
+                    )}
+                  </div>
                   <div className="admin-song-meta">
                     {song.author && <span>{song.author} · </span>}
-                    <span className="admin-song-category">{song.category}</span>
+                    <span>Розділ:</span>
                   </div>
                 </div>
+                <select
+                  className="admin-song-category-select"
+                  value={song.category || ''}
+                  onChange={(e) => handleChangeSongCategory(song._id, e.target.value)}
+                  title="Перемістити пісню в інший розділ"
+                >
+                  {/* Показуємо поточне значення, навіть якщо такого розділу вже нема */}
+                  {song.category && !categories.some(c => c.id === song.category) && (
+                    <option value={song.category}>{song.category} (невідомий)</option>
+                  )}
+                  {orderedCategories.map(cat => (
+                    <option key={cat.id || cat._id} value={cat.id}>
+                      {'\u00A0\u00A0'.repeat(cat.depth)}{cat.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  className="btn-edit-cat"
+                  title="Редагувати пісню (текст та акорди)"
+                  onClick={() => handleEditSong(song._id)}
+                >
+                  ✏️
+                </button>
                 <button
                   className="btn-delete-song"
                   onClick={() => handleDeleteOne(song._id, song.title)}
@@ -252,13 +556,8 @@ function AdminPanel() {
           {showAddCategory && (
             <div className="admin-category-form">
               <h3>Новий розділ</h3>
+              <p className="category-form-hint">ID згенерується автоматично з назви.</p>
               <div className="category-form-grid">
-                <input
-                  type="text"
-                  placeholder="ID (латиницею, напр: scout)"
-                  value={newCategory.id}
-                  onChange={e => setNewCategory({ ...newCategory, id: e.target.value })}
-                />
                 <input
                   type="text"
                   placeholder="Назва (напр: СКАУТСЬКІ ПІСНІ)"
@@ -267,44 +566,79 @@ function AdminPanel() {
                 />
                 <input
                   type="text"
-                  placeholder="Іконка (емодзі)"
+                  placeholder="Іконка (необовʼязково)"
                   value={newCategory.icon}
                   onChange={e => setNewCategory({ ...newCategory, icon: e.target.value })}
-                  style={{ maxWidth: '80px' }}
+                  style={{ maxWidth: '150px' }}
                 />
                 <input
                   type="color"
                   value={newCategory.color}
                   onChange={e => setNewCategory({ ...newCategory, color: e.target.value })}
                   style={{ maxWidth: '50px', height: '36px' }}
+                  title="Колір (використовується як кружечок, якщо немає іконки)"
                 />
+                <select
+                  className="category-parent-select"
+                  value={newCategory.parentId}
+                  onChange={e => setNewCategory({ ...newCategory, parentId: e.target.value })}
+                  title="Батьківський розділ"
+                >
+                  <option value="">— Кореневий розділ —</option>
+                  {orderedCategories.map(cat => (
+                    <option key={cat.id || cat._id} value={cat.id}>
+                      {'\u00A0\u00A0'.repeat(cat.depth)}{cat.name}
+                    </option>
+                  ))}
+                </select>
                 <button className="btn-import" onClick={handleAddCategory}>Зберегти</button>
-                <button className="btn-refresh" onClick={() => setShowAddCategory(false)}>Скасувати</button>
+                <button className="btn-refresh" onClick={() => { setShowAddCategory(false); setNewCategory({ ...EMPTY_CATEGORY }); }}>Скасувати</button>
               </div>
             </div>
           )}
 
           <div className="admin-song-list">
             <div className="admin-song-list-header">
-              <span>Розділи</span>
+              <span>Розділи <span className="admin-hint-inline">(перетягніть ⠿ щоб змінити порядок)</span></span>
               <span>{categories.length} шт.</span>
             </div>
 
-            {categories.map(cat => (
-              <div key={cat.id || cat._id} className="admin-category-item">
-                {editingCategory && editingCategory._editId === (cat.id || cat._id) ? (
+            {orderedCategories.map(cat => {
+              const isEditingThis = editingCategory && editingCategory._editId === (cat.id || cat._id);
+              const isDragging = dragCatId === cat.id;
+              const isDropTarget = dropTargetId === cat.id;
+              return (
+              <div
+                key={cat.id || cat._id}
+                className={`admin-category-item ${isDragging ? 'dragging' : ''} ${isDropTarget ? 'drop-target' : ''}`}
+                draggable={!isEditingThis}
+                onDragStart={(e) => handleCatDragStart(e, cat)}
+                onDragOver={(e) => handleCatDragOver(e, cat)}
+                onDrop={(e) => handleCatDrop(e, cat)}
+                onDragEnd={handleCatDragEnd}
+              >
+                {isEditingThis ? (
                   <div className="category-edit-row">
                     <input
                       type="text"
-                      value={editingCategory.icon}
+                      className="category-id-readonly"
+                      value={editingCategory.id}
+                      readOnly
+                      disabled
+                      title="ID розділу (не редагується)"
+                    />
+                    <input
+                      type="text"
+                      placeholder="іконка"
+                      value={editingCategory.icon || ''}
                       onChange={e => setEditingCategory({ ...editingCategory, icon: e.target.value })}
-                      style={{ width: '50px' }}
+                      style={{ width: '70px' }}
                     />
                     <input
                       type="text"
                       value={editingCategory.name}
                       onChange={e => setEditingCategory({ ...editingCategory, name: e.target.value })}
-                      style={{ flex: 1 }}
+                      style={{ flex: 1, minWidth: '120px' }}
                     />
                     <input
                       type="color"
@@ -312,16 +646,37 @@ function AdminPanel() {
                       onChange={e => setEditingCategory({ ...editingCategory, color: e.target.value })}
                       style={{ width: '40px', height: '32px' }}
                     />
+                    <select
+                      className="category-parent-select"
+                      value={editingCategory.parentId || ''}
+                      onChange={e => setEditingCategory({ ...editingCategory, parentId: e.target.value })}
+                      title="Батьківський розділ"
+                    >
+                      <option value="">— Кореневий —</option>
+                      {parentOptions(cat.id).map(p => (
+                        <option key={p.id || p._id} value={p.id}>
+                          {'\u00A0\u00A0'.repeat(p.depth)}{p.name}
+                        </option>
+                      ))}
+                    </select>
                     <button className="btn-save-cat" onClick={() => handleUpdateCategory(cat.id)}>✓</button>
                     <button className="btn-cancel-cat" onClick={() => setEditingCategory(null)}>✕</button>
                   </div>
                 ) : (
                   <>
-                    <div className="admin-category-info">
-                      <span className="admin-category-icon">{cat.icon}</span>
+                    <div
+                      className="admin-category-info"
+                      style={{ paddingLeft: `${cat.depth * 1.5}rem` }}
+                    >
+                      <span className="cat-drag-handle" title="Перетягніть, щоб змінити порядок">⠿</span>
+                      {cat.depth > 0 && <span className="admin-category-branch">└</span>}
+                      <CategoryGlyph icon={cat.icon} color={cat.color} />
                       <div>
                         <div className="admin-category-name">{cat.name}</div>
-                        <div className="admin-category-id">id: {cat.id}</div>
+                        <div className="admin-category-id">
+                          id: {cat.id}
+                          {cat.parentId && <span> · у розділі «{categoryNameById(cat.parentId)}»</span>}
+                        </div>
                       </div>
                       <span className="admin-category-color" style={{ background: cat.color }}></span>
                     </div>
@@ -342,9 +697,19 @@ function AdminPanel() {
                   </>
                 )}
               </div>
-            ))}
+              );
+            })}
           </div>
         </>
+      )}
+
+      {songEditor.open && (
+        <SongEditor
+          song={songEditor.song}
+          categories={orderedCategories}
+          onClose={() => setSongEditor({ open: false, song: null })}
+          onSave={handleSaveSong}
+        />
       )}
     </div>
   );

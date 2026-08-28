@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { songsAPI } from '../../services/api';
 import { FiSearch, FiMusic, FiYoutube, FiChevronDown, FiChevronUp, FiArrowLeft, FiPlus, FiCheck } from 'react-icons/fi';
+import { FaGuitar } from 'react-icons/fa';
 import FormattedSong from './FormattedSong';
 import axios from 'axios';
 import './SongList.css';
@@ -134,6 +135,11 @@ const SongCard = ({ song, isExpanded, onToggleExpand, onAddSong, isAdding, isAdd
           )}
         </div>
         <div className="song-card-actions">
+          {song.hasChords && (
+            <span className="chords-badge" title="Є акорди">
+              <FaGuitar />
+            </span>
+          )}
           {onAddSong && (
             <button
               className={`add-btn ${isAdded ? 'added' : ''}`}

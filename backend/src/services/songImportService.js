@@ -14,9 +14,12 @@ const CATEGORY_MAP = {
   author: 'author',
   plast: 'plast',
   uprising: 'uprising',
-  folk: 'folk',
+  cossack: 'cossack',
   lemko: 'lemko',
-  christmas: 'christmas'
+  folk: 'folk',
+  christmas: 'christmas',
+  carols: 'carols',
+  hymns: 'hymns'
 };
 
 const FALLBACK_JSON_PATH = path.join(__dirname, '../../data/latest-songs.json');
@@ -134,4 +137,58 @@ const importFromJson = async (body) => {
   };
 };
 
-module.exports = { importFromJson };
+// Reshape a stored Song document back into the "scraped" import format so the
+// exported file can be re-imported through importFromJson on another instance.
+const toImportShape = (song) => ({
+  title: song.title,
+  author: song.author || 'Невідомий',
+  category: song.category,
+  url: song.sourceUrl || '',
+  youtubeUrl: song.youtubeUrl || '',
+  metadata: {
+    words: song.metadata?.words || '',
+    music: song.metadata?.music || '',
+    performer: song.metadata?.performer || ''
+  },
+  structure: (song.structure || []).map((section) => ({
+    type: section.type,
+    number: section.number,
+    repeat: section.repeat || 1,
+    lines: (section.lines || []).map((line) => ({
+      text: line.text,
+      chordPositions: (line.chordPositions || []).map((cp) => ({
+        chord: cp.chord,
+        charIndex: cp.charIndex != null ? cp.charIndex : 0
+      })),
+      // importFromJson reads the chorus flag from line.metadata.isChorus
+      metadata: { isChorus: line.isChorus || false }
+    }))
+  }))
+});
+
+/**
+ * Export songs (optionally filtered by category ids) as an import-ready
+ * payload: { metadata, songs: [...] }. Passing an empty/undefined list
+ * exports every song.
+ */
+const exportForImport = async (categories) => {
+  const filter =
+    Array.isArray(categories) && categories.length > 0
+      ? { category: { $in: categories } }
+      : {};
+
+  const songs = await Song.find(filter).sort({ category: 1, title: 1 }).lean();
+
+  return {
+    metadata: {
+      exportedAt: new Date().toISOString(),
+      totalSongs: songs.length,
+      categories:
+        Array.isArray(categories) && categories.length > 0 ? categories : 'all',
+      format: 'import-from-json'
+    },
+    songs: songs.map(toImportShape)
+  };
+};
+
+module.exports = { importFromJson, exportForImport };

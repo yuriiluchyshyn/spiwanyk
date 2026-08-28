@@ -24,7 +24,10 @@ const Header = () => {
         <div className="header-left">
           <Link to="/" className="logo">
             <FiMusic />
-            <span>Давай співати</span>
+            <span className="logo-text">
+              <span className="logo-name">Кантичка</span>
+              <span className="logo-tagline">Давай співати</span>
+            </span>
           </Link>
           {canGoBack && (
             <button

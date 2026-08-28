@@ -1,4 +1,4 @@
-# robots.txt для "Давай співати"
+# robots.txt для "Кантичка"
 User-agent: *
 Allow: /
 

@@ -31,7 +31,8 @@ const Login = () => {
       <div className="login-card">
         <div className="login-header">
           <FiMusic className="login-icon" />
-          <h1>Давай співати</h1>
+          <h1>Кантичка</h1>
+          <p className="login-tagline">Давай співати</p>
           <p>Увійдіть за допомогою електронної пошти</p>
         </div>
 

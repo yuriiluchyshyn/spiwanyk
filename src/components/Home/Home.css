@@ -1,7 +1,14 @@
 .home-guest { text-align: center; padding: 3rem 1rem; animation: fadeIn 0.5s ease-out; }
 .hero { animation: fadeInUp 0.6s ease-out; }
 .hero-fire { font-size: 3.5rem; margin-bottom: 0.5rem; animation: float 3s ease-in-out infinite; }
-.hero h1 { font-size: 1.8rem; color: var(--dark-brown); margin-bottom: 0.25rem; }
+.hero h1 { font-size: 1.8rem; color: var(--dark-brown); margin-bottom: 0.1rem; }
+.hero-tagline {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--fire-orange, #d2691e);
+  margin-bottom: 0.25rem !important;
+  letter-spacing: 0.02em;
+}
 .hero p { color: var(--warm-gray); margin-bottom: 1.5rem; }
 .cta-btn {
   display: inline-block;

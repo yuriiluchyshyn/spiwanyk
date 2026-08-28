@@ -59,9 +59,17 @@
 
 .login-header h1 {
   color: var(--dark-brown);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
   font-size: 1.75rem;
   font-weight: 700;
+}
+
+.login-header .login-tagline {
+  color: var(--fire-orange);
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.02em;
 }
 
 .login-header p {

@@ -148,6 +148,20 @@
   transform: scale(0.92);
 }
 
+/* Значок наявності акордів (не інтерактивний) */
+.chords-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fire-orange, #d2691e);
+  background: rgba(210, 105, 30, 0.1);
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
 .add-btn {
   width: 34px;
   height: 34px;

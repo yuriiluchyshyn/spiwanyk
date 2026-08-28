@@ -71,6 +71,7 @@ const SongItem = forwardRef(({
   onDragLeave,
   onDrop,
   onDragEnd,
+  onTouchDragStart,
   onSetSingSong,
   onStopSinging
 }, ref) => {
@@ -203,6 +204,7 @@ const SongItem = forwardRef(({
     <article
       ref={setRefs}
       className={`bv-song ${isExpanded ? 'is-expanded' : ''} ${isDragging ? 'is-dragging' : ''} ${dropClass} ${isSwipeActive ? 'swiping' : ''} ${isLeaving ? 'is-leaving' : ''}`}
+      data-song-id={song._id}
       draggable={canEdit}
       onDragStart={canEdit ? (e) => onDragStart(e, song) : undefined}
       onDragOver={canEdit ? (e) => onDragOver(e, song) : undefined}
@@ -218,7 +220,16 @@ const SongItem = forwardRef(({
       
       <div className="bv-song-row" onClick={handleRowClick}>
         {canEdit && (
-          <span className="bv-drag-handle" title="Перетягнути">
+          <span
+            className="bv-drag-handle"
+            title="Перетягнути"
+            onTouchStart={(e) => {
+              // Не даємо article почати свайп/скрол — це жест перетягування
+              e.stopPropagation();
+              onTouchDragStart?.(e, song);
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <FiMove />
           </span>
         )}
@@ -227,6 +238,11 @@ const SongItem = forwardRef(({
           {song.author && <span className="bv-song-author">{song.author}</span>}
         </div>
         <div className="bv-song-actions">
+          {song.hasChords && (
+            <span className="bv-chords-badge" title="Є акорди">
+              <FaGuitar />
+            </span>
+          )}
           {currentSingSong === song._id ? (
             <button
               className={`bv-song-sing active ${singingIsMine ? 'mine' : 'by-other'}`}
@@ -300,6 +316,11 @@ const BookView = ({ onClose, songbookData, initialSingScrollSongId = null, scrol
   const [draggedSong, setDraggedSong] = useState(null);
   const [dragOverSongId, setDragOverSongId] = useState(null);
   const [dragPosition, setDragPosition] = useState(null); // 'before' | 'after'
+
+  // Touch-based reorder (mobile): HTML5 drag&drop не працює на тач-екранах,
+  // тож перетягування пальцем реалізуємо окремо через touch-події.
+  const touchDragRef = useRef({ song: null, targetSongId: null, position: null });
+  const autoScrollRef = useRef(0); // напрям авто-прокрутки під час перетягування
 
   // Навігація по розділах (ліва колонка)
   const [activeGroup, setActiveGroup] = useState(null);
@@ -516,6 +537,12 @@ const BookView = ({ onClose, songbookData, initialSingScrollSongId = null, scrol
   }, [songbook]);
 
   const flatSongs = useMemo(() => groupedSongs.flatMap((g) => g.songs), [groupedSongs]);
+
+  // Актуальні дані для доступу з тач-обробників (уникаємо застарілих замикань)
+  const groupedSongsRef = useRef(groupedSongs);
+  groupedSongsRef.current = groupedSongs;
+  const flatSongsRef = useRef(flatSongs);
+  flatSongsRef.current = flatSongs;
 
   // ---- Алфавітний індекс: лише ті літери, на які є пісні ----
   const alphaLetters = useMemo(() => {
@@ -803,34 +830,26 @@ const BookView = ({ onClose, songbookData, initialSingScrollSongId = null, scrol
     // Don't clear immediately - next dragover will set it
   };
 
-  const handleDrop = (e, targetSong) => {
-    e.preventDefault();
-    if (!draggedSong || draggedSong._id === targetSong._id) {
-      resetDrag();
-      return;
-    }
+  // Спільна логіка вставки перетягнутої пісні перед/після цільової.
+  // Зміна порядку діє ЛИШЕ в межах поточної сесії — у базу не зберігаємо.
+  const performReorder = useCallback((dragged, targetSong, position) => {
+    if (!dragged || !targetSong || dragged._id === targetSong._id) return;
 
     const targetSectionId = targetSong._sectionId || null;
-    const draggedSectionId = draggedSong._sectionId || null;
+    const draggedSectionId = dragged._sectionId || null;
 
-    // Find position within the same group
-    const group = groupedSongs.find(g => {
+    const group = groupedSongsRef.current.find(g => {
       const gId = g.id ? g.id.toString() : null;
       return gId === targetSectionId;
     });
-
-    if (!group) {
-      resetDrag();
-      return;
-    }
+    if (!group) return;
 
     const sectionSongs = group.songs;
     const targetIdx = sectionSongs.findIndex(s => s._id === targetSong._id);
-    let insertAt = dragPosition === 'before' ? targetIdx : targetIdx + 1;
+    let insertAt = position === 'before' ? targetIdx : targetIdx + 1;
 
-    // If same section and dragged is before target, adjust
     if (draggedSectionId === targetSectionId) {
-      const draggedIdx = sectionSongs.findIndex(s => s._id === draggedSong._id);
+      const draggedIdx = sectionSongs.findIndex(s => s._id === dragged._id);
       if (draggedIdx !== -1 && draggedIdx < insertAt) {
         insertAt -= 1;
       }
@@ -838,12 +857,15 @@ const BookView = ({ onClose, songbookData, initialSingScrollSongId = null, scrol
 
     if (insertAt < 0) insertAt = 0;
 
-    // Зміна порядку діє ЛИШЕ в межах поточної сесії — у базу не зберігаємо.
     setSongbook((prev) => ({
       ...prev,
-      songs: reorderSongsLocally(prev.songs, draggedSong._id, targetSectionId, insertAt),
+      songs: reorderSongsLocally(prev.songs, dragged._id, targetSectionId, insertAt),
     }));
+  }, []);
 
+  const handleDrop = (e, targetSong) => {
+    e.preventDefault();
+    performReorder(draggedSong, targetSong, dragPosition);
     resetDrag();
   };
 
@@ -856,6 +878,104 @@ const BookView = ({ onClose, songbookData, initialSingScrollSongId = null, scrol
     setDragOverSongId(null);
     setDragPosition(null);
   };
+
+  // ---- Перетягування пальцем (мобільна версія) ----
+  // Викликається з touchstart на «ручці» перетягування. Далі рух і завершення
+  // жесту ловимо на рівні document (passive:false), щоб глушити прокрутку.
+  const findSongById = useCallback(
+    (id) => flatSongsRef.current.find((s) => s._id === id) || null,
+    []
+  );
+
+  const runAutoScroll = useCallback(() => {
+    const dir = autoScrollRef.current;
+    if (!dir) return;
+    const el = scrollRef.current;
+    if (el) el.scrollTop += dir * 8;
+    requestAnimationFrame(runAutoScroll);
+  }, []);
+
+  const handleTouchDragMove = useCallback((e) => {
+    const state = touchDragRef.current;
+    if (!state.song) return;
+    // Блокуємо прокрутку сторінки під час перетягування
+    if (e.cancelable) e.preventDefault();
+
+    const touch = e.touches[0];
+    if (!touch) return;
+
+    // Авто-прокрутка біля верхнього/нижнього краю списку
+    const container = scrollRef.current;
+    let nextDir = 0;
+    if (container) {
+      const rect = container.getBoundingClientRect();
+      const edge = 60;
+      if (touch.clientY < rect.top + edge) nextDir = -1;
+      else if (touch.clientY > rect.bottom - edge) nextDir = 1;
+    }
+    if (nextDir !== autoScrollRef.current) {
+      autoScrollRef.current = nextDir;
+      if (nextDir !== 0) requestAnimationFrame(runAutoScroll);
+    }
+
+    // Пісня під пальцем
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    const songEl = el && el.closest('.bv-song');
+    if (!songEl) return;
+    const targetId = songEl.getAttribute('data-song-id');
+    if (!targetId || targetId === state.song._id) {
+      state.targetSongId = null;
+      setDragOverSongId(null);
+      setDragPosition(null);
+      return;
+    }
+
+    const rect = songEl.getBoundingClientRect();
+    const midpoint = rect.top + rect.height / 2;
+    const position = touch.clientY < midpoint ? 'before' : 'after';
+
+    state.targetSongId = targetId;
+    state.position = position;
+    setDragOverSongId(targetId);
+    setDragPosition(position);
+  }, [runAutoScroll]);
+
+  const handleTouchDragEnd = useCallback(() => {
+    const state = touchDragRef.current;
+    if (state.song && state.targetSongId) {
+      const targetSong = findSongById(state.targetSongId);
+      performReorder(state.song, targetSong, state.position || 'before');
+    }
+    touchDragRef.current = { song: null, targetSongId: null, position: null };
+    autoScrollRef.current = 0;
+    document.removeEventListener('touchmove', handleTouchDragMove);
+    document.removeEventListener('touchend', handleTouchDragEnd);
+    document.removeEventListener('touchcancel', handleTouchDragEnd);
+    document.body.classList.remove('bv-dragging-active');
+    resetDrag();
+  }, [findSongById, performReorder, handleTouchDragMove]);
+
+  const handleTouchDragStart = useCallback((e, song) => {
+    const touch = e.touches[0];
+    if (!touch) return;
+    touchDragRef.current = { song, targetSongId: null, position: null };
+    setDraggedSong(song);
+    document.body.classList.add('bv-dragging-active');
+    document.addEventListener('touchmove', handleTouchDragMove, { passive: false });
+    document.addEventListener('touchend', handleTouchDragEnd);
+    document.addEventListener('touchcancel', handleTouchDragEnd);
+  }, [handleTouchDragMove, handleTouchDragEnd]);
+
+  // Знімаємо слухачі, якщо компонент розмонтувався під час перетягування
+  useEffect(() => {
+    return () => {
+      autoScrollRef.current = 0;
+      document.removeEventListener('touchmove', handleTouchDragMove);
+      document.removeEventListener('touchend', handleTouchDragEnd);
+      document.removeEventListener('touchcancel', handleTouchDragEnd);
+      document.body.classList.remove('bv-dragging-active');
+    };
+  }, [handleTouchDragMove, handleTouchDragEnd]);
 
   // ---- Алфавітний індекс (мобільний) ----
   // Визначаємо літеру за вертикальним положенням пальця над смугою.
@@ -1079,6 +1199,7 @@ const BookView = ({ onClose, songbookData, initialSingScrollSongId = null, scrol
                       onDragLeave={handleDragLeave}
                       onDrop={handleDrop}
                       onDragEnd={handleDragEnd}
+                      onTouchDragStart={handleTouchDragStart}
                       onSetSingSong={handleSetSingSong}
                       onStopSinging={handleStopSinging}
                       ref={(el) => { songRefs.current[song._id] = el; }}
@@ -1090,8 +1211,9 @@ const BookView = ({ onClose, songbookData, initialSingScrollSongId = null, scrol
           )}
           </div>
 
-          {/* Алфавітний індекс (лише мобільна версія) */}
-          {alphaLetters.length > 1 && (
+          {/* Алфавітний індекс (лише мобільна версія). Ховаємо, поки відкрита
+              панель додавання пісень, щоб літери не «просвічувались» під нею. */}
+          {alphaLetters.length > 1 && !addMode && (
             <div
               className="bv-alpha-index"
               ref={alphaRef}

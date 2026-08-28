@@ -34,11 +34,18 @@ const deleteCategory = asyncHandler(async (req, res) => {
   res.json({ message: 'Категорію видалено', deletedCategory, affectedSongs });
 });
 
+const reorderCategories = asyncHandler(async (req, res) => {
+  const { parentId, orderedIds } = req.body;
+  const categories = await categoryService.reorderCategories(parentId ?? null, orderedIds);
+  res.json({ categories });
+});
+
 module.exports = {
   getPublicCategories,
   getLegacyMetaCategories,
   getAdminCategories,
   createCategory,
   updateCategory,
-  deleteCategory
+  deleteCategory,
+  reorderCategories
 };

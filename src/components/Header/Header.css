@@ -68,6 +68,25 @@
   color: var(--cream-white);
 }
 
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+}
+
+.logo-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.logo-tagline {
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
 .nav {
   display: flex;
   align-items: center;

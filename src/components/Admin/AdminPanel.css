@@ -128,33 +128,6 @@
   cursor: not-allowed;
 }
 
-/* Status message */
-.admin-status {
-  padding: 0.75rem 1rem;
-  border-radius: 10px;
-  margin-bottom: 1rem;
-  font-size: 0.85rem;
-  animation: fadeIn 0.3s ease-out;
-}
-
-.admin-status.success {
-  background: rgba(40, 167, 69, 0.1);
-  border: 1px solid rgba(40, 167, 69, 0.3);
-  color: #155724;
-}
-
-.admin-status.error {
-  background: rgba(220, 53, 69, 0.1);
-  border: 1px solid rgba(220, 53, 69, 0.3);
-  color: #721c24;
-}
-
-.admin-status.info {
-  background: rgba(0, 123, 255, 0.1);
-  border: 1px solid rgba(0, 123, 255, 0.3);
-  color: #004085;
-}
-
 /* Song list */
 .admin-song-list {
   background: #fff;
@@ -179,6 +152,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.4rem;
+  flex-wrap: wrap;
   padding: 0.6rem 1rem;
   border-bottom: 1px solid rgba(196, 168, 130, 0.1);
   transition: background 0.2s;
@@ -201,9 +176,26 @@
   font-size: 0.9rem;
   font-weight: 500;
   color: var(--dark-brown);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.admin-song-title-text {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.admin-chords-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #d2691e;
+  font-size: 0.8rem;
+  flex-shrink: 0;
 }
 
 .admin-song-meta {
@@ -307,6 +299,12 @@
   margin-bottom: 0.75rem;
 }
 
+.category-form-hint {
+  font-size: 0.75rem;
+  color: var(--warm-gray);
+  margin: -0.25rem 0 0.75rem;
+}
+
 .category-form-grid {
   display: flex;
   gap: 0.5rem;
@@ -325,6 +323,44 @@
 
 .category-form-grid input:focus {
   border-color: var(--fire-orange);
+}
+
+/* Export panel */
+.export-cat-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0.75rem 0 1rem;
+}
+
+.export-cat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid rgba(196, 168, 130, 0.3);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: var(--dark-brown);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.export-cat-item:hover {
+  border-color: var(--fire-orange);
+  background: rgba(255, 247, 237, 0.6);
+}
+
+.export-cat-item input {
+  cursor: pointer;
+  accent-color: var(--fire-orange, #e8590c);
+}
+
+.export-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 /* Category items */
@@ -352,6 +388,36 @@
   flex: 1;
 }
 
+/* Drag & drop розділів */
+.cat-drag-handle {
+  cursor: grab;
+  color: var(--warm-gray);
+  font-size: 1rem;
+  opacity: 0.55;
+  user-select: none;
+  padding: 0 0.15rem;
+  line-height: 1;
+}
+
+.cat-drag-handle:hover {
+  opacity: 1;
+}
+
+.admin-hint-inline {
+  font-weight: 400;
+  font-size: 0.72rem;
+  color: var(--warm-gray);
+}
+
+.admin-category-item.dragging {
+  opacity: 0.5;
+}
+
+.admin-category-item.drop-target {
+  box-shadow: inset 0 2px 0 0 var(--fire-orange);
+  background: rgba(232, 168, 124, 0.08);
+}
+
 .admin-category-icon {
   font-size: 1.3rem;
 }
@@ -373,6 +439,62 @@
   border-radius: 50%;
   display: inline-block;
   margin-left: 0.5rem;
+}
+
+/* Кружечок замість іконки, коли емодзі не задано */
+.admin-category-icon-circle {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+/* Гілка вкладеного розділу */
+.admin-category-branch {
+  color: var(--warm-gray);
+  font-size: 0.9rem;
+  margin-right: -0.2rem;
+  opacity: 0.6;
+}
+
+/* Селект вибору батьківського розділу */
+.category-parent-select {
+  padding: 0.5rem 0.6rem;
+  border: 1px solid rgba(196, 168, 130, 0.3);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  outline: none;
+  background: #fff;
+  color: var(--dark-brown);
+  max-width: 200px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.category-parent-select:focus {
+  border-color: var(--fire-orange);
+}
+
+/* Селект зміни розділу пісні */
+.admin-song-category-select {
+  margin-left: 0.75rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid rgba(196, 168, 130, 0.3);
+  border-radius: 8px;
+  font-size: 0.78rem;
+  outline: none;
+  background: rgba(232, 168, 124, 0.08);
+  color: var(--dark-brown);
+  max-width: 180px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.admin-song-category-select:hover,
+.admin-song-category-select:focus {
+  border-color: var(--fire-orange);
 }
 
 .admin-category-actions {
@@ -413,6 +535,16 @@
 
 .category-edit-row input:focus {
   border-color: var(--fire-orange);
+}
+
+/* ID розділу — показуємо, але не даємо редагувати */
+.category-id-readonly {
+  width: 110px;
+  background: rgba(196, 168, 130, 0.12);
+  color: var(--warm-gray);
+  font-family: "Courier New", monospace;
+  font-size: 0.78rem;
+  cursor: not-allowed;
 }
 
 .btn-save-cat, .btn-cancel-cat {

@@ -1,0 +1,2092 @@
+{
+  "metadata": {
+    "exportedAt": "2026-08-28T22:48:23.981Z",
+    "totalSongs": 14,
+    "categories": [
+      "hymns"
+    ],
+    "source": "pryvatri.de",
+    "format": "import-from-json"
+  },
+  "songs": [
+    {
+      "title": "Боже великий, єдиний",
+      "author": "Невідомий",
+      "category": "hymns",
+      "url": "https://pryvatri.de/molytvy/17-bozhe-velykyi-yedynyi",
+      "youtubeUrl": "https://www.youtube.com/watch?v=KklKxdg-CCM",
+      "metadata": {
+        "words": "",
+        "music": "Микола Лисенко",
+        "performer": ""
+      },
+      "structure": [
+        {
+          "type": "verse",
+          "number": 1,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Боже великий, єдиний,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Нам Україну храни,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Волі і світу промінням",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Ти її осіни.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Світлом науки і знання",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Нас, дітей, просвіти,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 2,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "В чистій любові до краю,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Ти нас, Боже, зрости.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Молимось, Боже єдиний,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Нам Україну храни,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Всі свої даски й щедроти",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Ти на люд наш зверни.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 3,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Дай йому волю, дай йому долю,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Дай доброго світу,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Щастя, дай, Боже, народу",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "І многая, многая літа.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Гей, пластуни, гей, юнаки",
+      "author": "Невідомий",
+      "category": "hymns",
+      "url": "https://pryvatri.de/molytvy/366-hey-plastuny-hey-yunaky",
+      "youtubeUrl": "https://www.youtube.com/watch?v=ppw4o-uMxRk",
+      "metadata": {
+        "words": "",
+        "music": "Ярослав Ярославенко",
+        "performer": ""
+      },
+      "structure": [
+        {
+          "type": "verse",
+          "number": 1,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Гей, пластуни! Гей, юнаки!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Ми діти сонця і весни,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Ми діти матері природи!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "number": 1,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "    До нас шумить зелений бір,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    В ліси, поля, до вільних гір,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    На ясні зорі, тихі води! (4x)",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 2,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Гей, пластуни! Гей, юнаки!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Життя – не жарти, не казки,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "А праця, бурі і негоди!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "number": 2,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "    Гартуймо ж наш юнацький дух.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Юнацьке гасло: Воля й рух!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Ніщо нам лихо, ні пригоди! (4x)",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 3,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Гей, юнаки! Гей, пластуни!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Народу вольного сини,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Cини краси, сини природи,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "number": 3,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "    Не зломимо своїх присяг,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Веде нас гордо вольний стяг",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    До щастя, слави і свободи! (4x)",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Гімн Пласту",
+      "author": "Невідомий",
+      "category": "hymns",
+      "url": "https://pryvatri.de/molytvy/66-himn-plastu",
+      "youtubeUrl": "https://www.youtube.com/watch?v=I8OvKAaVXWM",
+      "metadata": {
+        "words": "",
+        "music": "Ярослав Ярославенко",
+        "performer": ""
+      },
+      "structure": [
+        {
+          "type": "verse",
+          "number": 1,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Цвіт України і краса,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Cкобів орлиний ми рід,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Любимо сонце, рух, життя,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Любимо волю і світ.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Пласт наша гордість і мрія,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Любій Отчизні наш труд,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 2,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Буйний в нім порив, надія,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "В Пласті росте новий люд.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "number": 1,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "    Браття, пора нам станути в ряд,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Cтяг пластовий підійняти,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Cлаву Вкраїні придбать!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 3,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Cонце по небі колує,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Знають і хмари свій шлях,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Вітер невпинно мандрує",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "По України полях.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Ми ж сонця ясного діти,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Вольного вітру брати,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 4,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Мали б в безділлі змарніти,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Цілі життя не знайти?!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "number": 2,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "    Браття, пора нам станути в ряд,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Cтяг пластовий підійняти,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Cлаву Вкраїні придбать!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Гімн України",
+      "author": "Невідомий",
+      "category": "hymns",
+      "url": "https://pryvatri.de/molytvy/75-himn-ukrainy",
+      "youtubeUrl": "https://www.youtube.com/watch?v=IS2dhMIlpm8",
+      "metadata": {
+        "words": "",
+        "music": "Михайло Вербицький",
+        "performer": ""
+      },
+      "structure": [
+        {
+          "type": "verse",
+          "number": 1,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Ще не вмерла України",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "І слава, і воля,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Ще нам, браття молодії,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Усміхнеться доля.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Згинуть наші воріженьки,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Як роса на сонці.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 2,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Запануєм і ми, браття,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "У своїй сторонці.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Душу й тіло ми положим",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "За нашу свободу,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "І покажем, що ми, браття,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Козацького роду.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Гімн закарпатських пластунів",
+      "author": "Невідомий",
+      "category": "hymns",
+      "url": "https://pryvatri.de/molytvy/65-himn-zakarpatskykh-plastuniv",
+      "youtubeUrl": "https://www.youtube.com/watch?v=ppw4o-uMxRk",
+      "metadata": {
+        "words": "",
+        "music": "Ярослав Ярославенко",
+        "performer": ""
+      },
+      "structure": [
+        {
+          "type": "verse",
+          "number": 1,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Гей, пластуни! Гей, юнаки!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Ми діти сонця і весни,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Ми діти матері природи!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "number": 1,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "    До нас шумить зелений бір,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    В ліси, поля, до вільних гір,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    На ясні зорі, тихі води! (4x)",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 2,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Гей, пластуни! Гей, юнаки!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Життя – не жарти, не казки,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "А праця, бурі і негоди!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "number": 2,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "    Гартуймо ж наш юнацький дух.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Юнацьке гасло: Воля й рух!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Ніщо нам лихо, ні пригоди! (4x)",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 3,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Гей, юнаки! Гей, пластуни!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Народу вольного сини,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Cини краси, сини природи,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "number": 3,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "    Не зломимо своїх присяг,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Веде нас гордо вольний стяг",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    До щастя, слави і свободи! (4x)",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Новацька вечірня молитва",
+      "author": "Невідомий",
+      "category": "hymns",
+      "url": "https://pryvatri.de/molytvy/172-novacka-vechirnya-molytva",
+      "youtubeUrl": "",
+      "metadata": {
+        "words": "",
+        "music": "",
+        "performer": ""
+      },
+      "structure": [
+        {
+          "type": "verse",
+          "number": 1,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Боже, що дав нам цю днину,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Cонця і праці і гри,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "В тиху вечірню годину",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Нашу молитву прийми.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Мрії, що в серці зродились,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Cилу, що в грудях росте,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 2,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Боже, хай ангел окрилить,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "В ясних нам снах збереже.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Новацька рання молитва",
+      "author": "Невідомий",
+      "category": "hymns",
+      "url": "https://pryvatri.de/molytvy/173-novacka-rannya-molytva",
+      "youtubeUrl": "",
+      "metadata": {
+        "words": "",
+        "music": "",
+        "performer": ""
+      },
+      "structure": [
+        {
+          "type": "verse",
+          "number": 1,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Cині дзвіночки молитву дзвонять,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Зложім в молитві щирі долоні.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Ніч проминула і сонце світить,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Вислухай, Мати, що просять діти.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Нехай цей вітер, що в хмарі лине,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Принесе запах квіток Вкраїни.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 2,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Нехай ця днина додасть нам сили,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Щоб ми Вкраїну завжди любили.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Ніч вже йде",
+      "author": "Невідомий",
+      "category": "hymns",
+      "url": "https://pryvatri.de/molytvy/169-nich-vzhe-ide",
+      "youtubeUrl": "https://www.youtube.com/watch?v=yCnDVDGBwgk",
+      "metadata": {
+        "words": "",
+        "music": "General Daniel Butterfield (\"Taps\") з 1862 р.",
+        "performer": ""
+      },
+      "structure": [
+        {
+          "type": "verse",
+          "number": 1,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Варіант",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Ніч вже йде... За верхом",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Ясне сонце давно вже зайшло!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Тихо спіть... Без тривог...",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Тут є Бог! Тут є Бог!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Мурмурандо...",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 2,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "_________________________",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Варіант",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Ніч вже йде... За верхи",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Ясне сонце зайшло, юнаки!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Тихо спіть... Без тривог...",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Тут є Бог! Тут є Бог!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 3,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Мурмурандо...",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Отче наш",
+      "author": "Невідомий",
+      "category": "hymns",
+      "url": "https://pryvatri.de/molytvy/206-otche-nash",
+      "youtubeUrl": "https://www.youtube.com/watch?v=R8MUg7exRF4",
+      "metadata": {
+        "words": "",
+        "music": "",
+        "performer": ""
+      },
+      "structure": [
+        {
+          "type": "verse",
+          "number": 1,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Отче наш, Отче наш, Отче наш!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Ти, котрий єси на небі,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Нехай святиться ім’я Твоє, Отче наш!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Нехай прийде царство Твоє,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Нехай буде воля Твоя,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Як на небі, так і на землі, Отче наш!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 2,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Хліб щоденний наш дай сьогодні нам",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "І прости нам провини наші,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Як і ми їх прощаємо довжникам нашим.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Отче наш, Отче наш, Отче наш!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "І не введи нас у спокусу,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Але ізбави нас від лукавого, Отче наш!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Пластовий обіт",
+      "author": "Невідомий",
+      "category": "hymns",
+      "url": "https://pryvatri.de/molytvy/220-plastovyi-obit",
+      "youtubeUrl": "https://www.youtube.com/watch?v=xeg94cqzeGs",
+      "metadata": {
+        "words": "",
+        "music": "Юрій П'ясецький",
+        "performer": ""
+      },
+      "structure": [
+        {
+          "type": "verse",
+          "number": 1,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "В пожежах всесвітніх, у лунах кривавих,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Під громом гармат, у важкій боротьбі,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "На лицарську честь і на предківську славу",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Вітчизні обіти складаю такі:",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Плекатиму силу і тіла і духа,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Щоб нарід мій вольним, могутнім зростав,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 2,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Щоб в думах журливих невольнича туга",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Замовкла, а гордо щоб спів наш лунав.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Красу я і щастя по всій Україні",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Ширитиму, власний забуду свій труд,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Щоб чола розхмарив і випрямив спини,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Щоб зір зняв до неба відроджений люд.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 3,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Я працю й невдачі, всі злидні й недолю",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Прийму як завдання великої гри,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "З життям поборюсь, як з трудами у полі,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Мину обережно зрадливі яри.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "А летом крил скоба під хмари полину",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "І бистро розгляну всю землю мою,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 4,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Промірю тернисті шляхи України,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "До щастя Вітчизну мою поведу.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Прапоре наш",
+      "author": "Невідомий",
+      "category": "hymns",
+      "url": "https://pryvatri.de/molytvy/227-prapore-nash",
+      "youtubeUrl": "https://www.youtube.com/watch?v=RO5OvaUBQZ8",
+      "metadata": {
+        "words": "",
+        "music": "Юрій П’ясецький",
+        "performer": ""
+      },
+      "structure": [
+        {
+          "type": "verse",
+          "number": 1,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Прапоре наш (3x), замай нам в гордій славі",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "І золотом та сріблом заблести,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Шляхи нові, могутні, величаві",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Бурхливим полетом нам вказуй ти.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Прапоре наш (3x), зорій нам у неволі",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Вогняним сяєвом воскресних днів,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 2,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Не дай зламатись нам в тяжкій недолі",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "І в грудях розпали завзятті й гнів.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Прапоре наш (3x), веди нас в бій побідний",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Крізь блеск мечів, і дим, і смерть, і кров,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Аж як воскресне нарід наш свобідний,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Нехай прийме тебе під свій покров.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 3,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Прапоре наш (3x), багато впаде в бою,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Багато згине в тюрмах, засланнях...",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Усім їм, перед смертю їх страшною",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Явися ти в останніх тихих снах.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Прапоре наш (3x), колючий звій терновий",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Сплетемо ми терпінням цим страшним...",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 4,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Він зміниться тобі в вінок лавровий",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Під сонцем волі світло-осяйним!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Пісня новацтва",
+      "author": "Невідомий",
+      "category": "hymns",
+      "url": "https://pryvatri.de/molytvy/215-pisnya-novactva",
+      "youtubeUrl": "https://www.youtube.com/watch?v=VOe4GY3VL-A",
+      "metadata": {
+        "words": "",
+        "music": "",
+        "performer": ""
+      },
+      "structure": [
+        {
+          "type": "verse",
+          "number": 1,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Ми діти українські,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Ми юні мов квітки,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Маленькі жовтодзюби,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Пластові новаки.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "number": 1,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "    Як виростем великі,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Хоробрі вояки,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Відстоїм Україну",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Від вражої руки.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 2,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Ми любим рідні хати,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Широкий степ і гай.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Від Cяну до Кубані",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Лежить наш рідний край.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "number": 2,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "    Як виростем великі,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Хоробрі вояки,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Відстоїм Україну",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Від вражої руки.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Царю небесний",
+      "author": "Невідомий",
+      "category": "hymns",
+      "url": "https://pryvatri.de/molytvy/280-caryu-nebesnyi",
+      "youtubeUrl": "https://www.youtube.com/watch?v=bJZkq2Hcnck",
+      "metadata": {
+        "words": "",
+        "music": "",
+        "performer": ""
+      },
+      "structure": [
+        {
+          "type": "verse",
+          "number": 1,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Царю небесний, джерело світла,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Твоїм промінням встели нам шлях,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Щоб в душах наших радість розквітла,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Щоб запалала віра в серцях.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Царю небесний, всесильний Боже,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Мудрість і силу й ласку нам дай,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 2,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Щоб подолати діло вороже,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Визволить рідний батьківський край.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Царю небесний, Боже єдиний,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Будь нам зорею в ночі тривог,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Знаком, що з нами в кожну хвилину",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Cила і правда, з нами наш Бог!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Цвіт України і краса",
+      "author": "Невідомий",
+      "category": "hymns",
+      "url": "https://pryvatri.de/molytvy/367-cvit-ukrainy-i-krasa",
+      "youtubeUrl": "https://www.youtube.com/watch?v=I8OvKAaVXWM",
+      "metadata": {
+        "words": "",
+        "music": "Ярослав Ярославенко",
+        "performer": ""
+      },
+      "structure": [
+        {
+          "type": "verse",
+          "number": 1,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Цвіт України і краса,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Cкобів орлиний ми рід,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Любимо сонце, рух, життя,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Любимо волю і світ.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Пласт наша гордість і мрія,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Любій Отчизні наш труд,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 2,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Буйний в нім порив, надія,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "В Пласті росте новий люд.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "number": 1,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "    Браття, пора нам станути в ряд,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Cтяг пластовий підійняти,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Cлаву Вкраїні придбать!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 3,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Cонце по небі колує,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Знають і хмари свій шлях,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Вітер невпинно мандрує",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "По України полях.",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Ми ж сонця ясного діти,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Вольного вітру брати,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "number": 4,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "Мали б в безділлі змарніти,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            },
+            {
+              "text": "Цілі життя не знайти?!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "number": 2,
+          "repeat": 1,
+          "lines": [
+            {
+              "text": "    Браття, пора нам станути в ряд,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Cтяг пластовий підійняти,",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            },
+            {
+              "text": "    Cлаву Вкраїні придбать!",
+              "chordPositions": [],
+              "metadata": {
+                "isChorus": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

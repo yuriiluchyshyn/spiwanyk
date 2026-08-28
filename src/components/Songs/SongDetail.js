@@ -44,7 +44,7 @@ const SongDetail = () => {
     );
   }
 
-  const seoDescription = `${song.title}${song.author ? ` — ${song.author}` : ''}. Слова та акорди пісні на сайті "Давай співати".`;
+  const seoDescription = `${song.title}${song.author ? ` — ${song.author}` : ''}. Слова та акорди пісні на сайті "Кантичка".`;
 
   return (
     <div className="song-detail">
