@@ -303,9 +303,17 @@ body.bv-dragging-active {
   font-weight: 600;
   color: #3e2415;
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.bv-song-title-text {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .bv-song-author {
@@ -322,16 +330,13 @@ body.bv-dragging-active {
   flex-shrink: 0;
 }
 
-/* Значок наявності акордів (не інтерактивний) */
+/* Значок наявності акордів (не інтерактивний) — одразу після назви */
 .bv-chords-badge {
-  width: 30px;
-  height: 30px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
   color: #d2691e;
-  background: rgba(210, 105, 30, 0.1);
+  background: transparent;
   font-size: 0.8rem;
   flex-shrink: 0;
 }

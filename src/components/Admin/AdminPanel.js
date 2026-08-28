@@ -55,6 +55,13 @@ function AdminPanel() {
   const [toasts, setToasts] = useState([]);
   const [activeTab, setActiveTab] = useState('songs'); // 'songs' | 'categories'
 
+  // Фільтри та пагінація списку пісень
+  const [songSearch, setSongSearch] = useState('');
+  const [songCategoryFilter, setSongCategoryFilter] = useState(''); // '' = усі розділи
+  const [songChordsFilter, setSongChordsFilter] = useState('all'); // 'all' | 'with' | 'without'
+  const [songPage, setSongPage] = useState(1);
+  const SONGS_PER_PAGE = 20;
+
   // Category editing state
   const [editingCategory, setEditingCategory] = useState(null);
   const [newCategory, setNewCategory] = useState({ ...EMPTY_CATEGORY });
@@ -390,6 +397,37 @@ function AdminPanel() {
     return c ? c.name : id;
   };
 
+  // === Фільтрація та пагінація пісень ===
+  const normalizedSearch = songSearch.trim().toLowerCase();
+  const filteredSongs = songs.filter(song => {
+    if (songCategoryFilter && song.category !== songCategoryFilter) return false;
+    if (songChordsFilter === 'with' && !song.hasChords) return false;
+    if (songChordsFilter === 'without' && song.hasChords) return false;
+    if (normalizedSearch) {
+      const haystack = `${song.title || ''} ${song.author || ''}`.toLowerCase();
+      if (!haystack.includes(normalizedSearch)) return false;
+    }
+    return true;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filteredSongs.length / SONGS_PER_PAGE));
+  const currentPage = Math.min(songPage, totalPages);
+  const pageStart = (currentPage - 1) * SONGS_PER_PAGE;
+  const pagedSongs = filteredSongs.slice(pageStart, pageStart + SONGS_PER_PAGE);
+
+  // Скидаємо на першу сторінку при зміні фільтрів
+  useEffect(() => {
+    setSongPage(1);
+  }, [songSearch, songCategoryFilter, songChordsFilter]);
+
+  const hasSongFilters = normalizedSearch || songCategoryFilter || songChordsFilter !== 'all';
+
+  const resetSongFilters = () => {
+    setSongSearch('');
+    setSongCategoryFilter('');
+    setSongChordsFilter('all');
+  };
+
   return (
     <div className="admin-panel">
       <h1>⚙️ Адмін-панель</h1>
@@ -473,10 +511,54 @@ function AdminPanel() {
             </div>
           )}
 
+          {!loading && songs.length > 0 && (
+            <div className="admin-song-filters">
+              <input
+                type="text"
+                className="admin-song-search"
+                placeholder="🔍 Пошук за назвою або автором..."
+                value={songSearch}
+                onChange={(e) => setSongSearch(e.target.value)}
+              />
+              <select
+                className="admin-song-filter-select"
+                value={songCategoryFilter}
+                onChange={(e) => setSongCategoryFilter(e.target.value)}
+                title="Фільтр за розділом"
+              >
+                <option value="">Усі розділи</option>
+                {orderedCategories.map(cat => (
+                  <option key={cat.id || cat._id} value={cat.id}>
+                    {'\u00A0\u00A0'.repeat(cat.depth)}{cat.name}
+                  </option>
+                ))}
+              </select>
+              <select
+                className="admin-song-filter-select"
+                value={songChordsFilter}
+                onChange={(e) => setSongChordsFilter(e.target.value)}
+                title="Фільтр за акордами"
+              >
+                <option value="all">Усі пісні</option>
+                <option value="with">З акордами</option>
+                <option value="without">Без акордів</option>
+              </select>
+              {hasSongFilters && (
+                <button className="btn-reset-filters" onClick={resetSongFilters}>
+                  ✕ Скинути
+                </button>
+              )}
+            </div>
+          )}
+
           <div className="admin-song-list">
             <div className="admin-song-list-header">
               <span>Пісні в базі</span>
-              <span>{songs.length} шт.</span>
+              <span>
+                {hasSongFilters
+                  ? `${filteredSongs.length} з ${songs.length} шт.`
+                  : `${songs.length} шт.`}
+              </span>
             </div>
 
             {loading && (
@@ -490,7 +572,11 @@ function AdminPanel() {
               <div className="admin-empty">База порожня. Натисніть "Імпорт з JSON" щоб завантажити пісні.</div>
             )}
 
-            {!loading && songs.map(song => (
+            {!loading && songs.length > 0 && filteredSongs.length === 0 && (
+              <div className="admin-empty">Нічого не знайдено. Спробуйте змінити фільтри.</div>
+            )}
+
+            {!loading && pagedSongs.map(song => (
               <div key={song._id} className="admin-song-item">
                 <div className="admin-song-info">
                   <div className="admin-song-title">
@@ -538,6 +624,44 @@ function AdminPanel() {
               </div>
             ))}
           </div>
+
+          {!loading && totalPages > 1 && (
+            <div className="admin-pagination">
+              <button
+                className="btn-page"
+                onClick={() => setSongPage(1)}
+                disabled={currentPage === 1}
+                title="Перша сторінка"
+              >
+                «
+              </button>
+              <button
+                className="btn-page"
+                onClick={() => setSongPage(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                ‹ Назад
+              </button>
+              <span className="admin-page-info">
+                Сторінка {currentPage} з {totalPages}
+              </span>
+              <button
+                className="btn-page"
+                onClick={() => setSongPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                Далі ›
+              </button>
+              <button
+                className="btn-page"
+                onClick={() => setSongPage(totalPages)}
+                disabled={currentPage === totalPages}
+                title="Остання сторінка"
+              >
+                »
+              </button>
+            </div>
+          )}
         </>
       )}
 

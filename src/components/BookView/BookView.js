@@ -234,15 +234,17 @@ const SongItem = forwardRef(({
           </span>
         )}
         <div className="bv-song-info">
-          <h3 className="bv-song-title">{song.title}</h3>
+          <h3 className="bv-song-title">
+            <span className="bv-song-title-text">{song.title}</span>
+            {song.hasChords && (
+              <span className="bv-chords-badge" title="Є акорди">
+                <FaGuitar />
+              </span>
+            )}
+          </h3>
           {song.author && <span className="bv-song-author">{song.author}</span>}
         </div>
         <div className="bv-song-actions">
-          {song.hasChords && (
-            <span className="bv-chords-badge" title="Є акорди">
-              <FaGuitar />
-            </span>
-          )}
           {currentSingSong === song._id ? (
             <button
               className={`bv-song-sing active ${singingIsMine ? 'mine' : 'by-other'}`}
@@ -498,7 +500,10 @@ const BookView = ({ onClose, songbookData, initialSingScrollSongId = null, scrol
           const sKey = s.section ? s.section.toString() : null;
           return sectionId ? sKey === sectionId.toString() : !sKey;
         })
-        .sort((a, b) => (a.order || 0) - (b.order || 0))
+        // Пісні в розділі завжди за абеткою (назва пісні)
+        .sort((a, b) =>
+          (a.song?.title || '').localeCompare(b.song?.title || '', 'uk')
+        )
         .map((s) => {
           const song = s.song || {};
           return { 

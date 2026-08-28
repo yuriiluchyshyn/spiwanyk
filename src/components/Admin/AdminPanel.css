@@ -128,6 +128,104 @@
   cursor: not-allowed;
 }
 
+/* Song filters */
+.admin-song-filters {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.admin-song-search {
+  flex: 1;
+  min-width: 200px;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid rgba(196, 168, 130, 0.3);
+  border-radius: 10px;
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.admin-song-search:focus {
+  border-color: var(--fire-orange);
+}
+
+.admin-song-filter-select {
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgba(196, 168, 130, 0.3);
+  border-radius: 10px;
+  font-size: 0.82rem;
+  outline: none;
+  background: #fff;
+  color: var(--dark-brown);
+  cursor: pointer;
+  max-width: 200px;
+  transition: border-color 0.2s;
+}
+
+.admin-song-filter-select:hover,
+.admin-song-filter-select:focus {
+  border-color: var(--fire-orange);
+}
+
+.btn-reset-filters {
+  padding: 0.55rem 0.9rem;
+  background: transparent;
+  border: 1px solid rgba(196, 168, 130, 0.3);
+  color: var(--warm-gray);
+  border-radius: 10px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-reset-filters:hover {
+  border-color: var(--fire-orange);
+  color: var(--fire-orange);
+}
+
+/* Pagination */
+.admin-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.btn-page {
+  padding: 0.45rem 0.8rem;
+  background: #fff;
+  border: 1px solid rgba(196, 168, 130, 0.3);
+  color: var(--dark-brown);
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-page:hover:not(:disabled) {
+  border-color: var(--fire-orange);
+  background: rgba(232, 168, 124, 0.08);
+}
+
+.btn-page:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.admin-page-info {
+  font-size: 0.82rem;
+  color: var(--warm-gray);
+  padding: 0 0.5rem;
+  white-space: nowrap;
+}
+
 /* Song list */
 .admin-song-list {
   background: #fff;

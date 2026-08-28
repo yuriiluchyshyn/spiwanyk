@@ -25,7 +25,7 @@ const Header = () => {
           <Link to="/" className="logo">
             <FiMusic />
             <span className="logo-text">
-              <span className="logo-name">Кантичка</span>
+              <span className="logo-name">Файні Співанки</span>
               <span className="logo-tagline">Давай співати</span>
             </span>
           </Link>
