@@ -380,19 +380,27 @@
 .category-card .category-info {
   flex: 1;
   min-width: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 
+.category-card .category-info h2,
 .category-card .category-info h3 {
   font-size: 1rem;
   font-weight: 600;
   color: var(--dark-brown);
-  margin: 0 0 0.15rem 0;
+  margin: 0;
   line-height: 1.3;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .category-card .category-count {
   font-size: 0.85rem;
   color: var(--stone-gray);
+  flex-shrink: 0;
 }
 
 /* Category detail header */

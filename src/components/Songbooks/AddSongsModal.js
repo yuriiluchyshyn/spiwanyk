@@ -144,7 +144,7 @@ const AddSongsModal = ({ songbook, isOpen, onClose, onSongAdded, onSongRemoved =
         </button>
       </div>
 
-      {songbook.sections && songbook.sections.length > 0 && (
+      {!sessionOnly && songbook.sections && songbook.sections.length > 0 && (
         <div className="section-selector-bar">
           <label>Розділ:</label>
           <select
