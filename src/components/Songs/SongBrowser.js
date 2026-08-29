@@ -202,6 +202,13 @@ const SongBrowser = ({ onAddSong, addingSongs, addedSongs, excludeSongIds, compa
   const [currentCategoryId, setCurrentCategoryId] = useState(null); // null = корінь
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedSongId, setExpandedSongId] = useState(null);
+  const [categoryPage, setCategoryPage] = useState(1); // пагінація списку пісень розділу
+  const SONGS_PER_PAGE = 20;
+
+  // При зміні розділу повертаємось на першу сторінку
+  useEffect(() => {
+    setCategoryPage(1);
+  }, [currentCategoryId]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -257,17 +264,22 @@ const SongBrowser = ({ onAddSong, addingSongs, addedSongs, excludeSongIds, compa
   };
 
   // Пісні, що належать безпосередньо цьому розділу (без підрозділів).
+  // Завжди відсортовані за абеткою (українська локаль).
   const getDirectSongs = (categoryId) =>
-    getVisibleSongs().filter(song => song.category === categoryId);
+    getVisibleSongs()
+      .filter(song => song.category === categoryId)
+      .sort((a, b) => (a.title || '').localeCompare(b.title || '', 'uk'));
 
   const getSearchResults = () => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return [];
-    return getVisibleSongs().filter(song =>
-      song.title.toLowerCase().includes(q) ||
-      song.lyrics?.toLowerCase().includes(q) ||
-      song.author?.toLowerCase().includes(q)
-    );
+    return getVisibleSongs()
+      .filter(song =>
+        song.title.toLowerCase().includes(q) ||
+        song.lyrics?.toLowerCase().includes(q) ||
+        song.author?.toLowerCase().includes(q)
+      )
+      .sort((a, b) => (a.title || '').localeCompare(b.title || '', 'uk'));
   };
 
   const handleToggleExpand = (songId) => {
@@ -351,6 +363,11 @@ const SongBrowser = ({ onAddSong, addingSongs, addedSongs, excludeSongIds, compa
     const childCategories = getChildCategories(currentCategoryId);
     const directSongs = getDirectSongs(currentCategoryId);
 
+    const totalPages = Math.max(1, Math.ceil(directSongs.length / SONGS_PER_PAGE));
+    const page = Math.min(categoryPage, totalPages);
+    const pageStart = (page - 1) * SONGS_PER_PAGE;
+    const pagedSongs = directSongs.slice(pageStart, pageStart + SONGS_PER_PAGE);
+
     return (
       <div className={`song-list ${compact ? 'compact' : ''}`}>
         <div className="category-header">
@@ -375,9 +392,47 @@ const SongBrowser = ({ onAddSong, addingSongs, addedSongs, excludeSongIds, compa
         )}
 
         {directSongs.length > 0 && (
-          <div className="songs-grid">
-            {directSongs.map(renderSongCard)}
-          </div>
+          <>
+            <div className="songs-grid">
+              {pagedSongs.map(renderSongCard)}
+            </div>
+
+            {totalPages > 1 && (
+              <div className="songs-pagination">
+                <button
+                  className="page-btn"
+                  onClick={() => setCategoryPage(1)}
+                  disabled={page === 1}
+                  title="Перша сторінка"
+                >
+                  «
+                </button>
+                <button
+                  className="page-btn"
+                  onClick={() => setCategoryPage(page - 1)}
+                  disabled={page === 1}
+                >
+                  ‹
+                </button>
+                <span className="page-info">{page} / {totalPages}</span>
+                <button
+                  className="page-btn"
+                  onClick={() => setCategoryPage(page + 1)}
+                  disabled={page === totalPages}
+                >
+                  ›
+                </button>
+                <button
+                  className="page-btn"
+                  onClick={() => setCategoryPage(totalPages)}
+                  disabled={page === totalPages}
+                  title="Остання сторінка"
+                >
+                  »
+                </button>
+              </div>
+            )}
+          </>
         )}
 
         {childCategories.length === 0 && directSongs.length === 0 && (
