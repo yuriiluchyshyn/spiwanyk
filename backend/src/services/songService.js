@@ -186,6 +186,56 @@ const adminDeleteAll = async () => {
 };
 
 /**
+ * Admin: delete all songs that belong to any of the given category ids.
+ * Returns the number of removed documents.
+ */
+const adminDeleteByCategories = async (categoryIds) => {
+  const ids = (Array.isArray(categoryIds) ? categoryIds : [])
+    .map((c) => String(c).trim())
+    .filter(Boolean);
+  if (ids.length === 0) {
+    throw ApiError.badRequest('Не вказано жодного розділу');
+  }
+  const result = await Song.deleteMany({ category: { $in: ids } });
+  return result.deletedCount;
+};
+
+/**
+ * Admin: delete a set of songs by their ids. Returns the number removed.
+ */
+const adminDeleteByIds = async (songIds) => {
+  const ids = (Array.isArray(songIds) ? songIds : [])
+    .map((s) => String(s).trim())
+    .filter(Boolean);
+  if (ids.length === 0) {
+    throw ApiError.badRequest('Не вказано жодної пісні');
+  }
+  const result = await Song.deleteMany({ _id: { $in: ids } });
+  return result.deletedCount;
+};
+
+/**
+ * Admin: move a set of songs (by ids) into another category.
+ * Returns the number of updated documents.
+ */
+const adminSetCategoryForIds = async (songIds, category) => {
+  const ids = (Array.isArray(songIds) ? songIds : [])
+    .map((s) => String(s).trim())
+    .filter(Boolean);
+  if (ids.length === 0) {
+    throw ApiError.badRequest('Не вказано жодної пісні');
+  }
+  if (!category || !String(category).trim()) {
+    throw ApiError.badRequest('Не вказано розділ');
+  }
+  const result = await Song.updateMany(
+    { _id: { $in: ids } },
+    { category: String(category).trim() }
+  );
+  return result.modifiedCount;
+};
+
+/**
  * Admin: delete a single song by id without ownership checks.
  */
 const adminDeleteById = async (id) => {
@@ -347,6 +397,9 @@ module.exports = {
   remove,
   adminList,
   adminDeleteAll,
+  adminDeleteByCategories,
+  adminDeleteByIds,
+  adminSetCategoryForIds,
   adminDeleteById,
   adminUpdateCategory,
   adminGetById,

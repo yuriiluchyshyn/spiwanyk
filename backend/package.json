@@ -12,6 +12,7 @@
     "scrape-carols": "node src/scripts/scrapeCarols.js",
     "scrape-cossack": "node src/scripts/scrapeCossack.js",
     "scrape-author": "node src/scripts/scrapeAuthor.js",
+    "scrape-plast-pisennyk": "node src/scripts/scrapePlastPisennyk.js",
     "export-import": "node src/scripts/exportForImport.js",
     "scrape-test": "node src/scripts/testParser.js",
     "improve-chords": "node src/scripts/improveChords.js",

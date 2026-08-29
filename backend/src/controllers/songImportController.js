@@ -2,7 +2,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const songImportService = require('../services/songImportService');
 
 const importFromJson = asyncHandler(async (req, res) => {
-  const { totalInFile, imported, skipped, totalInDatabase, errors } =
+  const { totalInFile, imported, skipped, skippedTitles, totalInDatabase, errors } =
     await songImportService.importFromJson(req.body);
 
   res.json({
@@ -14,6 +14,7 @@ const importFromJson = asyncHandler(async (req, res) => {
       errors: errors.length,
       totalInDatabase
     },
+    ...(skippedTitles.length > 0 && { skippedTitles }),
     ...(errors.length > 0 && { errors })
   });
 });

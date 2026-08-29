@@ -107,14 +107,14 @@ const importFromJson = async (body) => {
   const importUser = await getOrCreateImportUser();
 
   let imported = 0;
-  let skipped = 0;
+  const skippedTitles = [];
   const errors = [];
 
   for (const songData of data.songs) {
     try {
       const existingSong = await Song.findOne({ title: songData.title });
       if (existingSong) {
-        skipped++;
+        skippedTitles.push(songData.title || 'Без назви');
         continue;
       }
 
@@ -122,7 +122,7 @@ const importFromJson = async (body) => {
       await newSong.save();
       imported++;
     } catch (err) {
-      errors.push({ title: songData.title, error: err.message });
+      errors.push({ title: songData.title || 'Без назви', error: err.message });
     }
   }
 
@@ -131,7 +131,8 @@ const importFromJson = async (body) => {
   return {
     totalInFile: data.songs.length,
     imported,
-    skipped,
+    skipped: skippedTitles.length,
+    skippedTitles,
     totalInDatabase,
     errors
   };

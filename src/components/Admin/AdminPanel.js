@@ -62,6 +62,10 @@ function AdminPanel() {
   const [songPage, setSongPage] = useState(1);
   const SONGS_PER_PAGE = 20;
 
+  // Масовий вибір пісень (чекбокси у списку)
+  const [selectedSongIds, setSelectedSongIds] = useState(() => new Set());
+  const [bulkCategory, setBulkCategory] = useState('');
+
   // Category editing state
   const [editingCategory, setEditingCategory] = useState(null);
   const [newCategory, setNewCategory] = useState({ ...EMPTY_CATEGORY });
@@ -134,6 +138,24 @@ function AdminPanel() {
       showStatus('success',
         `Імпорт завершено! Додано: ${r.imported}, пропущено: ${r.skipped}, помилок: ${r.errors}. Всього в базі: ${r.totalInDatabase}`
       );
+
+      // Показуємо, які саме пісні НЕ були завантажені (пропущені + з помилками).
+      const skippedTitles = res.data.skippedTitles || [];
+      const errorItems = res.data.errors || [];
+      if (skippedTitles.length > 0 || errorItems.length > 0) {
+        const parts = [];
+        if (skippedTitles.length > 0) {
+          parts.push(`Пропущено (вже існують): ${skippedTitles.join(', ')}`);
+        }
+        if (errorItems.length > 0) {
+          parts.push(
+            `Помилки: ${errorItems.map(e => `${e.title} (${e.error})`).join('; ')}`
+          );
+        }
+        // Тип 'error' → повідомлення не зникає саме, його закривають вручну.
+        showStatus('error', `Не завантажено ${skippedTitles.length + errorItems.length} пісень. ${parts.join('. ')}`);
+      }
+
       await fetchSongs();
     } catch (err) {
       if (err instanceof SyntaxError) {
@@ -186,6 +208,85 @@ function AdminPanel() {
       );
     } catch (err) {
       showStatus('error', 'Помилка експорту: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Видалити всі пісні з вибраних розділів (використовує той самий вибір, що й експорт).
+  const handleDeleteSelectedCategories = async () => {
+    if (exportCats.length === 0) {
+      showStatus('error', 'Спочатку виберіть хоча б один розділ');
+      return;
+    }
+    const names = exportCats
+      .map(id => orderedCategories.find(c => c.id === id)?.name || id)
+      .join(', ');
+    if (!window.confirm(`Видалити ВСІ пісні з розділів: ${names}?\n\nЦю дію неможливо скасувати.`)) return;
+
+    try {
+      setLoading(true);
+      const res = await axios.post(`${API_BASE_URL}/songs/admin/delete-by-category`, {
+        categories: exportCats
+      });
+      showStatus('success', `Видалено ${res.data.deletedCount} пісень із вибраних розділів`);
+      await fetchSongs();
+    } catch (err) {
+      showStatus('error', 'Помилка видалення: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // === Масовий вибір пісень ===
+  const toggleSongSelect = (id) => {
+    setSelectedSongIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const clearSongSelection = () => setSelectedSongIds(new Set());
+
+  // Видалити всі вибрані пісні
+  const handleBulkDeleteSongs = async () => {
+    const ids = [...selectedSongIds];
+    if (ids.length === 0) return;
+    if (!window.confirm(`Видалити ${ids.length} вибраних пісень? Цю дію неможливо скасувати.`)) return;
+    try {
+      setLoading(true);
+      const res = await axios.post(`${API_BASE_URL}/songs/admin/songs/bulk-delete`, { ids });
+      showStatus('success', `Видалено ${res.data.deletedCount} пісень`);
+      clearSongSelection();
+      await fetchSongs();
+    } catch (err) {
+      showStatus('error', 'Помилка видалення: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Перенести всі вибрані пісні в інший розділ
+  const handleBulkMoveSongs = async () => {
+    const ids = [...selectedSongIds];
+    if (ids.length === 0) return;
+    if (!bulkCategory) {
+      showStatus('error', 'Виберіть розділ, у який перенести');
+      return;
+    }
+    try {
+      setLoading(true);
+      const res = await axios.post(`${API_BASE_URL}/songs/admin/songs/bulk-category`, {
+        ids,
+        category: bulkCategory
+      });
+      showStatus('success', `Перенесено ${res.data.modifiedCount} пісень`);
+      clearSongSelection();
+      setBulkCategory('');
+      await fetchSongs();
+    } catch (err) {
+      showStatus('error', 'Помилка перенесення: ' + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
     }
@@ -448,6 +549,18 @@ function AdminPanel() {
     setSongChordsFilter('all');
   };
 
+  const allFilteredSelected =
+    filteredSongs.length > 0 && filteredSongs.every(s => selectedSongIds.has(s._id));
+
+  const toggleSelectAllFiltered = () => {
+    setSelectedSongIds(prev => {
+      const next = new Set(prev);
+      if (allFilteredSelected) filteredSongs.forEach(s => next.delete(s._id));
+      else filteredSongs.forEach(s => next.add(s._id));
+      return next;
+    });
+  };
+
   return (
     <div className="admin-panel">
       <h1>⚙️ Адмін-панель</h1>
@@ -527,6 +640,14 @@ function AdminPanel() {
                 <button className="btn-import" onClick={handleExport} disabled={loading}>
                   ⬇️ Завантажити JSON{exportCats.length > 0 ? ` (${exportCats.length})` : ' (всі)'}
                 </button>
+                <button
+                  className="btn-delete-all"
+                  onClick={handleDeleteSelectedCategories}
+                  disabled={loading || exportCats.length === 0}
+                  title={exportCats.length === 0 ? 'Виберіть розділи для видалення' : 'Видалити всі пісні з вибраних розділів'}
+                >
+                  🗑️ Видалити пісні вибраних розділів{exportCats.length > 0 ? ` (${exportCats.length})` : ''}
+                </button>
               </div>
             </div>
           )}
@@ -571,9 +692,52 @@ function AdminPanel() {
             </div>
           )}
 
+          {selectedSongIds.size > 0 && (
+            <div className="admin-bulk-bar">
+              <span className="admin-bulk-count">Вибрано: {selectedSongIds.size}</span>
+              <select
+                className="admin-song-filter-select"
+                value={bulkCategory}
+                onChange={(e) => setBulkCategory(e.target.value)}
+                title="Перенести вибрані пісні в розділ"
+              >
+                <option value="">— перенести в розділ —</option>
+                {orderedCategories.map(cat => (
+                  <option key={cat.id || cat._id} value={cat.id}>
+                    {'\u00A0\u00A0'.repeat(cat.depth)}{cat.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                className="btn-import"
+                onClick={handleBulkMoveSongs}
+                disabled={loading || !bulkCategory}
+              >
+                ↪️ Перенести
+              </button>
+              <button className="btn-delete-all" onClick={handleBulkDeleteSongs} disabled={loading}>
+                🗑️ Видалити вибрані
+              </button>
+              <button className="btn-reset-filters" onClick={clearSongSelection}>
+                ✕ Зняти вибір
+              </button>
+            </div>
+          )}
+
           <div className="admin-song-list">
             <div className="admin-song-list-header">
-              <span>Пісні в базі</span>
+              {!loading && filteredSongs.length > 0 ? (
+                <label className="admin-select-all">
+                  <input
+                    type="checkbox"
+                    checked={allFilteredSelected}
+                    onChange={toggleSelectAllFiltered}
+                  />
+                  <span>Пісні в базі</span>
+                </label>
+              ) : (
+                <span>Пісні в базі</span>
+              )}
               <span>
                 {hasSongFilters
                   ? `${filteredSongs.length} з ${songs.length} шт.`
@@ -597,7 +761,17 @@ function AdminPanel() {
             )}
 
             {!loading && pagedSongs.map(song => (
-              <div key={song._id} className="admin-song-item">
+              <div
+                key={song._id}
+                className={`admin-song-item ${selectedSongIds.has(song._id) ? 'selected' : ''}`}
+              >
+                <input
+                  type="checkbox"
+                  className="admin-song-checkbox"
+                  checked={selectedSongIds.has(song._id)}
+                  onChange={() => toggleSongSelect(song._id)}
+                  title="Вибрати пісню"
+                />
                 <div className="admin-song-info">
                   <div className="admin-song-title">
                     <span className="admin-song-title-text">{song.title}</span>

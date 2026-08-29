@@ -52,6 +52,29 @@ const adminDeleteAll = asyncHandler(async (req, res) => {
   res.json({ message: 'Всі пісні видалено', deletedCount });
 });
 
+const adminDeleteByCategory = asyncHandler(async (req, res) => {
+  // Розділи приймаємо або з тіла (categories: [...]), або з query (?categories=a,b)
+  let categories = req.body?.categories;
+  if (!categories && typeof req.query.categories === 'string') {
+    categories = req.query.categories.split(',');
+  }
+  const deletedCount = await songService.adminDeleteByCategories(categories);
+  res.json({ message: 'Пісні вибраних розділів видалено', deletedCount });
+});
+
+const adminBulkDelete = asyncHandler(async (req, res) => {
+  const deletedCount = await songService.adminDeleteByIds(req.body?.ids);
+  res.json({ message: 'Вибрані пісні видалено', deletedCount });
+});
+
+const adminBulkCategory = asyncHandler(async (req, res) => {
+  const modifiedCount = await songService.adminSetCategoryForIds(
+    req.body?.ids,
+    req.body?.category
+  );
+  res.json({ message: 'Розділ вибраних пісень оновлено', modifiedCount });
+});
+
 const adminDeleteById = asyncHandler(async (req, res) => {
   const song = await songService.adminDeleteById(req.params.id);
   res.json({ message: 'Пісню видалено', song });
@@ -87,6 +110,9 @@ module.exports = {
   remove,
   adminList,
   adminDeleteAll,
+  adminDeleteByCategory,
+  adminBulkDelete,
+  adminBulkCategory,
   adminDeleteById,
   adminUpdateCategory,
   adminGetById,
