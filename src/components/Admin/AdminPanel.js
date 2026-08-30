@@ -34,6 +34,22 @@ function buildCategoryTree(cats) {
   return result;
 }
 
+// Короткий формат дати для таблиць адмінки (напр. 29.08.2026).
+function formatDate(value) {
+  if (!value) return '—';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+// Людяна назва рівня приватності співаника.
+const PRIVACY_LABELS = {
+  private: '🔒 Приватний',
+  public: '🌍 Публічний',
+  shared: '🔗 Спільний',
+  nearby: '📍 Поблизу'
+};
+
 // Іконка категорії або кружечок з кольором, якщо емодзі не задано.
 function CategoryGlyph({ icon, color }) {
   if (icon && icon.trim()) {
@@ -53,7 +69,17 @@ function AdminPanel() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [toasts, setToasts] = useState([]);
-  const [activeTab, setActiveTab] = useState('songs'); // 'songs' | 'categories'
+  const [activeTab, setActiveTab] = useState('songs'); // 'songs' | 'categories' | 'users' | 'songbooks'
+
+  // Користувачі та співаники (вкладки перегляду)
+  const [users, setUsers] = useState([]);
+  const [songbooks, setSongbooks] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [songbooksLoading, setSongbooksLoading] = useState(false);
+  const [userSearch, setUserSearch] = useState('');
+  const [songbookSearch, setSongbookSearch] = useState('');
+  const [editingSongbookId, setEditingSongbookId] = useState(null);
+  const [editingSongbookTitle, setEditingSongbookTitle] = useState('');
 
   // Фільтри та пагінація списку пісень
   const [songSearch, setSongSearch] = useState('');
@@ -115,10 +141,70 @@ function AdminPanel() {
     }
   }, []);
 
+  const fetchUsers = useCallback(async () => {
+    try {
+      setUsersLoading(true);
+      const res = await axios.get(`${API_BASE_URL}/songs/admin/users`);
+      setUsers(res.data.users || []);
+    } catch (err) {
+      showStatus('error', 'Помилка завантаження користувачів');
+    } finally {
+      setUsersLoading(false);
+    }
+  }, []);
+
+  const fetchSongbooks = useCallback(async () => {
+    try {
+      setSongbooksLoading(true);
+      const res = await axios.get(`${API_BASE_URL}/songs/admin/songbooks`);
+      setSongbooks(res.data.songbooks || []);
+    } catch (err) {
+      showStatus('error', 'Помилка завантаження співаників');
+    } finally {
+      setSongbooksLoading(false);
+    }
+  }, []);
+
+  // Почати/скасувати редагування назви співаника
+  const startEditSongbook = (sb) => {
+    setEditingSongbookId(sb._id);
+    setEditingSongbookTitle(sb.title || '');
+  };
+
+  const cancelEditSongbook = () => {
+    setEditingSongbookId(null);
+    setEditingSongbookTitle('');
+  };
+
+  // Зберегти нову назву співаника
+  const handleSaveSongbookTitle = async (id) => {
+    const title = editingSongbookTitle.trim();
+    if (!title) {
+      showStatus('error', 'Назва співаника не може бути порожньою');
+      return;
+    }
+    try {
+      const res = await axios.put(`${API_BASE_URL}/songs/admin/songbooks/${id}`, { title });
+      const updated = res.data.songbook;
+      setSongbooks(prev => prev.map(sb => (sb._id === id ? { ...sb, title: updated.title } : sb)));
+      cancelEditSongbook();
+      showStatus('success', 'Назву співаника оновлено');
+    } catch (err) {
+      showStatus('error', 'Помилка оновлення: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
   useEffect(() => {
     fetchSongs();
     fetchCategories();
   }, [fetchSongs, fetchCategories]);
+
+  // Ліниве завантаження даних вкладок при першому відкритті
+  useEffect(() => {
+    if (activeTab === 'users' && users.length === 0) fetchUsers();
+    if (activeTab === 'songbooks' && songbooks.length === 0) fetchSongbooks();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   // === SONGS ===
   const handleImport = async (file) => {
@@ -561,6 +647,19 @@ function AdminPanel() {
     });
   };
 
+  // === Користувачі та співаники: фільтрація за пошуком ===
+  const normalizedUserSearch = userSearch.trim().toLowerCase();
+  const filteredUsers = normalizedUserSearch
+    ? users.filter(u => (u.email || '').toLowerCase().includes(normalizedUserSearch))
+    : users;
+
+  const normalizedSongbookSearch = songbookSearch.trim().toLowerCase();
+  const filteredSongbooks = normalizedSongbookSearch
+    ? songbooks.filter(sb =>
+        `${sb.title || ''} ${sb.ownerEmail || ''}`.toLowerCase().includes(normalizedSongbookSearch)
+      )
+    : songbooks;
+
   return (
     <div className="admin-panel">
       <h1>⚙️ Адмін-панель</h1>
@@ -579,6 +678,18 @@ function AdminPanel() {
           onClick={() => setActiveTab('categories')}
         >
           📁 Розділи ({categories.length})
+        </button>
+        <button
+          className={`admin-tab ${activeTab === 'users' ? 'active' : ''}`}
+          onClick={() => setActiveTab('users')}
+        >
+          👥 Користувачі{users.length ? ` (${users.length})` : ''}
+        </button>
+        <button
+          className={`admin-tab ${activeTab === 'songbooks' ? 'active' : ''}`}
+          onClick={() => setActiveTab('songbooks')}
+        >
+          📖 Співаники{songbooks.length ? ` (${songbooks.length})` : ''}
         </button>
       </div>
 
@@ -1017,6 +1128,168 @@ function AdminPanel() {
               </div>
               );
             })}
+          </div>
+        </>
+      )}
+
+      {/* === USERS TAB === */}
+      {activeTab === 'users' && (
+        <>
+          <div className="admin-actions">
+            <button className="btn-refresh" onClick={fetchUsers} disabled={usersLoading}>
+              🔄 Оновити
+            </button>
+          </div>
+
+          <div className="admin-song-filters">
+            <input
+              type="text"
+              className="admin-song-search"
+              placeholder="🔍 Пошук за email..."
+              value={userSearch}
+              onChange={(e) => setUserSearch(e.target.value)}
+            />
+            {userSearch && (
+              <button className="btn-reset-filters" onClick={() => setUserSearch('')}>
+                ✕ Скинути
+              </button>
+            )}
+          </div>
+
+          <div className="admin-song-list">
+            <div className="admin-song-list-header">
+              <span>Зареєстровані користувачі</span>
+              <span>
+                {normalizedUserSearch
+                  ? `${filteredUsers.length} з ${users.length} шт.`
+                  : `${users.length} шт.`}
+              </span>
+            </div>
+
+            {usersLoading && (
+              <div className="admin-loading">
+                <FiMusic className="loading-note" />
+                Завантаження...
+              </div>
+            )}
+
+            {!usersLoading && users.length === 0 && (
+              <div className="admin-empty">Користувачів поки немає.</div>
+            )}
+
+            {!usersLoading && users.length > 0 && filteredUsers.length === 0 && (
+              <div className="admin-empty">Нічого не знайдено.</div>
+            )}
+
+            {!usersLoading && filteredUsers.map(u => (
+              <div key={u._id} className="admin-user-item">
+                <div className="admin-user-main">
+                  <span className="admin-user-email">{u.email}</span>
+                  {!u.isActive && <span className="admin-user-inactive">неактивний</span>}
+                </div>
+                <div className="admin-user-meta">
+                  <span title="Кількість створених співаників">📖 {u.songbookCount}</span>
+                  <span title="Дата реєстрації">Реєстрація: {formatDate(u.createdAt)}</span>
+                  <span title="Останній вхід">Вхід: {formatDate(u.lastLogin)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* === SONGBOOKS TAB === */}
+      {activeTab === 'songbooks' && (
+        <>
+          <div className="admin-actions">
+            <button className="btn-refresh" onClick={fetchSongbooks} disabled={songbooksLoading}>
+              🔄 Оновити
+            </button>
+          </div>
+
+          <div className="admin-song-filters">
+            <input
+              type="text"
+              className="admin-song-search"
+              placeholder="🔍 Пошук за назвою або автором..."
+              value={songbookSearch}
+              onChange={(e) => setSongbookSearch(e.target.value)}
+            />
+            {songbookSearch && (
+              <button className="btn-reset-filters" onClick={() => setSongbookSearch('')}>
+                ✕ Скинути
+              </button>
+            )}
+          </div>
+
+          <div className="admin-song-list">
+            <div className="admin-song-list-header">
+              <span>Створені співаники</span>
+              <span>
+                {normalizedSongbookSearch
+                  ? `${filteredSongbooks.length} з ${songbooks.length} шт.`
+                  : `${songbooks.length} шт.`}
+              </span>
+            </div>
+
+            {songbooksLoading && (
+              <div className="admin-loading">
+                <FiMusic className="loading-note" />
+                Завантаження...
+              </div>
+            )}
+
+            {!songbooksLoading && songbooks.length === 0 && (
+              <div className="admin-empty">Співаників поки немає.</div>
+            )}
+
+            {!songbooksLoading && songbooks.length > 0 && filteredSongbooks.length === 0 && (
+              <div className="admin-empty">Нічого не знайдено.</div>
+            )}
+
+            {!songbooksLoading && filteredSongbooks.map(sb => (
+              <div key={sb._id} className="admin-songbook-item">
+                {editingSongbookId === sb._id ? (
+                  <div className="admin-songbook-edit">
+                    <input
+                      type="text"
+                      className="admin-songbook-title-input"
+                      value={editingSongbookTitle}
+                      autoFocus
+                      onChange={(e) => setEditingSongbookTitle(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSaveSongbookTitle(sb._id);
+                        if (e.key === 'Escape') cancelEditSongbook();
+                      }}
+                    />
+                    <button className="btn-save-cat" onClick={() => handleSaveSongbookTitle(sb._id)}>✓</button>
+                    <button className="btn-cancel-cat" onClick={cancelEditSongbook}>✕</button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="admin-songbook-main">
+                      <span className="admin-songbook-title">{sb.title}</span>
+                      <span className="admin-songbook-owner">👤 {sb.ownerEmail}</span>
+                    </div>
+                    <div className="admin-songbook-meta">
+                      <span className="admin-songbook-privacy">
+                        {PRIVACY_LABELS[sb.privacy] || sb.privacy}
+                      </span>
+                      {sb.shareNearby && <span title="Видимий поблизу">📍</span>}
+                      <span title="Кількість пісень">🎵 {sb.songCount}</span>
+                      <span title="Дата створення">{formatDate(sb.createdAt)}</span>
+                      <button
+                        className="btn-edit-cat"
+                        title="Редагувати назву"
+                        onClick={() => startEditSongbook(sb)}
+                      >
+                        ✏️
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
           </div>
         </>
       )}

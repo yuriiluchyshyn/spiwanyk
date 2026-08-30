@@ -337,6 +337,100 @@
   font-size: 0.9rem;
 }
 
+/* Користувачі */
+.admin-user-item,
+.admin-songbook-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid rgba(196, 168, 130, 0.1);
+  transition: background 0.2s;
+}
+
+.admin-user-item:last-child,
+.admin-songbook-item:last-child {
+  border-bottom: none;
+}
+
+.admin-user-item:hover,
+.admin-songbook-item:hover {
+  background: rgba(196, 168, 130, 0.05);
+}
+
+.admin-user-main,
+.admin-songbook-main {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.admin-user-email,
+.admin-songbook-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--dark-brown);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-songbook-owner {
+  font-size: 0.78rem;
+  color: var(--warm-gray);
+  white-space: nowrap;
+}
+
+.admin-user-inactive {
+  font-size: 0.7rem;
+  color: #dc3545;
+  background: rgba(220, 53, 69, 0.1);
+  padding: 0.1rem 0.4rem;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.admin-user-meta,
+.admin-songbook-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--warm-gray);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.admin-songbook-privacy {
+  font-weight: 500;
+}
+
+.admin-songbook-edit {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.admin-songbook-title-input {
+  flex: 1;
+  min-width: 120px;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid rgba(196, 168, 130, 0.3);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.admin-songbook-title-input:focus {
+  border-color: var(--fire-orange);
+}
+
 /* Loading */
 .admin-loading {
   display: flex;

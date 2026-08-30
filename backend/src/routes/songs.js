@@ -4,6 +4,7 @@ const handleValidation = require('../utils/handleValidation');
 const songController = require('../controllers/songController');
 const categoryController = require('../controllers/categoryController');
 const songImportController = require('../controllers/songImportController');
+const adminController = require('../controllers/adminController');
 const {
   listSongsRules,
   popularSongsRules,
@@ -29,6 +30,9 @@ router.post('/admin/categories', categoryController.createCategory);
 router.put('/admin/categories/reorder', categoryController.reorderCategories);
 router.put('/admin/categories/:categoryId', categoryController.updateCategory);
 router.delete('/admin/categories/:categoryId', categoryController.deleteCategory);
+router.get('/admin/users', adminController.listUsers);
+router.get('/admin/songbooks', adminController.listSongbooks);
+router.put('/admin/songbooks/:id', adminController.updateSongbookTitle);
 router.get('/admin/list', songController.adminList);
 router.post('/admin/songs', songController.adminCreate);
 router.get('/admin/export', songImportController.exportToJson);
