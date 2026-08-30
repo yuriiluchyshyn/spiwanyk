@@ -68,6 +68,14 @@ const songSchema = new mongoose.Schema({
     type: String,
     default: 'folk'
   },
+  // Власник приватної пісні. null → глобальна пісня (видима всім у каталозі).
+  // Заданий → приватна пісня користувача: у каталозі «Пісні» її бачить лише
+  // власник, але всередині розшареного співаника — усі, хто має до нього доступ.
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
   tags: [{
     type: String,
     trim: true,
@@ -115,6 +123,7 @@ songSchema.index({ author: 1 });
 songSchema.index({ category: 1 });
 songSchema.index({ tags: 1 });
 songSchema.index({ isPublic: 1 });
+songSchema.index({ owner: 1 });
 
 // Virtual properties
 songSchema.virtual('hasChords').get(function() {

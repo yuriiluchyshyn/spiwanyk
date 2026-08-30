@@ -31,6 +31,13 @@ const categorySchema = new mongoose.Schema({
   order: {
     type: Number,
     default: 0
+  },
+  // Власник приватного розділу. null → глобальний (публічний) розділ, видимий
+  // усім. Заданий → приватний розділ конкретного користувача.
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
   }
 }, {
   timestamps: true
@@ -38,5 +45,6 @@ const categorySchema = new mongoose.Schema({
 
 categorySchema.index({ order: 1 });
 categorySchema.index({ parentId: 1 });
+categorySchema.index({ owner: 1 });
 
 module.exports = mongoose.model('Category', categorySchema);

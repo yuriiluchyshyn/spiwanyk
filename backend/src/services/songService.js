@@ -3,6 +3,7 @@ const Song = require('../models/Song');
 const Category = require('../models/Category');
 const User = require('../models/User');
 const ApiError = require('../utils/ApiError');
+const categoryService = require('./categoryService');
 
 /**
  * Song business logic: listing/searching, retrieval with access control and
@@ -21,10 +22,22 @@ const cleanTags = (tags) =>
     .map((tag) => tag.trim().toLowerCase());
 
 /**
+ * Visibility filter for the songs catalogue:
+ *  - anonymous: only global public songs (owner-less, isPublic);
+ *  - authenticated: global public songs PLUS the user's own private songs.
+ * Private songs of other users never appear in the catalogue (they surface only
+ * inside a shared songbook).
+ */
+const visibilityFilter = (user) =>
+  user
+    ? { $or: [{ isPublic: true, owner: null }, { owner: user._id }] }
+    : { isPublic: true, owner: null };
+
+/**
  * List public songs with optional full-text search, filtering and pagination.
  * When a category is supplied it must exist in the DB.
  */
-const listSongs = async (params) => {
+const listSongs = async (params, user) => {
   const { q: searchQuery, category, difficulty, tags, limit, skip = 0 } = params;
 
   if (category) {
@@ -38,36 +51,32 @@ const listSongs = async (params) => {
     }
   }
 
-  const options = {
-    category,
-    difficulty,
-    tags: tags ? tags.split(',').map((tag) => tag.trim()) : undefined,
-    limit: limit ? parseInt(limit) : undefined,
-    skip: parseInt(skip)
-  };
+  const parsedLimit = limit ? parseInt(limit) : undefined;
+  const parsedSkip = parseInt(skip);
+  const tagList = tags ? tags.split(',').map((tag) => tag.trim()).filter(Boolean) : undefined;
 
-  let songs;
-  if (searchQuery) {
-    songs = await Song.search(searchQuery, options);
-  } else {
-    // Preserve the full document (incl. the `structure` virtual) by not using
-    // .select() here.
-    let query = Song.find({ isPublic: true }).sort({ createdAt: -1 });
+  // Visibility: public global songs + (for a logged-in user) their own private
+  // songs. Preserve the full document (incl. the `structure` virtual).
+  const filter = { ...visibilityFilter(user) };
 
-    if (category) query = query.where('category', category);
-    if (difficulty) query = query.where('difficulty', difficulty);
-    if (options.tags && options.tags.length > 0) query = query.where('tags').in(options.tags);
-
-    if (options.skip > 0) query = query.skip(options.skip);
-    if (options.limit) query = query.limit(options.limit);
-
-    songs = await query;
+  if (searchQuery && searchQuery.trim()) {
+    const regex = new RegExp(searchQuery.trim(), 'i');
+    filter.$and = [{ $or: [{ title: regex }, { lyrics: regex }, { author: regex }] }];
   }
+  if (category) filter.category = category;
+  if (difficulty) filter.difficulty = difficulty;
+  if (tagList && tagList.length > 0) filter.tags = { $in: tagList };
+
+  let query = Song.find(filter).sort({ createdAt: -1 });
+  if (parsedSkip > 0) query = query.skip(parsedSkip);
+  if (parsedLimit) query = query.limit(parsedLimit);
+
+  const songs = await query;
 
   return {
     songs,
     total: songs.length,
-    hasMore: songs.length === options.limit
+    hasMore: parsedLimit ? songs.length === parsedLimit : false
   };
 };
 
@@ -163,7 +172,8 @@ const remove = async (id, userId) => {
  */
 const adminList = async () => {
   const songs = await Song.find({})
-    .select('title author category createdAt tags chords structure')
+    .select('title author category createdAt tags chords structure createdBy owner isPublic')
+    .populate('createdBy', 'email')
     .sort({ createdAt: -1 });
 
   return songs.map((s) => ({
@@ -173,7 +183,10 @@ const adminList = async () => {
     category: s.category,
     createdAt: s.createdAt,
     tags: s.tags,
-    hasChords: s.hasChords // virtual computed from chords/structure
+    hasChords: s.hasChords, // virtual computed from chords/structure
+    createdBy: s.createdBy ? s.createdBy.email : null, // хто додав пісню
+    owner: s.owner || null, // null → глобальна пісня
+    isPublic: s.isPublic
   }));
 };
 
@@ -387,12 +400,198 @@ const adminUpdate = async (id, body) => {
   return song;
 };
 
+/**
+ * Admin: зберегти пісню в загальний (публічний) список, доступний усім.
+ * Робить пісню глобальною (owner=null) та публічною (isPublic=true).
+ * Розділ обовʼязковий: беремо переданий `category`, інакше поточний розділ
+ * пісні. Якщо розділу немає — помилка (адмін має спочатку вибрати розділ).
+ */
+const adminPublish = async (id, category) => {
+  assertValidId(id);
+
+  const song = await Song.findById(id);
+  if (!song) {
+    throw ApiError.notFound('Пісню не знайдено');
+  }
+
+  const targetCategory =
+    category !== undefined && category !== null && String(category).trim() !== ''
+      ? category
+      : song.category;
+
+  if (!targetCategory) {
+    throw ApiError.badRequest('Спочатку виберіть розділ для пісні');
+  }
+  await assertCategoryExists(targetCategory);
+
+  song.category = targetCategory;
+  song.owner = null;
+  song.isPublic = true;
+  await song.save();
+  return song;
+};
+
+// --- User-owned (private) songs -------------------------------------------
+
+// Resolve the target category for a user's private song: an existing global or
+// own category id, or a freshly created private category (when `newCategory`
+// is provided). Returns the category id string (or '' for none).
+const resolveUserCategory = async (user, { category, newCategory }) => {
+  if (newCategory && newCategory.name && newCategory.name.trim()) {
+    const created = await categoryService.createUserCategory(user, newCategory);
+    return created.id;
+  }
+  if (category) {
+    const cat = await Category.findOne({
+      id: category,
+      $or: [{ owner: null }, { owner: user._id }]
+    });
+    if (!cat) {
+      throw ApiError.badRequest('Невірна категорія');
+    }
+    return cat.id;
+  }
+  return '';
+};
+
+/**
+ * Create a private song owned by the user. Visible to the user in the catalogue
+ * and to anyone who can access a songbook it is added to, but never in other
+ * users' catalogues.
+ */
+const createUserSong = async (user, body) => {
+  if (!body.title || !body.title.trim()) {
+    throw ApiError.badRequest('Назва пісні обовʼязкова');
+  }
+
+  const category = await resolveUserCategory(user, {
+    category: body.category,
+    newCategory: body.newCategory
+  });
+
+  const song = new Song({
+    owner: user._id,
+    createdBy: user._id,
+    isPublic: false,
+    title: body.title,
+    author: body.author,
+    category: category || undefined,
+    youtubeUrl: body.youtubeUrl,
+    structure: body.structure,
+    chords: body.chords,
+    difficulty: body.difficulty,
+    tags: Array.isArray(body.tags) ? cleanTags(body.tags) : undefined,
+    metadata: body.metadata
+  });
+
+  if (Array.isArray(body.structure) && body.structure.length > 0) {
+    song.lyrics = buildLyricsFromStructure(body.structure);
+  } else if (body.lyrics !== undefined) {
+    song.lyrics = body.lyrics;
+  }
+
+  await song.save();
+  return song;
+};
+
+/**
+ * Update one of the user's own private songs (title, author, category, chords,
+ * structure, youtube). Category may be an existing global/own one or a new one.
+ */
+const updateUserSong = async (user, id, body) => {
+  assertValidId(id);
+  const song = await Song.findOne({ _id: id, owner: user._id });
+  if (!song) {
+    throw ApiError.notFound('Пісню не знайдено');
+  }
+
+  if (body.title !== undefined) {
+    if (!body.title.trim()) throw ApiError.badRequest('Назва пісні обовʼязкова');
+    song.title = body.title;
+  }
+  if (body.author !== undefined) song.author = body.author;
+  if (body.youtubeUrl !== undefined) song.youtubeUrl = body.youtubeUrl;
+  if (body.chords !== undefined) song.chords = body.chords;
+
+  if (body.structure !== undefined) {
+    song.structure = body.structure;
+    song.lyrics = buildLyricsFromStructure(body.structure);
+  } else if (body.lyrics !== undefined) {
+    song.lyrics = body.lyrics;
+  }
+
+  if (body.category !== undefined || body.newCategory) {
+    song.category =
+      (await resolveUserCategory(user, { category: body.category, newCategory: body.newCategory })) ||
+      undefined;
+  }
+
+  await song.save();
+  return song;
+};
+
+/**
+ * Delete one of the user's own private songs.
+ */
+const deleteUserSong = async (user, id) => {
+  assertValidId(id);
+  const song = await Song.findOneAndDelete({ _id: id, owner: user._id });
+  if (!song) {
+    throw ApiError.notFound('Пісню не знайдено');
+  }
+  return { id: song._id, title: song.title };
+};
+
+/**
+ * Copy an existing song (e.g. one seen inside a shared songbook) into the user's
+ * own catalogue as a private song, under a chosen or newly created category.
+ * Refuses to create a duplicate if the user already has a song with that title.
+ */
+const saveSongToMyCatalog = async (user, sourceSongId, { category, newCategory }) => {
+  assertValidId(sourceSongId);
+
+  const source = await Song.findById(sourceSongId);
+  if (!source) {
+    throw ApiError.notFound('Пісню не знайдено');
+  }
+
+  const existing = await Song.findOne({ owner: user._id, title: source.title });
+  if (existing) {
+    throw ApiError.badRequest('Така пісня вже є у ваших піснях');
+  }
+
+  const targetCategory = await resolveUserCategory(user, { category, newCategory });
+
+  const copy = new Song({
+    owner: user._id,
+    createdBy: user._id,
+    isPublic: false,
+    title: source.title,
+    author: source.author,
+    lyrics: source.lyrics,
+    chords: source.chords,
+    notes: source.notes,
+    structure: source.structure,
+    youtubeUrl: source.youtubeUrl,
+    category: targetCategory || undefined,
+    metadata: source.metadata,
+    difficulty: source.difficulty
+  });
+
+  await copy.save();
+  return copy;
+};
+
 module.exports = {
   listSongs,
   getPopular,
   search,
   getById,
   create,
+  createUserSong,
+  updateUserSong,
+  deleteUserSong,
+  saveSongToMyCatalog,
   update,
   remove,
   adminList,
@@ -404,5 +603,6 @@ module.exports = {
   adminUpdateCategory,
   adminGetById,
   adminCreate,
-  adminUpdate
+  adminUpdate,
+  adminPublish
 };

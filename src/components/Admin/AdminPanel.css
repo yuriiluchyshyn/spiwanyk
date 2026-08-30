@@ -299,7 +299,108 @@
 .admin-song-meta {
   font-size: 0.75rem;
   color: var(--warm-gray);
-  margin-top: 0.15rem;
+  margin-top: 0.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+}
+
+.admin-song-author {
+  font-style: italic;
+}
+
+.admin-song-path {
+  color: var(--dark-brown);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 320px;
+}
+
+.admin-song-creator {
+  color: var(--warm-gray);
+}
+
+.admin-song-badge {
+  display: inline-block;
+  padding: 0.1rem 0.45rem;
+  border-radius: 6px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.admin-song-badge.public {
+  background: rgba(76, 175, 80, 0.15);
+  color: #2e7d32;
+}
+
+.admin-song-badge.private {
+  background: rgba(255, 152, 0, 0.15);
+  color: #e65100;
+}
+
+.admin-song-badge.hidden {
+  background: rgba(120, 120, 120, 0.15);
+  color: #555;
+}
+
+/* Панель сортування списку пісень */
+.admin-song-sort {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.admin-sort-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--warm-gray);
+  margin-right: 0.2rem;
+}
+
+.admin-sort-btn {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid rgba(196, 168, 130, 0.35);
+  border-radius: 8px;
+  background: rgba(232, 168, 124, 0.08);
+  color: var(--dark-brown);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.admin-sort-btn:hover {
+  border-color: var(--fire-orange);
+}
+
+.admin-sort-btn.active {
+  background: var(--fire-orange, #e8a87c);
+  border-color: var(--fire-orange, #e8a87c);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Кнопка «Зберегти в загальний список» */
+.btn-publish-song {
+  padding: 0.4rem 0.7rem;
+  margin-left: 0.4rem;
+  border: none;
+  border-radius: 8px;
+  background: #2e7d32;
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.btn-publish-song:hover {
+  background: #256628;
 }
 
 .admin-song-category {

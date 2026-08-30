@@ -21,8 +21,18 @@ router.get('/popular', popularSongsRules, handleValidation, songController.getPo
 router.get('/search', searchSongsRules, handleValidation, songController.search);
 
 // --- Categories (public + legacy) ---
-router.get('/categories', categoryController.getPublicCategories);
+// optionalAuth so an authenticated user also receives their own private categories.
+router.get('/categories', optionalAuth, categoryController.getPublicCategories);
 router.get('/meta/categories', categoryController.getLegacyMetaCategories);
+
+// --- Authenticated user's own (private) songs & categories ---
+router.post('/my/categories', auth, categoryController.createUserCategory);
+router.put('/my/categories/:id', auth, categoryController.updateUserCategory);
+router.delete('/my/categories/:id', auth, categoryController.deleteUserCategory);
+router.post('/my/songs', auth, songController.createUserSong);
+router.put('/my/songs/:id', auth, songController.updateUserSong);
+router.delete('/my/songs/:id', auth, songController.deleteUserSong);
+router.post('/my/save/:id', auth, songController.saveSongToMyCatalog);
 
 // --- Hidden admin endpoints (before /:id to avoid route conflicts) ---
 router.get('/admin/categories', categoryController.getAdminCategories);
@@ -45,6 +55,7 @@ router.post('/admin/delete-by-category', songController.adminDeleteByCategory);
 router.post('/admin/songs/bulk-delete', songController.adminBulkDelete);
 router.post('/admin/songs/bulk-category', songController.adminBulkCategory);
 router.put('/admin/:id/category', songController.adminUpdateCategory);
+router.put('/admin/:id/publish', songController.adminPublish);
 router.get('/admin/:id', songController.adminGetById);
 router.put('/admin/:id', songController.adminUpdate);
 router.delete('/admin/:id', songController.adminDeleteById);

@@ -778,6 +778,128 @@ body.bv-dragging-active {
   color: #22c55e;
 }
 
+/* Кнопка «зберегти пісню у мої пісні» */
+.bv-song-save {
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #8b5e34;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.bv-song-save:hover {
+  background: rgba(210, 105, 30, 0.12);
+  color: #d2691e;
+}
+
+/* Модалка збереження пісні у власні пісні */
+.bv-save-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  background: rgba(20, 14, 8, 0.5);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.bv-save-modal {
+  width: min(420px, 94vw);
+  background: linear-gradient(180deg, #faf3e4 0%, #f3e9d2 100%);
+  border-radius: 14px;
+  border: 1px solid rgba(139, 69, 19, 0.2);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+  padding: 1.25rem;
+}
+
+.bv-save-title {
+  margin: 0 0 0.25rem;
+  font-family: 'Georgia', serif;
+  font-size: 1.05rem;
+  color: #5c3d2e;
+}
+
+.bv-save-song {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  color: #8b7355;
+}
+
+.bv-save-label {
+  display: block;
+  font-size: 0.8rem;
+  color: #5c3d2e;
+  margin-bottom: 0.3rem;
+  font-weight: 600;
+}
+
+.bv-save-select,
+.bv-save-input {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid rgba(139, 69, 19, 0.25);
+  border-radius: 10px;
+  font-size: 0.9rem;
+  outline: none;
+  background: #fff;
+  color: #3e2415;
+}
+
+.bv-save-select:focus,
+.bv-save-input:focus {
+  border-color: #d2691e;
+}
+
+.bv-save-select:disabled {
+  opacity: 0.5;
+}
+
+.bv-save-or {
+  text-align: center;
+  font-size: 0.75rem;
+  color: #a0826d;
+  margin: 0.75rem 0 0.4rem;
+}
+
+.bv-save-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.1rem;
+}
+
+/* Кнопки в світлій модалці (footer .bv-btn світлі — тут перевизначаємо) */
+.bv-save-actions .bv-btn {
+  border: 1px solid rgba(139, 69, 19, 0.25);
+  background: #fff;
+  color: #5c3d2e;
+}
+
+.bv-save-actions .bv-btn:hover:not(:disabled) {
+  background: rgba(139, 69, 19, 0.06);
+  border-color: rgba(139, 69, 19, 0.4);
+}
+
+.bv-save-actions .bv-btn.primary {
+  background: linear-gradient(135deg, #d2691e, #8b4513);
+  border-color: transparent;
+  color: #fff;
+}
+
+.bv-save-actions .bv-btn.primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #e07b30, #a05420);
+}
+
 /* Active sing button: green when I'm the one singing, yellow when it's someone else. */
 .bv-song-sing.active {
   color: white;

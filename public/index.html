@@ -42,6 +42,17 @@
       content="Колекція українських пісень зі словами та акордами. Створюйте власні співаники та співайте разом."
     />
     <meta name="twitter:image" content="https://spivanyk.yluch.app/og-image.jpg" />
+
+    <!-- 5. Google Analytics (GA4) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-KQMVQDNTPK"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      // send_page_view: false — перегляди сторінок шлемо вручну з React (див. AnalyticsTracker),
+      // щоб коректно рахувати переходи в SPA і не дублювати перше завантаження.
+      gtag('config', 'G-KQMVQDNTPK', { send_page_view: false });
+    </script>
   </head>
   <body>
     <noscript>Вам потрібно увімкнути JavaScript для роботи цього додатку.</noscript>

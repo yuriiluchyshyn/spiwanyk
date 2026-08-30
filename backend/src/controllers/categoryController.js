@@ -1,10 +1,28 @@
 const asyncHandler = require('../utils/asyncHandler');
 const categoryService = require('../services/categoryService');
 
-// Public
+// Public (includes the authenticated user's own private categories)
 const getPublicCategories = asyncHandler(async (req, res) => {
-  const categories = await categoryService.getPublicCategories();
+  const categories = await categoryService.getPublicCategories(req.user);
   res.json({ categories });
+});
+
+// Authenticated user creates a private category of their own.
+const createUserCategory = asyncHandler(async (req, res) => {
+  const category = await categoryService.createUserCategory(req.user, req.body);
+  res.status(201).json({ category });
+});
+
+// Authenticated user renames one of their own private categories.
+const updateUserCategory = asyncHandler(async (req, res) => {
+  const category = await categoryService.updateUserCategory(req.user, req.params.id, req.body);
+  res.json({ category });
+});
+
+// Authenticated user deletes one of their own private categories.
+const deleteUserCategory = asyncHandler(async (req, res) => {
+  const result = await categoryService.deleteUserCategory(req.user, req.params.id);
+  res.json({ message: 'Розділ видалено', ...result });
 });
 
 const getLegacyMetaCategories = (req, res) => {
@@ -42,6 +60,9 @@ const reorderCategories = asyncHandler(async (req, res) => {
 
 module.exports = {
   getPublicCategories,
+  createUserCategory,
+  updateUserCategory,
+  deleteUserCategory,
   getLegacyMetaCategories,
   getAdminCategories,
   createCategory,

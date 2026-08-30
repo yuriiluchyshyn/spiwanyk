@@ -5,6 +5,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { NowSingingProvider } from './contexts/NowSingingContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import ErrorBoundary from './components/Common/ErrorBoundary';
+import AnalyticsTracker from './components/Common/AnalyticsTracker';
 import Header from './components/Header/Header';
 import GlobalBookView from './components/NowSinging/GlobalBookView';
 import Settings from './components/Settings/Settings';
@@ -24,6 +25,7 @@ function App() {
         <SettingsProvider>
           <Router>
             <NowSingingProvider>
+              <AnalyticsTracker />
               <div className="App">
                 <Header />
                 <main className="main-content">

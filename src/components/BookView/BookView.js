@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, forwardRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { songbooksAPI } from '../../services/api';
+import { songbooksAPI, songsAPI } from '../../services/api';
 import { FiX, FiMusic, FiPlus, FiCornerDownRight, FiTrash2, FiChevronDown, FiMove, FiUsers } from 'react-icons/fi';
 import { FaGuitar } from 'react-icons/fa';
 import FormattedSong from '../Songs/FormattedSong';
@@ -73,7 +73,9 @@ const SongItem = forwardRef(({
   onDragEnd,
   onTouchDragStart,
   onSetSingSong,
-  onStopSinging
+  onStopSinging,
+  showSaveToCatalog,
+  onSaveToMyCatalog
 }, ref) => {
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isSwipeActive, setIsSwipeActive] = useState(false);
@@ -245,6 +247,15 @@ const SongItem = forwardRef(({
           {song.author && <span className="bv-song-author">{song.author}</span>}
         </div>
         <div className="bv-song-actions">
+          {showSaveToCatalog && (
+            <button
+              className="bv-song-save"
+              onClick={(e) => { e.stopPropagation(); onSaveToMyCatalog(song); }}
+              title="Зберегти пісню у мої пісні"
+            >
+              <FiPlus />
+            </button>
+          )}
           {currentSingSong === song._id ? (
             <button
               className={`bv-song-sing active ${singingIsMine ? 'mine' : 'by-other'}`}
@@ -313,6 +324,14 @@ const BookView = ({ onClose, songbookData, initialSingScrollSongId = null, scrol
   const [undoVisible, setUndoVisible] = useState(false); // для анімації появи/зникнення
   const [currentSingSong, setCurrentSingSong] = useState(null); // поточна пісня для співу
   const [singingByEmail, setSingingByEmail] = useState(null); // хто саме зараз веде спів
+
+  // Збереження чужої (приватної) пісні зі співаника у власні пісні
+  const [saveModalSong, setSaveModalSong] = useState(null); // пісня, яку зберігаємо, або null
+  const [savedSongIds, setSavedSongIds] = useState(() => new Set()); // збережені в цій сесії
+  const [myCategories, setMyCategories] = useState([]); // розділи для вибору
+  const [saveCategory, setSaveCategory] = useState(''); // обраний id розділу
+  const [saveNewCatName, setSaveNewCatName] = useState(''); // назва нового розділу
+  const [saveBusy, setSaveBusy] = useState(false);
 
   // Drag and drop state
   const [draggedSong, setDraggedSong] = useState(null);
@@ -518,6 +537,8 @@ const BookView = ({ onClose, songbookData, initialSingScrollSongId = null, scrol
             structure: song.structure,
             metadata: song.metadata,
             hasChords: song.hasChords,
+            isPublic: song.isPublic,
+            owner: song.owner,
             _sectionId: s.section ? s.section.toString() : null
           };
         })
@@ -806,6 +827,50 @@ const BookView = ({ onClose, songbookData, initialSingScrollSongId = null, scrol
       refreshNowSinging();
     } catch (error) {
       console.error('Error stopping singing:', error);
+    }
+  };
+
+  // ---- Збереження пісні у власні пісні ----
+  // Кнопку показуємо лише для чужих приватних пісень (isPublic === false і
+  // власник — не поточний користувач), яких ще не зберігали в цій сесії.
+  const canSaveToMyCatalog = (song) =>
+    !!currentUser &&
+    song.isPublic === false &&
+    String(song.owner || '') !== String(currentUser._id || '') &&
+    !savedSongIds.has(song._id);
+
+  const openSaveModal = async (song) => {
+    setSaveModalSong(song);
+    setSaveCategory('');
+    setSaveNewCatName('');
+    try {
+      const cats = await songsAPI.getCategories();
+      setMyCategories(Array.isArray(cats) ? cats : []);
+    } catch {
+      setMyCategories([]);
+    }
+  };
+
+  const closeSaveModal = () => {
+    setSaveModalSong(null);
+    setSaveNewCatName('');
+    setSaveCategory('');
+  };
+
+  const handleConfirmSave = async () => {
+    if (!saveModalSong) return;
+    const payload = saveNewCatName.trim()
+      ? { newCategory: { name: saveNewCatName.trim() } }
+      : { category: saveCategory || undefined };
+    setSaveBusy(true);
+    try {
+      await songsAPI.saveToMyCatalog(saveModalSong._id, payload);
+      setSavedSongIds((prev) => new Set(prev).add(saveModalSong._id));
+      closeSaveModal();
+    } catch (error) {
+      alert('Не вдалося зберегти: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setSaveBusy(false);
     }
   };
 
@@ -1207,6 +1272,8 @@ const BookView = ({ onClose, songbookData, initialSingScrollSongId = null, scrol
                       onTouchDragStart={handleTouchDragStart}
                       onSetSingSong={handleSetSingSong}
                       onStopSinging={handleStopSinging}
+                      showSaveToCatalog={canSaveToMyCatalog(song)}
+                      onSaveToMyCatalog={openSaveModal}
                       ref={(el) => { songRefs.current[song._id] = el; }}
                     />
                   );
@@ -1301,6 +1368,47 @@ const BookView = ({ onClose, songbookData, initialSingScrollSongId = null, scrol
             >
               Відмінити
             </button>
+          </div>
+        )}
+
+        {/* Збереження пісні у власні пісні: вибір розділу або створення нового */}
+        {saveModalSong && (
+          <div className="bv-save-overlay" onClick={closeSaveModal}>
+            <div className="bv-save-modal" onClick={(e) => e.stopPropagation()}>
+              <h3 className="bv-save-title">Зберегти в мої пісні</h3>
+              <p className="bv-save-song">«{saveModalSong.title}»</p>
+
+              <label className="bv-save-label">Розділ</label>
+              <select
+                className="bv-save-select"
+                value={saveCategory}
+                disabled={!!saveNewCatName.trim()}
+                onChange={(e) => setSaveCategory(e.target.value)}
+              >
+                <option value="">— без розділу —</option>
+                {myCategories.map((c) => (
+                  <option key={c.id || c._id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+
+              <div className="bv-save-or">або створіть новий розділ</div>
+              <input
+                className="bv-save-input"
+                type="text"
+                placeholder="Назва нового розділу"
+                value={saveNewCatName}
+                onChange={(e) => setSaveNewCatName(e.target.value)}
+              />
+
+              <div className="bv-save-actions">
+                <button className="bv-btn" onClick={closeSaveModal} disabled={saveBusy}>
+                  Скасувати
+                </button>
+                <button className="bv-btn primary" onClick={handleConfirmSave} disabled={saveBusy}>
+                  {saveBusy ? 'Збереження…' : 'Зберегти'}
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

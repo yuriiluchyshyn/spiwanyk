@@ -2,8 +2,33 @@ const asyncHandler = require('../utils/asyncHandler');
 const songService = require('../services/songService');
 
 const list = asyncHandler(async (req, res) => {
-  const result = await songService.listSongs(req.query);
+  const result = await songService.listSongs(req.query, req.user);
   res.json(result);
+});
+
+// Authenticated user creates a private song of their own.
+const createUserSong = asyncHandler(async (req, res) => {
+  const song = await songService.createUserSong(req.user, req.body);
+  res.status(201).json({ message: 'Пісню створено', song });
+});
+
+// Authenticated user saves a song (seen in a shared songbook) into their own
+// catalogue under a chosen or newly created category.
+const saveSongToMyCatalog = asyncHandler(async (req, res) => {
+  const song = await songService.saveSongToMyCatalog(req.user, req.params.id, req.body);
+  res.status(201).json({ message: 'Пісню збережено у ваших піснях', song });
+});
+
+// Authenticated user updates one of their own private songs.
+const updateUserSong = asyncHandler(async (req, res) => {
+  const song = await songService.updateUserSong(req.user, req.params.id, req.body);
+  res.json({ message: 'Пісню оновлено', song });
+});
+
+// Authenticated user deletes one of their own private songs.
+const deleteUserSong = asyncHandler(async (req, res) => {
+  const song = await songService.deleteUserSong(req.user, req.params.id);
+  res.json({ message: 'Пісню видалено', song });
 });
 
 const getPopular = asyncHandler(async (req, res) => {
@@ -100,8 +125,18 @@ const adminUpdate = asyncHandler(async (req, res) => {
   res.json({ message: 'Пісню оновлено', song });
 });
 
+// Зберегти пісню в загальний список (доступний усім). Потрібен розділ.
+const adminPublish = asyncHandler(async (req, res) => {
+  const song = await songService.adminPublish(req.params.id, req.body?.category);
+  res.json({ message: 'Пісню збережено в загальний список', song });
+});
+
 module.exports = {
   list,
+  createUserSong,
+  updateUserSong,
+  deleteUserSong,
+  saveSongToMyCatalog,
   getPopular,
   search,
   getById,
@@ -117,5 +152,6 @@ module.exports = {
   adminUpdateCategory,
   adminGetById,
   adminCreate,
-  adminUpdate
+  adminUpdate,
+  adminPublish
 };

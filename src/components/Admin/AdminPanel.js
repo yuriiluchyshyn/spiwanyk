@@ -88,6 +88,8 @@ function AdminPanel() {
   const [songCategoryFilter, setSongCategoryFilter] = useState(''); // '' = усі розділи
   const [songChordsFilter, setSongChordsFilter] = useState('all'); // 'all' | 'with' | 'without'
   const [songPage, setSongPage] = useState(1);
+  // Сортування списку пісень: key ∈ 'title'|'category'|'createdBy'|'createdAt'
+  const [songSort, setSongSort] = useState({ key: 'createdAt', dir: 'desc' });
   const SONGS_PER_PAGE = 20;
 
   // Масовий вибір пісень (чекбокси у списку)
@@ -464,6 +466,12 @@ function AdminPanel() {
 
   // Перемістити пісню в інший розділ
   const handleChangeSongCategory = async (id, category) => {
+    // Порожній вибір ("— виберіть розділ —") лише скидає локально, без запиту:
+    // бекенд вимагає непорожній розділ для переміщення.
+    if (!category) {
+      setSongs(prev => prev.map(s => (s._id === id ? { ...s, category: '' } : s)));
+      return;
+    }
     const prevCategory = songs.find(s => s._id === id)?.category;
     // Оптимістичне оновлення
     setSongs(prev => prev.map(s => (s._id === id ? { ...s, category } : s)));
@@ -508,6 +516,27 @@ function AdminPanel() {
     } catch (err) {
       showStatus('error', 'Помилка збереження: ' + (err.response?.data?.message || err.message));
       throw err; // щоб редактор не закривався і зняв стан "збереження"
+    }
+  };
+
+  // Зберегти пісню в загальний список (доступний усім). Спочатку має бути
+  // вибраний розділ — інакше зберегти не можна.
+  const handlePublishSong = async (song) => {
+    const category = song.category;
+    const validCategory = category && categories.some(c => c.id === category);
+    if (!validCategory) {
+      showStatus('error', 'Спочатку виберіть розділ для пісні');
+      return;
+    }
+    if (!window.confirm(
+      `Зберегти пісню "${song.title}" в загальний список? Вона стане доступною всім у розділі «${getCategoryPath(category)}».`
+    )) return;
+    try {
+      await axios.put(`${API_BASE_URL}/songs/admin/${song._id}/publish`, { category });
+      showStatus('success', `Пісню "${song.title}" збережено в загальний список`);
+      await fetchSongs();
+    } catch (err) {
+      showStatus('error', 'Помилка збереження: ' + (err.response?.data?.message || err.message));
     }
   };
 
@@ -632,6 +661,23 @@ function AdminPanel() {
   // === Фільтрація та пагінація пісень ===
   // Вибраний розділ разом з усіма підрозділами (щоб фільтр за батьківським
   // розділом показував і пісні його дочірніх розділів).
+  // Повний шлях розділу з урахуванням вкладеності, напр. "Батько › Дитина".
+  // Якщо розділ невідомий (немає в списку) — повертаємо сам id з позначкою.
+  const getCategoryPath = (categoryId) => {
+    if (!categoryId) return '';
+    const byId = new Map(categories.map(c => [c.id, c]));
+    const parts = [];
+    const seen = new Set();
+    let current = byId.get(categoryId);
+    while (current && !seen.has(current.id)) {
+      seen.add(current.id);
+      parts.unshift(current.name);
+      current = current.parentId ? byId.get(current.parentId) : null;
+    }
+    if (parts.length === 0) return `${categoryId} (невідомий)`;
+    return parts.join(' › ');
+  };
+
   const getCategoryWithDescendants = (categoryId) => {
     const ids = new Set([categoryId]);
     const stack = [categoryId];
@@ -662,15 +708,46 @@ function AdminPanel() {
     return true;
   });
 
-  const totalPages = Math.max(1, Math.ceil(filteredSongs.length / SONGS_PER_PAGE));
+  // Сортування (застосовуємо до відфільтрованого списку перед пагінацією).
+  const sortValue = (song) => {
+    switch (songSort.key) {
+      case 'title':
+        return (song.title || '').toLowerCase();
+      case 'category':
+        return getCategoryPath(song.category).toLowerCase();
+      case 'createdBy':
+        return (song.createdBy || '').toLowerCase();
+      case 'createdAt':
+      default:
+        return new Date(song.createdAt || 0).getTime();
+    }
+  };
+  const sortedSongs = [...filteredSongs].sort((a, b) => {
+    const dir = songSort.dir === 'asc' ? 1 : -1;
+    const av = sortValue(a);
+    const bv = sortValue(b);
+    if (av < bv) return -1 * dir;
+    if (av > bv) return 1 * dir;
+    return 0;
+  });
+
+  const toggleSort = (key) => {
+    setSongSort(prev =>
+      prev.key === key
+        ? { key, dir: prev.dir === 'asc' ? 'desc' : 'asc' }
+        : { key, dir: key === 'createdAt' ? 'desc' : 'asc' }
+    );
+  };
+
+  const totalPages = Math.max(1, Math.ceil(sortedSongs.length / SONGS_PER_PAGE));
   const currentPage = Math.min(songPage, totalPages);
   const pageStart = (currentPage - 1) * SONGS_PER_PAGE;
-  const pagedSongs = filteredSongs.slice(pageStart, pageStart + SONGS_PER_PAGE);
+  const pagedSongs = sortedSongs.slice(pageStart, pageStart + SONGS_PER_PAGE);
 
-  // Скидаємо на першу сторінку при зміні фільтрів
+  // Скидаємо на першу сторінку при зміні фільтрів або сортування
   useEffect(() => {
     setSongPage(1);
-  }, [songSearch, songCategoryFilter, songChordsFilter]);
+  }, [songSearch, songCategoryFilter, songChordsFilter, songSort]);
 
   const hasSongFilters = normalizedSearch || songCategoryFilter || songChordsFilter !== 'all';
 
@@ -880,6 +957,28 @@ function AdminPanel() {
             </div>
           )}
 
+          {!loading && songs.length > 0 && (
+            <div className="admin-song-sort">
+              <span className="admin-sort-label">Сортувати:</span>
+              {[
+                { key: 'title', label: 'Назва' },
+                { key: 'category', label: 'Розділ' },
+                { key: 'createdBy', label: 'Хто додав' },
+                { key: 'createdAt', label: 'Дата' }
+              ].map(({ key, label }) => (
+                <button
+                  key={key}
+                  className={`admin-sort-btn ${songSort.key === key ? 'active' : ''}`}
+                  onClick={() => toggleSort(key)}
+                  title={`Сортувати за: ${label}`}
+                >
+                  {label}
+                  {songSort.key === key && (songSort.dir === 'asc' ? ' ▲' : ' ▼')}
+                </button>
+              ))}
+            </div>
+          )}
+
           <div className="admin-song-list">
             <div className="admin-song-list-header">
               {!loading && filteredSongs.length > 0 ? (
@@ -938,8 +1037,26 @@ function AdminPanel() {
                     )}
                   </div>
                   <div className="admin-song-meta">
-                    {song.author && <span>{song.author} · </span>}
-                    <span>Розділ:</span>
+                    {song.author && <span className="admin-song-author">{song.author}</span>}
+                    <span className="admin-song-path" title="Розділ (з урахуванням вкладеності)">
+                      📁 {getCategoryPath(song.category) || 'без розділу'}
+                    </span>
+                    <span className="admin-song-creator" title="Хто додав пісню">
+                      👤 {song.createdBy || '—'}
+                    </span>
+                    {song.owner ? (
+                      <span className="admin-song-badge private" title="Приватна пісня користувача (не в загальному списку)">
+                        приватна
+                      </span>
+                    ) : song.isPublic ? (
+                      <span className="admin-song-badge public" title="Доступна всім у загальному списку">
+                        у загальному списку
+                      </span>
+                    ) : (
+                      <span className="admin-song-badge hidden" title="Прихована (не публічна)">
+                        прихована
+                      </span>
+                    )}
                   </div>
                 </div>
                 <select
@@ -948,6 +1065,8 @@ function AdminPanel() {
                   onChange={(e) => handleChangeSongCategory(song._id, e.target.value)}
                   title="Перемістити пісню в інший розділ"
                 >
+                  {/* Порожній варіант, щоб було видно що розділ не вибрано */}
+                  <option value="">— виберіть розділ —</option>
                   {/* Показуємо поточне значення, навіть якщо такого розділу вже нема */}
                   {song.category && !categories.some(c => c.id === song.category) && (
                     <option value={song.category}>{song.category} (невідомий)</option>
@@ -958,6 +1077,16 @@ function AdminPanel() {
                     </option>
                   ))}
                 </select>
+                {/* Кнопку показуємо лише якщо пісня ще НЕ в загальному списку */}
+                {!(song.isPublic && !song.owner) && (
+                  <button
+                    className="btn-publish-song"
+                    title="Зберегти в загальний список (доступний усім). Спочатку виберіть розділ."
+                    onClick={() => handlePublishSong(song)}
+                  >
+                    💾 Зберегти
+                  </button>
+                )}
                 <button
                   className="btn-edit-cat"
                   title="Редагувати пісню (текст та акорди)"

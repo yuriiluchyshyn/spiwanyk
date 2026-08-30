@@ -9,12 +9,60 @@ const { DEFAULT_CATEGORIES, LEGACY_META_CATEGORIES } = require('../constants/def
  */
 
 /**
- * Categories for the public UI. Falls back to the canonical defaults (without
- * touching the DB) when the collection is still empty.
+ * Categories for the public UI. Returns the global (owner-less) categories and,
+ * for an authenticated user, also that user's own private categories.
+ * Falls back to the canonical defaults (without touching the DB) when the
+ * global collection is still empty.
  */
-const getPublicCategories = async () => {
-  const categories = await Category.find({}).sort({ order: 1 });
-  return categories.length > 0 ? categories : DEFAULT_CATEGORIES;
+const getPublicCategories = async (user) => {
+  const globals = await Category.find({ owner: null }).sort({ order: 1 });
+  const base = globals.length > 0 ? globals : DEFAULT_CATEGORIES;
+
+  if (!user) return base;
+
+  const own = await Category.find({ owner: user._id }).sort({ order: 1 });
+  return [...base, ...own];
+};
+
+/**
+ * Create a private category owned by the given user. The generated id (slug)
+ * is globally unique. Parent may be any global or own category of the user.
+ */
+const createUserCategory = async (user, { name, icon, color, parentId }) => {
+  if (!name || !name.trim()) {
+    throw ApiError.badRequest('Назва розділу обовʼязкова');
+  }
+
+  const normalizedId = await generateUniqueId(name);
+
+  let normalizedParent = null;
+  if (parentId) {
+    normalizedParent = String(parentId).toLowerCase();
+    // Батьком може бути глобальний розділ або власний розділ користувача.
+    const parent = await Category.findOne({
+      id: normalizedParent,
+      $or: [{ owner: null }, { owner: user._id }]
+    });
+    if (!parent) {
+      throw ApiError.badRequest('Батьківську категорію не знайдено');
+    }
+  }
+
+  // Ставимо приватні розділи після глобальних (щоб не змішувалися в UI).
+  const ownCount = await Category.countDocuments({ owner: user._id });
+
+  const category = new Category({
+    id: normalizedId,
+    name: name.trim(),
+    icon: icon === undefined ? '🎵' : icon,
+    color: color || '#8B4513',
+    parentId: normalizedParent,
+    order: 500 + ownCount,
+    owner: user._id
+  });
+
+  await category.save();
+  return category;
 };
 
 const getLegacyMetaCategories = () => LEGACY_META_CATEGORIES;
@@ -88,7 +136,8 @@ const generateUniqueId = async (name) => {
  * first time it is called on an empty collection.
  */
 const getAdminCategories = async () => {
-  let categories = await Category.find({}).sort({ order: 1 });
+  // Адмінка керує лише глобальними (публічними) розділами.
+  let categories = await Category.find({ owner: null }).sort({ order: 1 });
   if (categories.length === 0) {
     // За замовчуванням розділи впорядковані за алфавітом.
     const seeded = [...DEFAULT_CATEGORIES]
@@ -236,8 +285,57 @@ const deleteCategory = async (categoryId) => {
   return { deletedCategory: category.name, affectedSongs };
 };
 
+/**
+ * Rename / restyle a private category owned by the user.
+ */
+const updateUserCategory = async (user, categoryId, { name, icon, color }) => {
+  const category = await Category.findOne({ id: categoryId, owner: user._id });
+  if (!category) {
+    throw ApiError.notFound('Розділ не знайдено');
+  }
+  if (name !== undefined) {
+    if (!name.trim()) throw ApiError.badRequest('Назва розділу обовʼязкова');
+    category.name = name.trim();
+  }
+  if (icon !== undefined) category.icon = icon;
+  if (color) category.color = color;
+  await category.save();
+  return category;
+};
+
+/**
+ * Delete a private category owned by the user. Its own subcategories are lifted
+ * one level up (to this category's parent), and the user's songs in it move to
+ * the parent category (or become uncategorised when there is no parent).
+ */
+const deleteUserCategory = async (user, categoryId) => {
+  const category = await Category.findOne({ id: categoryId, owner: user._id });
+  if (!category) {
+    throw ApiError.notFound('Розділ не знайдено');
+  }
+
+  const fallbackCategory = category.parentId || '';
+
+  await Category.updateMany(
+    { parentId: category.id, owner: user._id },
+    { parentId: category.parentId || null }
+  );
+
+  const { modifiedCount } = await Song.updateMany(
+    { owner: user._id, category: category.id },
+    { category: fallbackCategory }
+  );
+
+  await Category.deleteOne({ _id: category._id });
+
+  return { deletedCategory: category.name, affectedSongs: modifiedCount || 0 };
+};
+
 module.exports = {
   getPublicCategories,
+  createUserCategory,
+  updateUserCategory,
+  deleteUserCategory,
   getLegacyMetaCategories,
   getAdminCategories,
   createCategory,

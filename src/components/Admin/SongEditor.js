@@ -399,7 +399,9 @@ export default function SongEditor({ song, categories = [], onClose, onSave }) {
               <select value={category} onChange={(e) => setCategory(e.target.value)}>
                 <option value="">— без розділу —</option>
                 {categories.map((c) => (
-                  <option key={c.id || c._id} value={c.id}>{c.name}</option>
+                  <option key={c.id || c._id} value={c.id}>
+                    {'\u00A0\u00A0'.repeat(c.depth || 0)}{c.name}
+                  </option>
                 ))}
               </select>
             </label>

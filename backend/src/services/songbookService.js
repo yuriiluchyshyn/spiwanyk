@@ -156,7 +156,7 @@ const getById = async (id, user) => {
 
   const songbook = await Songbook.findById(id)
     .populate('owner', 'email')
-    .populate('songs.song', 'title author lyrics chords notes youtubeUrl category structure metadata')
+    .populate('songs.song', 'title author lyrics chords notes youtubeUrl category structure metadata isPublic owner')
     .populate('songs.addedBy', 'email');
 
   if (!songbook || !songbook.isActive) {
@@ -196,7 +196,7 @@ const adminGetById = async (id) => {
 
   const songbook = await Songbook.findById(id)
     .populate('owner', 'email')
-    .populate('songs.song', 'title author lyrics chords notes youtubeUrl category structure metadata')
+    .populate('songs.song', 'title author lyrics chords notes youtubeUrl category structure metadata isPublic owner')
     .populate('songs.addedBy', 'email');
 
   if (!songbook) {
@@ -528,7 +528,13 @@ const getAvailableSongs = async (id, params, user) => {
 
   const existingSongIds = songbook.songs.map((s) => s.song.toString());
 
-  const query = { _id: { $nin: existingSongIds } };
+  // Visibility: public global songs + the requesting user's own private songs.
+  // Other users' private songs must never be offered here.
+  const visibility = user
+    ? { $or: [{ isPublic: true, owner: null }, { owner: user._id }] }
+    : { isPublic: true, owner: null };
+
+  const query = { $and: [visibility], _id: { $nin: existingSongIds } };
   if (searchTerm) {
     query.$or = [
       { title: { $regex: searchTerm, $options: 'i' } },

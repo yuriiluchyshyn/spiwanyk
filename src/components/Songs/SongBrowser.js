@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { songsAPI } from '../../services/api';
-import { FiSearch, FiMusic, FiYoutube, FiChevronDown, FiChevronUp, FiArrowLeft, FiPlus, FiCheck } from 'react-icons/fi';
+import { useAuth } from '../../contexts/AuthContext';
+import { FiSearch, FiMusic, FiYoutube, FiChevronDown, FiChevronUp, FiArrowLeft, FiPlus, FiCheck, FiTrash2, FiEdit2 } from 'react-icons/fi';
 import { FaGuitar } from 'react-icons/fa';
 import FormattedSong from './FormattedSong';
-import axios from 'axios';
+import SongEditor from '../Admin/SongEditor';
 import './SongList.css';
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
 const defaultCategories = [
   { id: 'author', name: 'АВТОРСЬКІ ПІСНІ', icon: '🎵', color: '#8B4513' },
@@ -20,7 +19,7 @@ const defaultCategories = [
   { id: 'hymns', name: 'ГІМНИ / МОЛИТВИ', icon: '🇺🇦', color: '#4682B4' }
 ];
 
-const SongCard = ({ song, isExpanded, onToggleExpand, onAddSong, isAdding, isAdded }) => {
+const SongCard = ({ song, isExpanded, onToggleExpand, onAddSong, isAdding, isAdded, canManage, onEdit, onDelete }) => {
   const [showChords, setShowChords] = useState(false);
   const [touchStart, setTouchStart] = useState(null);
   const [swipeOffset, setSwipeOffset] = useState(0);
@@ -150,6 +149,24 @@ const SongCard = ({ song, isExpanded, onToggleExpand, onAddSong, isAdding, isAdd
               {isAdding ? '...' : isAdded ? <FiCheck /> : <FiPlus />}
             </button>
           )}
+          {canManage && (
+            <>
+              <button
+                className="song-manage-btn"
+                onClick={(e) => { e.stopPropagation(); onEdit(song); }}
+                title="Редагувати пісню"
+              >
+                <FiEdit2 />
+              </button>
+              <button
+                className="song-manage-btn danger"
+                onClick={(e) => { e.stopPropagation(); onDelete(song); }}
+                title="Видалити пісню"
+              >
+                <FiTrash2 />
+              </button>
+            </>
+          )}
           {song.youtubeUrl && (
             <a href={song.youtubeUrl} target="_blank" rel="noopener noreferrer" 
                className="yt-btn" onClick={(e) => e.stopPropagation()}>
@@ -196,6 +213,7 @@ const SongCard = ({ song, isExpanded, onToggleExpand, onAddSong, isAdding, isAdd
  * - compact: boolean — if true, reduces padding for modal usage
  */
 const SongBrowser = ({ onAddSong, addingSongs, addedSongs, excludeSongIds, compact }) => {
+  const { user } = useAuth();
   const [songs, setSongs] = useState([]);
   const [categories, setCategories] = useState(defaultCategories);
   const [loading, setLoading] = useState(true);
@@ -205,31 +223,170 @@ const SongBrowser = ({ onAddSong, addingSongs, addedSongs, excludeSongIds, compa
   const [categoryPage, setCategoryPage] = useState(1); // пагінація списку пісень розділу
   const SONGS_PER_PAGE = 20;
 
+  // Створення власного розділу / пісні (лише для авторизованих)
+  const [showAddCat, setShowAddCat] = useState(false);   // форма нового кореневого розділу
+  const [addCatClosing, setAddCatClosing] = useState(false); // програвання анімації зникнення
+  const [newCatName, setNewCatName] = useState('');
+  const [showAddSub, setShowAddSub] = useState(false);   // форма нового підрозділу (в межах розділу)
+  const [newSubName, setNewSubName] = useState('');
+  const [songEditorOpen, setSongEditorOpen] = useState(false);
+  const [songEditorCategory, setSongEditorCategory] = useState(''); // попередньо обраний розділ
+  const [songEditorSong, setSongEditorSong] = useState(null); // пісня для редагування (або null)
+  const [editingCatId, setEditingCatId] = useState(null); // id розділу, що перейменовуємо
+  const [editingCatName, setEditingCatName] = useState('');
+  const [busy, setBusy] = useState(false);
+
   // При зміні розділу повертаємось на першу сторінку
   useEffect(() => {
     setCategoryPage(1);
   }, [currentCategoryId]);
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [songsData, catRes] = await Promise.all([
-          songsAPI.getAll(),
-          axios.get(`${API_BASE_URL}/songs/categories`).catch(() => null)
-        ]);
-        setSongs(Array.isArray(songsData) ? songsData : []);
-        if (catRes?.data?.categories) {
-          setCategories(catRes.data.categories);
-        }
-      } catch (error) {
-        console.error('Error loading data:', error);
-        setSongs([]);
-      } finally {
-        setLoading(false);
+  const loadData = useCallback(async () => {
+    try {
+      const [songsData, cats] = await Promise.all([
+        songsAPI.getAll(),
+        songsAPI.getCategories().catch(() => null)
+      ]);
+      setSongs(Array.isArray(songsData) ? songsData : []);
+      if (Array.isArray(cats) && cats.length > 0) {
+        setCategories(cats);
       }
-    };
-    loadData();
+    } catch (error) {
+      console.error('Error loading data:', error);
+      setSongs([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  // Чи належить розділ поточному користувачу (тоді його можна видалити).
+  const isMyCategory = (cat) =>
+    !!user && !!cat?.owner && String(cat.owner) === String(user._id);
+
+  // Плавне закриття форми додавання кореневого розділу (програємо анімацію
+  // зникнення, а вже потім прибираємо форму й очищаємо поле).
+  const closeAddCat = () => {
+    setAddCatClosing(true);
+    setTimeout(() => {
+      setShowAddCat(false);
+      setAddCatClosing(false);
+      setNewCatName('');
+    }, 200);
+  };
+
+  // Створити власний розділ. parentId — id батьківського розділу (для підрозділу).
+  const handleCreateCategory = async (parentId = null) => {
+    const name = (parentId ? newSubName : newCatName).trim();
+    if (!name) return;
+    setBusy(true);
+    try {
+      await songsAPI.createMyCategory({ name, parentId: parentId || undefined });
+      if (parentId) { setNewSubName(''); setShowAddSub(false); }
+      else { closeAddCat(); }
+      await loadData();
+    } catch (error) {
+      console.error('Error creating category:', error);
+      alert('Не вдалося створити розділ: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // Видалити власний розділ (з підтвердженням).
+  const handleDeleteCategory = async (cat) => {
+    if (!window.confirm(
+      `Видалити розділ «${cat.name}»?\n\nПідрозділи піднімуться рівнем вище, а ваші пісні з нього стануть без розділу. Цю дію неможливо скасувати.`
+    )) return;
+    setBusy(true);
+    try {
+      await songsAPI.deleteMyCategory(cat.id);
+      // Якщо видалили розділ, у якому зараз перебуваємо — піднімаємось вище.
+      if (currentCategoryId === cat.id) {
+        setCurrentCategoryId(cat.parentId || null);
+      }
+      await loadData();
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      alert('Не вдалося видалити розділ: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // Автозбереження форми нового розділу при втраті фокусу:
+  // є назва — створюємо, немає — просто плавно закриваємо.
+  const commitAddCat = () => {
+    if (busy) return;
+    if (newCatName.trim()) handleCreateCategory(null);
+    else closeAddCat();
+  };
+
+  // --- Перейменування власного розділу (інлайн, автозбереження на blur) ---
+  const startRenameCat = (cat) => {
+    setEditingCatId(cat.id);
+    setEditingCatName(cat.name);
+  };
+
+  const commitRenameCat = async () => {
+    const id = editingCatId;
+    if (!id) return;
+    const name = editingCatName.trim();
+    const original = categories.find((c) => c.id === id)?.name;
+    setEditingCatId(null);
+    if (!name || name === original) return; // без змін — нічого не зберігаємо
+    try {
+      await songsAPI.updateMyCategory(id, { name });
+      await loadData();
+    } catch (error) {
+      alert('Не вдалося перейменувати розділ: ' + (error.response?.data?.message || error.message));
+    }
+  };
+
+  // Чи належить пісня поточному користувачу (тоді її можна редагувати/видаляти).
+  const isMySong = (song) =>
+    !!user && !!song?.owner && String(song.owner) === String(user._id);
+
+  // Створити/оновити власну пісню (payload з SongEditor)
+  const handleSaveSong = async (payload) => {
+    if (songEditorSong && songEditorSong._id) {
+      await songsAPI.updateMySong(songEditorSong._id, payload);
+    } else {
+      await songsAPI.createMySong(payload);
+    }
+    setSongEditorOpen(false);
+    setSongEditorSong(null);
+    setSongEditorCategory('');
+    await loadData();
+  };
+
+  // Відкрити редактор нової пісні з попередньо обраним розділом.
+  const openSongEditor = (categoryId = '') => {
+    setSongEditorSong(null);
+    setSongEditorCategory(categoryId || '');
+    setSongEditorOpen(true);
+  };
+
+  // Відкрити редактор існуючої пісні для редагування.
+  const openEditSong = (song) => {
+    setSongEditorSong(song);
+    setSongEditorCategory(song.category || '');
+    setSongEditorOpen(true);
+  };
+
+  // Видалити власну пісню.
+  const handleDeleteSong = async (song) => {
+    if (!window.confirm(`Видалити пісню «${song.title}»? Цю дію неможливо скасувати.`)) return;
+    try {
+      await songsAPI.deleteMySong(song._id);
+      await loadData();
+    } catch (error) {
+      alert('Не вдалося видалити пісню: ' + (error.response?.data?.message || error.message));
+    }
+  };
 
   const getVisibleSongs = () => {
     if (!excludeSongIds || excludeSongIds.size === 0) return songs;
@@ -337,23 +494,103 @@ const SongBrowser = ({ onAddSong, addingSongs, addedSongs, excludeSongIds, compa
       onAddSong={onAddSong}
       isAdding={addingSongs?.has(song._id)}
       isAdded={addedSongs?.has(song._id)}
+      canManage={!compact && isMySong(song)}
+      onEdit={openEditSong}
+      onDelete={handleDeleteSong}
     />
   );
 
-  const renderCategoryCard = (category) => (
-    <div
-      key={category.id}
-      className="category-card"
-      onClick={() => openCategory(category.id)}
-      style={{ '--category-color': category.color }}
-    >
-      <span className="category-icon">{category.icon}</span>
-      <div className="category-info">
-        <h2>{category.name}</h2>
-        <span className="category-count">{getSongCount(category.id)}</span>
+  const renderCategoryCard = (category) => {
+    const mine = isMyCategory(category);
+    const renaming = editingCatId === category.id;
+    return (
+      <div
+        key={category.id}
+        className="category-card"
+        onClick={() => { if (!renaming) openCategory(category.id); }}
+        style={{ '--category-color': category.color }}
+      >
+        <span className="category-icon">{category.icon}</span>
+        <div className="category-info">
+          {renaming ? (
+            <input
+              type="text"
+              className="category-rename-input"
+              value={editingCatName}
+              autoFocus
+              onClick={(e) => e.stopPropagation()}
+              onChange={(e) => setEditingCatName(e.target.value)}
+              onBlur={commitRenameCat}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') { e.preventDefault(); commitRenameCat(); }
+                if (e.key === 'Escape') setEditingCatId(null);
+              }}
+            />
+          ) : (
+            <h2>{category.name}</h2>
+          )}
+          <span className="category-count">{getSongCount(category.id)}</span>
+        </div>
+        {mine && !renaming && (
+          <div className="category-manage">
+            <button
+              className="category-manage-btn"
+              title="Перейменувати розділ"
+              onClick={(e) => { e.stopPropagation(); startRenameCat(category); }}
+            >
+              <FiEdit2 />
+            </button>
+            <button
+              className="category-manage-btn danger"
+              title="Видалити розділ"
+              onClick={(e) => { e.stopPropagation(); handleDeleteCategory(category); }}
+            >
+              <FiTrash2 />
+            </button>
+          </div>
+        )}
       </div>
-    </div>
-  );
+    );
+  };
+
+  // Плитка «додати розділ» в кінці сітки розділів (лише для авторизованих).
+  // У неактивному стані — підказка «+ Додати розділ», при кліку перетворюється
+  // на форму (поле + Створити/Скасувати) прямо в межах цієї плитки.
+  const renderAddCategoryTile = () => {
+    if (!showAddCat && !addCatClosing) {
+      return (
+        <div
+          className="category-card add-category-card"
+          onClick={() => setShowAddCat(true)}
+          title="Додати розділ"
+        >
+          <span className="category-icon"><FiPlus /></span>
+          <div className="category-info">
+            <h2>Додати розділ</h2>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className={`category-card add-category-card editing ${addCatClosing ? 'leaving' : 'entering'}`}>
+        <input
+          type="text"
+          className="add-category-input"
+          placeholder="Назва нового розділу"
+          value={newCatName}
+          autoFocus
+          disabled={busy}
+          onChange={(e) => setNewCatName(e.target.value)}
+          onBlur={commitAddCat}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') { e.preventDefault(); commitAddCat(); }
+            if (e.key === 'Escape') closeAddCat();
+          }}
+        />
+      </div>
+    );
+  };
 
   const isRoot = currentCategoryId == null;
 
@@ -384,6 +621,55 @@ const SongBrowser = ({ onAddSong, addingSongs, addedSongs, excludeSongIds, compa
             </span>
           </div>
         </div>
+
+        {!compact && user && (
+          <div className="my-song-actions">
+            <button className="my-song-btn" onClick={() => openSongEditor(currentCategoryId)}>
+              <FiPlus /> Додати пісню
+            </button>
+            <button className="my-song-btn secondary" onClick={() => setShowAddSub((v) => !v)}>
+              <FiPlus /> Додати підрозділ
+            </button>
+          </div>
+        )}
+
+        {!compact && user && showAddSub && (
+          <div className="my-add-cat">
+            <input
+              type="text"
+              placeholder={`Назва підрозділу в «${category ? category.name : ''}»`}
+              value={newSubName}
+              autoFocus
+              onChange={(e) => setNewSubName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleCreateCategory(currentCategoryId);
+                if (e.key === 'Escape') { setShowAddSub(false); setNewSubName(''); }
+              }}
+            />
+            <button
+              className="my-song-btn"
+              onClick={() => handleCreateCategory(currentCategoryId)}
+              disabled={busy || !newSubName.trim()}
+            >
+              Створити
+            </button>
+            <button
+              className="my-song-btn secondary"
+              onClick={() => { setShowAddSub(false); setNewSubName(''); }}
+            >
+              Скасувати
+            </button>
+          </div>
+        )}
+
+        {songEditorOpen && (
+          <SongEditor
+            song={songEditorSong || (songEditorCategory ? { category: songEditorCategory } : null)}
+            categories={categories}
+            onClose={() => { setSongEditorOpen(false); setSongEditorSong(null); setSongEditorCategory(''); }}
+            onSave={handleSaveSong}
+          />
+        )}
 
         {childCategories.length > 0 && (
           <div className="categories-grid">
@@ -452,6 +738,7 @@ const SongBrowser = ({ onAddSong, addingSongs, addedSongs, excludeSongIds, compa
   return (
     <div className={`song-list ${compact ? 'compact' : ''}`}>
       <h1 className="song-list-heading">Пісні</h1>
+
       <div className="search-bar">
         <FiSearch className="search-icon" />
         <input
@@ -461,6 +748,15 @@ const SongBrowser = ({ onAddSong, addingSongs, addedSongs, excludeSongIds, compa
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
+
+      {songEditorOpen && (
+        <SongEditor
+          song={songEditorSong || (songEditorCategory ? { category: songEditorCategory } : null)}
+          categories={categories}
+          onClose={() => { setSongEditorOpen(false); setSongEditorSong(null); setSongEditorCategory(''); }}
+          onSave={handleSaveSong}
+        />
+      )}
 
       {searchResults ? (
         <>
@@ -476,9 +772,13 @@ const SongBrowser = ({ onAddSong, addingSongs, addedSongs, excludeSongIds, compa
           )}
         </>
       ) : (
-        <div className="categories-grid">
-          {rootCategories.map(renderCategoryCard)}
-        </div>
+        <>
+          <div className="categories-grid">
+            {rootCategories.map(renderCategoryCard)}
+            {/* Кнопка «додати розділ» завжди в кінці списку розділів (у межах плитки) */}
+            {!compact && user && renderAddCategoryTile()}
+          </div>
+        </>
       )}
     </div>
   );

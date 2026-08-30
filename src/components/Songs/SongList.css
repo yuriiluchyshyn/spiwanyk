@@ -335,6 +335,65 @@
   font-weight: 600;
 }
 
+/* Дії користувача: додати власну пісню / розділ */
+.my-song-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.85rem;
+}
+
+.my-song-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.6rem 1rem;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, var(--fire-orange, #d2691e), var(--warm-amber, #e8a87c));
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.my-song-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.my-song-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.my-song-btn.secondary {
+  background: #fff;
+  color: var(--dark-brown);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.my-add-cat {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.85rem;
+}
+
+.my-add-cat input {
+  flex: 1;
+  min-width: 180px;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.my-add-cat input:focus {
+  border-color: var(--warm-amber);
+}
+
 /* Пагінація списку пісень у розділі */
 .songs-pagination {
   display: flex;
@@ -450,6 +509,172 @@
   font-size: 0.85rem;
   color: var(--stone-gray);
   flex-shrink: 0;
+}
+
+/* Керування власним розділом: перейменувати / видалити */
+.category-manage {
+  display: flex;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.category-manage-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: transparent;
+  color: var(--stone-gray);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.category-manage-btn:hover {
+  border-color: var(--fire-orange, #d2691e);
+  color: var(--fire-orange, #d2691e);
+}
+
+.category-manage-btn.danger {
+  border-color: rgba(220, 53, 69, 0.25);
+  color: #dc3545;
+}
+
+.category-manage-btn.danger:hover {
+  background: rgba(220, 53, 69, 0.1);
+  border-color: #dc3545;
+}
+
+/* Інлайн-перейменування розділу */
+.category-rename-input {
+  width: 100%;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--warm-amber, #e8a87c);
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--dark-brown);
+  outline: none;
+  background: #fff;
+}
+
+/* Кнопки керування піснею (редагувати / видалити) */
+.song-manage-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(0, 0, 0, 0.1);
+  background: transparent;
+  color: var(--stone-gray);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.song-manage-btn:active {
+  transform: scale(0.92);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .song-manage-btn:hover {
+    border-color: var(--fire-orange, #d2691e);
+    color: var(--fire-orange, #d2691e);
+  }
+}
+
+.song-manage-btn.danger {
+  border-color: rgba(220, 53, 69, 0.25);
+  color: #dc3545;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .song-manage-btn.danger:hover {
+    background: rgba(220, 53, 69, 0.1);
+    border-color: #dc3545;
+  }
+}
+
+/* Плитка «додати розділ» — завжди в кінці сітки розділів */
+.category-card.add-category-card {
+  border-style: dashed;
+  border-color: rgba(0, 0, 0, 0.18);
+  background: transparent;
+  color: var(--dark-brown);
+  justify-content: center;
+}
+
+.category-card.add-category-card .category-icon {
+  font-size: 1.4rem;
+  color: var(--fire-orange, #d2691e);
+}
+
+.category-card.add-category-card .category-info h2 {
+  color: var(--dark-brown);
+}
+
+.category-card.add-category-card:hover {
+  border-color: var(--fire-orange, #d2691e);
+  background: rgba(255, 247, 237, 0.5);
+}
+
+/* Форма створення розділу прямо в межах плитки */
+.category-card.add-category-card.editing {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.6rem;
+  cursor: default;
+  border-style: solid;
+  border-color: var(--fire-orange, #d2691e);
+  background: #fff;
+  transform-origin: center;
+}
+
+.category-card.add-category-card.editing.entering {
+  animation: addCatIn 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.category-card.add-category-card.editing.leaving {
+  animation: addCatOut 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  pointer-events: none;
+}
+
+@keyframes addCatIn {
+  from { opacity: 0; transform: scale(0.94) translateY(4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes addCatOut {
+  from { opacity: 1; transform: scale(1) translateY(0); }
+  to { opacity: 0; transform: scale(0.94) translateY(4px); }
+}
+
+.category-card.add-category-card.editing:hover {
+  background: #fff;
+}
+
+.add-category-input {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.add-category-input:focus {
+  border-color: var(--warm-amber);
+}
+
+.add-category-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
 }
 
 /* Category detail header */
