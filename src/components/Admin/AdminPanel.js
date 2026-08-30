@@ -4,6 +4,7 @@ import { FiMusic } from 'react-icons/fi';
 import { FaGuitar } from 'react-icons/fa';
 import ToastContainer from '../Common/Toast';
 import SongEditor from './SongEditor';
+import AdminSongbookViewer from './AdminSongbookViewer';
 import './AdminPanel.css';
 
 let toastCounter = 0;
@@ -80,6 +81,7 @@ function AdminPanel() {
   const [songbookSearch, setSongbookSearch] = useState('');
   const [editingSongbookId, setEditingSongbookId] = useState(null);
   const [editingSongbookTitle, setEditingSongbookTitle] = useState('');
+  const [viewingSongbook, setViewingSongbook] = useState(null); // повні дані для перегляду
 
   // Фільтри та пагінація списку пісень
   const [songSearch, setSongSearch] = useState('');
@@ -191,6 +193,49 @@ function AdminPanel() {
       showStatus('success', 'Назву співаника оновлено');
     } catch (err) {
       showStatus('error', 'Помилка оновлення: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
+  // Переглянути співаник (повні дані, лише читання)
+  const handleViewSongbook = async (sb) => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/songs/admin/songbooks/${sb._id}`);
+      setViewingSongbook(res.data.songbook);
+    } catch (err) {
+      showStatus('error', 'Не вдалося відкрити співаник: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
+  // Видалити співаник
+  const handleDeleteSongbook = async (sb) => {
+    if (!window.confirm(`Видалити співаник "${sb.title}"? Цю дію неможливо скасувати.`)) return;
+    try {
+      await axios.delete(`${API_BASE_URL}/songs/admin/songbooks/${sb._id}`);
+      setSongbooks(prev => prev.filter(x => x._id !== sb._id));
+      // Оновлюємо лічильник співаників у власника (якщо список вже завантажено)
+      setUsers(prev => prev.map(u =>
+        u.email === sb.ownerEmail ? { ...u, songbookCount: Math.max(0, (u.songbookCount || 0) - 1) } : u
+      ));
+      showStatus('success', `Співаник "${sb.title}" видалено`);
+    } catch (err) {
+      showStatus('error', 'Помилка видалення: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
+  // Видалити користувача (разом з його співаниками)
+  const handleDeleteUser = async (user) => {
+    if (!window.confirm(
+      `Видалити користувача "${user.email}"?\n\nРазом з ним будуть видалені всі його співаники (${user.songbookCount}). Цю дію неможливо скасувати.`
+    )) return;
+    try {
+      const res = await axios.delete(`${API_BASE_URL}/songs/admin/users/${user._id}`);
+      const removed = res.data.user?.deletedSongbooks || 0;
+      setUsers(prev => prev.filter(u => u._id !== user._id));
+      // Прибираємо співаники цього користувача зі списку співаників
+      setSongbooks(prev => prev.filter(sb => sb.ownerEmail !== user.email));
+      showStatus('success', `Користувача "${user.email}" видалено (співаників: ${removed})`);
+    } catch (err) {
+      showStatus('error', 'Помилка видалення: ' + (err.response?.data?.message || err.message));
     }
   };
 
@@ -1191,6 +1236,13 @@ function AdminPanel() {
                   <span title="Кількість створених співаників">📖 {u.songbookCount}</span>
                   <span title="Дата реєстрації">Реєстрація: {formatDate(u.createdAt)}</span>
                   <span title="Останній вхід">Вхід: {formatDate(u.lastLogin)}</span>
+                  <button
+                    className="btn-delete-song"
+                    title="Видалити користувача разом з його співаниками"
+                    onClick={() => handleDeleteUser(u)}
+                  >
+                    Видалити
+                  </button>
                 </div>
               </div>
             ))}
@@ -1268,7 +1320,13 @@ function AdminPanel() {
                 ) : (
                   <>
                     <div className="admin-songbook-main">
-                      <span className="admin-songbook-title">{sb.title}</span>
+                      <span
+                        className="admin-songbook-title admin-songbook-title-clickable"
+                        title="Натисніть, щоб редагувати назву"
+                        onClick={() => startEditSongbook(sb)}
+                      >
+                        {sb.title}
+                      </span>
                       <span className="admin-songbook-owner">👤 {sb.ownerEmail}</span>
                     </div>
                     <div className="admin-songbook-meta">
@@ -1280,10 +1338,24 @@ function AdminPanel() {
                       <span title="Дата створення">{formatDate(sb.createdAt)}</span>
                       <button
                         className="btn-edit-cat"
+                        title="Переглянути співаник"
+                        onClick={() => handleViewSongbook(sb)}
+                      >
+                        👁
+                      </button>
+                      <button
+                        className="btn-edit-cat"
                         title="Редагувати назву"
                         onClick={() => startEditSongbook(sb)}
                       >
                         ✏️
+                      </button>
+                      <button
+                        className="btn-delete-song"
+                        title="Видалити співаник"
+                        onClick={() => handleDeleteSongbook(sb)}
+                      >
+                        Видалити
                       </button>
                     </div>
                   </>
@@ -1300,6 +1372,13 @@ function AdminPanel() {
           categories={orderedCategories}
           onClose={() => setSongEditor({ open: false, song: null })}
           onSave={handleSaveSong}
+        />
+      )}
+
+      {viewingSongbook && (
+        <AdminSongbookViewer
+          songbook={viewingSongbook}
+          onClose={() => setViewingSongbook(null)}
         />
       )}
     </div>

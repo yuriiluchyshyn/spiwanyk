@@ -84,4 +84,38 @@ const updateSongbookTitle = async (id, title) => {
   };
 };
 
-module.exports = { listUsers, listSongbooks, updateSongbookTitle };
+/**
+ * Delete a songbook by id (admin, no ownership check).
+ */
+const deleteSongbook = async (id) => {
+  const songbook = await Songbook.findByIdAndDelete(id);
+  if (!songbook) {
+    throw ApiError.notFound('Співаник не знайдено');
+  }
+  return { _id: songbook._id, title: songbook.title };
+};
+
+/**
+ * Delete a user by id (admin, no ownership check). Also removes every songbook
+ * that user owns, since a songbook cannot exist without its owner.
+ * Returns the deleted email and how many songbooks were removed with them.
+ */
+const deleteUser = async (id) => {
+  const user = await User.findById(id);
+  if (!user) {
+    throw ApiError.notFound('Користувача не знайдено');
+  }
+
+  const { deletedCount } = await Songbook.deleteMany({ owner: user._id });
+  await User.findByIdAndDelete(user._id);
+
+  return { _id: user._id, email: user.email, deletedSongbooks: deletedCount || 0 };
+};
+
+module.exports = {
+  listUsers,
+  listSongbooks,
+  updateSongbookTitle,
+  deleteSongbook,
+  deleteUser
+};

@@ -409,6 +409,17 @@
   font-weight: 500;
 }
 
+.admin-songbook-title-clickable {
+  cursor: pointer;
+  border-radius: 6px;
+  transition: color 0.2s;
+}
+
+.admin-songbook-title-clickable:hover {
+  color: var(--fire-orange);
+  text-decoration: underline;
+}
+
 .admin-songbook-edit {
   display: flex;
   align-items: center;

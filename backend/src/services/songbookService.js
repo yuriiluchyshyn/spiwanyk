@@ -186,6 +186,31 @@ const getById = async (id, user) => {
   return songbook;
 };
 
+/**
+ * Admin: fetch a fully-populated songbook WITHOUT access control, in
+ * presentation order. Used by the hidden admin panel to preview any user's
+ * songbook (including private ones). Read-only.
+ */
+const adminGetById = async (id) => {
+  assertId(id, 'Невірний ID співаника');
+
+  const songbook = await Songbook.findById(id)
+    .populate('owner', 'email')
+    .populate('songs.song', 'title author lyrics chords notes youtubeUrl category structure metadata')
+    .populate('songs.addedBy', 'email');
+
+  if (!songbook) {
+    throw ApiError.notFound('Співаник не знайдено');
+  }
+
+  // Drop dangling references to deleted songs, then order for presentation.
+  songbook.songs = songbook.songs.filter((s) => s.song !== null && s.song !== undefined);
+  applyPresentationOrder(songbook);
+  songbook.nowSinging = normalizeNowSinging(songbook.nowSinging);
+
+  return songbook;
+};
+
 const cleanTags = (tags) =>
   tags.filter((tag) => tag && tag.trim()).map((tag) => tag.trim().toLowerCase());
 
@@ -535,6 +560,7 @@ module.exports = {
   getPublicSongbooks,
   getNearbySongbooks,
   getById,
+  adminGetById,
   create,
   update,
   setSongSort,
